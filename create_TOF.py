@@ -520,7 +520,7 @@ if __name__=="__main__":
     if sys_exit: raise Exception(error_message)
         
     
-    # Check number of availble cores
+    # Check number of availible cores
     available_cpu = mp.cpu_count()
 
     for counter, shot_number in enumerate(shots):

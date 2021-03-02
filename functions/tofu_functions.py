@@ -307,10 +307,33 @@ def get_pre_trigger(board, shot_number, timer = False):
 def get_bias_level(board, shot_number, timer = False):
     '''
     Returns the bias level for the given shot, board and channel.
-    Example how to call: bias_level = get_bias_level('01', 'A', 94207)
+    
+    Parameters
+    ----------
+    board : int or string
+          Board number (between 1-10).
+    shot_number : int or string
+                JET pulse number.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+    
+    Returns
+    -------
+    blvl : int
+         Bias level in codes
+    
+    Examples
+    --------
+    >>> get_bias_level(1, 97100)
+    27000
+    >>> get_bias_level(6, 97100)
+    1600
     '''    
+
     if timer: t_start = elapsed_time()
-    file_name = 'M11D-B' + board + '>BSL'
+    
+    if int(board) < 10: board = f'0{int(board)}'
+    file_name = f'M11D-B{board}>BSL'
     
     # Get bias level
     blvl, nD, ier = gd.getbyte(file_name, shot_number)
@@ -321,9 +344,35 @@ def get_bias_level(board, shot_number, timer = False):
 
 def baseline_reduction(pulse_data, timer = False):
     '''
-    Returns the same pulse data array with the base line at zero.
-    pulse_data: array of pulse height data where each row corresponds to one record.
+    Subtracts the baseline average of the first 10 samples from each pulse. 
+    Returns the same pulse data array with the base line centred around zero.
+    
+    Parameters
+    ----------
+    pulse_data : ndarray
+               2D array of pulse waveforms where each row corresponds to one 
+               pulse. Typically 64 samples in each row for ADQ14 (board 1-5) 
+               and 56 samples for ADQ412 (board 6-10).
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+          
+    Returns
+    -------
+    pulses_baseline : ndarray
+                    Same as pulse_data but with baseline centred around 0.
+                    
+    Examples
+    --------
+    >>> baseline_reduction(
+                    array([[26969, 26974, 26992, ..., 26793, 26734, 26671],
+                           ...,
+                           [26969, 26951, 26974, ..., 26684, 26675, 26630]])
+                          )
+    array([[  -9.6,   -4.6,   13.4, ..., -185.6, -244.6, -307.6],
+           ...,
+           [   1.8,  -16.2,    6.8, ..., -283.2, -292.2, -337.2]])
     '''
+    
     if timer: t_start = elapsed_time()
     
     # Calculate the average baseline from ten first samples in each record
@@ -333,9 +382,9 @@ def baseline_reduction(pulse_data, timer = False):
     # Create array of baseline averages with same size as pulse_data
     baseline_av = np.reshape(baseline_av, (len(baseline_av), 1))
     baseline_av = np.repeat(baseline_av, np.shape(pulse_data)[1], axis = 1)
-    
+    pulses_baseline = pulse_data - baseline_av
     if timer: elapsed_time(t_start, 'baseline_reduction()')
-    return pulse_data-baseline_av
+    return pulses_baseline
 
 def remove_led(time_stamps, timer = False):
     '''
