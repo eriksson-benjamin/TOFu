@@ -109,11 +109,11 @@ def get_times(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A'
     Examples
     --------
     >>> get_times(97100, 2, 'B')
-    array([9.48831445e+17, 9.48514788e+17, 9.42146327e+17, ...,
-           9.46685159e+17, 9.48022189e+17, 9.47670333e+17])
+    array([3.68841388e+06, 9.55251888e+06, 1.62414959e+07, ...,
+           1.22809128e+11, 1.22824604e+11, 1.22827203e+11])
     >>> get_times(97100, detector_name = 'S2_04')
-    array([9.48831445e+17, 9.48514788e+17, 9.42146327e+17, ...,
-           9.46685159e+17, 9.48022189e+17, 9.47670333e+17])
+    array([3.68841388e+06, 9.55251888e+06, 1.62414959e+07, ...,
+           1.22809128e+11, 1.22824604e+11, 1.22827203e+11])
     '''
     
 
@@ -121,7 +121,7 @@ def get_times(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A'
     if detector_name != 'N/A': board, channel = get_board_name(detector_name)
     
     if int(board) < 10: board = f'0{int(board)}'
-    file_name = f'M11D-B{board}<DT{channel}'
+    file_name = f'M11D-B{board}<TM{channel}'
     
 
     # For ADQ14 time stamps are multiplied by 0.125 to return in ns
@@ -849,8 +849,49 @@ def find_time_range(shot_number):
         time_slice = np.array([40., f_times[np.searchsorted(f_cdist, 0.995)]])
  
     return time_slice
+#
+#def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([0, 0]), timer = False):
+#    '''
+#    Takes an array of baseline reduced pulses and removes junk pulses.
+#    pulses: array of baseline reduced pulses
+#    dx: distance between each point on the x-axis
+#    detector_name: string containing the name of the detector ('S1_01', ..., 'S2_32')
+#    bias_level: value in codes where the baseline is expected (typically 27000 for ADQ14, 1600 for ADQ412)
+#    Example: new_pulses, junk_indices = cleanup(pulses)
+#    '''
+#    if timer: t_start = elapsed_time()
+#    
+#    # Remove anything with a negative area
+#    area = np.trapz(pulses, axis = 1, dx = dx)
+#    indices = np.where(area < 0)[0]
+#
+#    # Remove anything with points on the baseline far from requested baseline 
+#    if bias_level not in [27000, 30000, 1600]: print('WARNING: The function cleanup() bases it\'s cuts on a bias level of 27k or 30k for ADQ14 and 1.6k codes for ADQ412. This shot has a bias level of ' + str(bias_level) + ' codes.')
+#    
+#    # Define ADQ14 and ADQ412 thresholds for the baseline
+#    if not np.array_equal(baseline_cut, np.array([0, 0])):
+#        low_threshold = baseline_cut[0]
+#        high_threshold = baseline_cut[1]
+#    elif int(detector_name[3:]) < 16:
+#        high_threshold = 200
+#        low_threshold = -200
+#    elif int(detector_name[3:]) >= 16:
+#        high_threshold = 70
+#        low_threshold = 20
+#    else: raise Exception('Unknown detector name.')
+#    
+#    # Find baselines which violate the thresholds
+#    baseline = pulses[:, 0:10]
+#    odd_bl = np.unique(np.where((baseline < low_threshold) | (baseline > high_threshold))[0])
+#    
+#    # Add to indices, remove duplicates and sort in ascending manner
+#    indices = np.sort(np.unique(np.append(indices, odd_bl)))
+#    
+#    
+#    if timer: elapsed_time(t_start, 'cleanup()')
+#    return pulses[indices], indices
 
-def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([0, 0]), timer = False):
+def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 0], [0, 0]]), timer = False):
     '''
     Takes an array of baseline reduced pulses and removes junk pulses.
     pulses: array of baseline reduced pulses
@@ -860,36 +901,61 @@ def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([0, 0
     Example: new_pulses, junk_indices = cleanup(pulses)
     '''
     if timer: t_start = elapsed_time()
-    
-    # Remove anything with a negative area
+    if detector_name not in get_dictionaries('merged').keys():
+        raise Exception('Unknown detector name.')
+    # Remove anything with a positive area
     area = np.trapz(pulses, axis = 1, dx = dx)
-    indices = np.where(area < 0)[0]
+    indices = np.where(area > 0)[0]
 
     # Remove anything with points on the baseline far from requested baseline 
     if bias_level not in [27000, 30000, 1600]: print('WARNING: The function cleanup() bases it\'s cuts on a bias level of 27k or 30k for ADQ14 and 1.6k codes for ADQ412. This shot has a bias level of ' + str(bias_level) + ' codes.')
     
-    # Define ADQ14 and ADQ412 thresholds for the baseline
-    if not np.array_equal(baseline_cut, np.array([0, 0])):
-        low_threshold = baseline_cut[0]
-        high_threshold = baseline_cut[1]
+    '''
+    Left hand side baseline
+    '''
+    # Define ADQ14 and ADQ412 thresholds for the left hand side baseline
+    if not np.array_equal(baseline_cut, np.array([[0, 0], [0, 0]])):
+        low_threshold = baseline_cut[0][0]
+        high_threshold = baseline_cut[0][1]
     elif int(detector_name[3:]) < 16:
-        high_threshold = 200
-        low_threshold = -200
-    elif int(detector_name[3:]) >= 16:
-        high_threshold = 70
-        low_threshold = 20
-    else: raise Exception('Unknown detector name.')
+        high_threshold = 50
+        low_threshold = -50
+    else:
+        high_threshold = 5
+        low_threshold = -5
     
     # Find baselines which violate the thresholds
-    baseline = pulses[:, 0:10]
-    odd_bl = np.unique(np.where((baseline < low_threshold) | (baseline > high_threshold))[0])
+    baseline_left = pulses[:, 0:11]
+    odd_bl_left = np.unique(np.where((baseline_left < low_threshold) | (baseline_left > high_threshold))[0])
+
+    '''
+    Right hand side baseline
+    '''
+    # Define ADQ14 and ADQ412 thresholds for the right hand side baseline
+    if not np.array_equal(baseline_cut, np.array([[0, 0], [0, 0]])):
+        low_threshold = baseline_cut[1][0]
+        high_threshold = baseline_cut[1][1]
+    elif int(detector_name[3:]) < 16:
+        high_threshold = 50
+        low_threshold = -200
+    else:
+        high_threshold = 5
+        low_threshold = -20
     
-    # Add to indices, remove duplicates and sort in ascending manner
-    indices = np.sort(np.unique(np.append(indices, odd_bl)))
+    if int(detector_name[3:]) < 6: baseline_right = pulses[:, 40:]
+    else: baseline_right = pulses[:, 35:]
     
+    odd_bl_right = np.unique(np.where((baseline_right < low_threshold) | (baseline_right > high_threshold))[0])
     
+    # Indices for pulses to be removed
+    odd_bl = np.append(odd_bl_right, odd_bl_left)
+    odd_bl = np.unique(np.append(odd_bl, indices))
+
+    # Remove pulses with odd baseline
+    new_pulses = np.delete(pulses, odd_bl, axis = 0)    
+
     if timer: elapsed_time(t_start, 'cleanup()')
-    return pulses[indices], indices
+    return new_pulses, odd_bl
 
 def inverted_light_yield(light_yield, timer = False):
     '''
