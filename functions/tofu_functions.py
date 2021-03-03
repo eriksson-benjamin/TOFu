@@ -388,9 +388,24 @@ def baseline_reduction(pulse_data, timer = False):
 
 def remove_led(time_stamps, timer = False):
     '''
-    Returns the same time stamps back without the LED chunk at the end and the position where the LED starts.
-    time_stamps: one dimensional array of time stamps
+    Removes chunk of LED data at the end of time stamp train. Assumes that the
+    frequency of the LED source is 5 kHz.
+    
+    Parameters
+    ----------
+    time_stamps : ndarray
+                1D array of time stamps.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+          
+    Returns
+    -------
+    t : ndarray
+      1D array of time stamps without LED chunk.
+    led_start : int
+              Index in time_stamps at which LED started.
     '''
+    
     if timer: t_start = elapsed_time()
     
     if len(time_stamps) == 0:
@@ -413,12 +428,16 @@ def remove_led(time_stamps, timer = False):
         
         if combo_counter == 10: break
     
-    if combo_counter < 10: print('LED\'s not found, returning full data set.')
-    
     if timer: elapsed_time(t_start, 'remove_led()')
-    return time_stamps[0:led_start - 10], led_start - 10
 
-#@profile
+    if combo_counter < 10: 
+        print('LED\'s not found, returning full data set.')
+        return time_stamps
+
+    led_start -= 10
+    t = time_stamps[0:led_start - 10]
+    return t, led_start - 10
+
 def find_threshold(pulse_data, trig_level, timer = False, detector_name = 'None'):
     '''
     Finds the point in the pulse which crosses the trigger level (generally 16, 17, 18 or 19 ns for ADQ14).
@@ -849,7 +868,7 @@ def find_time_range(shot_number):
         time_slice = np.array([40., f_times[np.searchsorted(f_cdist, 0.995)]])
  
     return time_slice
-#
+
 #def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([0, 0]), timer = False):
 #    '''
 #    Takes an array of baseline reduced pulses and removes junk pulses.
@@ -929,33 +948,38 @@ def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 
     odd_bl_left = np.unique(np.where((baseline_left < low_threshold) | (baseline_left > high_threshold))[0])
 
     '''
+    The following thresholds on the right hand side baseline could be set to
+    remove large pulses or pile-up events. It is ignored for now as the
+    integration of the pulses is only done between 10-30 ns.
+    
     Right hand side baseline
+        # Define ADQ14 and ADQ412 thresholds for the right hand side baseline
+        if not np.array_equal(baseline_cut, np.array([[0, 0], [0, 0]])):
+            low_threshold = baseline_cut[1][0]
+            high_threshold = baseline_cut[1][1]
+        elif int(detector_name[3:]) < 16:
+            high_threshold = 50
+            low_threshold = -200
+        else:
+            high_threshold = 5
+            low_threshold = -20
+        
+        if int(detector_name[3:]) < 6: baseline_right = pulses[:, 40:]
+        else: baseline_right = pulses[:, 35:]
+        
+        odd_bl_right = np.unique(np.where((baseline_right < low_threshold) | (baseline_right > high_threshold))[0])
     '''
-    # Define ADQ14 and ADQ412 thresholds for the right hand side baseline
-    if not np.array_equal(baseline_cut, np.array([[0, 0], [0, 0]])):
-        low_threshold = baseline_cut[1][0]
-        high_threshold = baseline_cut[1][1]
-    elif int(detector_name[3:]) < 16:
-        high_threshold = 50
-        low_threshold = -200
-    else:
-        high_threshold = 5
-        low_threshold = -20
     
-    if int(detector_name[3:]) < 6: baseline_right = pulses[:, 40:]
-    else: baseline_right = pulses[:, 35:]
-    
-    odd_bl_right = np.unique(np.where((baseline_right < low_threshold) | (baseline_right > high_threshold))[0])
-    
+    odd_bl_right = np.array([], dtype = 'int')
     # Indices for pulses to be removed
-    odd_bl = np.append(odd_bl_right, odd_bl_left)
-    odd_bl = np.unique(np.append(odd_bl, indices))
+    bad_indices = np.append(odd_bl_right, odd_bl_left)
+    bad_indices = np.unique(np.append(bad_indices, indices))
 
     # Remove pulses with odd baseline
-    new_pulses = np.delete(pulses, odd_bl, axis = 0)    
+    new_pulses = np.delete(pulses, bad_indices, axis = 0)    
 
     if timer: elapsed_time(t_start, 'cleanup()')
-    return new_pulses, odd_bl
+    return new_pulses, bad_indices
 
 def inverted_light_yield(light_yield, timer = False):
     '''
