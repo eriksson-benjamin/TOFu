@@ -223,14 +223,17 @@ def create_TOF(arguments):
 
     # Remove junk pulses and corresponding times
     bias_level = dfs.get_bias_level(shot_number = shot_number, board = boa)
-    pulse_data_bl, good_indices = dfs.cleanup(pulses = pulse_data_bl, dx = 1, bias_level = bias_level, detector_name = detector_name)
-    pulse_data = pulse_data[good_indices]
-    time_data = time_data[good_indices]
-    pre_trig_adjustment = pre_trig_adjustment[good_indices]
-
+#    pulse_data_bl, good_indices = dfs.cleanup(pulses = pulse_data_bl, dx = 1, bias_level = bias_level, detector_name = detector_name)
+#    pulse_data = pulse_data[good_indices]
+#    time_data = time_data[good_indices]
+#    pre_trig_adjustment = pre_trig_adjustment[good_indices]
+    pulse_data_bl, bad_indices = dfs.cleanup(pulses = pulse_data_bl, dx = 1, bias_level = bias_level, detector_name = detector_name)
+    time_data = np.delete(time_data, bad_indices)
+    pre_trig_adjustment = np.delete(pre_trig_adjustment, bad_indices)
+    
     # Set up x-axes for sinc interpolation
     u_factor = 10
-    record_length = np.shape(pulse_data)[1]
+    record_length = np.shape(pulse_data_bl)[1]
     x_axis = np.arange(0, record_length)
     ux_axis = np.arange(0, record_length, 1./u_factor)
     
@@ -453,9 +456,20 @@ if __name__=="__main__":
                 if sys.argv[i + 1][0:2] == '--': 
                     error_message = '--disable-detectors requires an additional argument.'
                     sys_exit = True
-                else: 
-                    disabled_detectors = sys.argv[i + 1]
-                    skip_flag = 1
+                else:
+                    j = 0
+                    while i + j + 1 < len(sys.argv):
+                        if sys.argv[i + j + 1][0:2] == '--': break
+                        disabled_detectors = np.append(disabled_detectors, 
+                                                       sys.argv[i + j + 1])
+                        #    Remove detectors from dictionary
+                        s1_dicts.pop(sys.argv[i + j + 1], None)
+                        s2_dicts.pop(sys.argv[i + j + 1], None)                        
+                        j += 1
+                    skip_flag = j
+#                    
+#                    disabled_detectors = sys.argv[i + 1]
+#                    skip_flag = 1
             
             # Enable given detectors
             elif sys.argv[i] == '--enable-detectors': 
@@ -565,7 +579,8 @@ if __name__=="__main__":
             '''
             Perform coincidence analysis on raw time stamps, anything that
             does not produce coincidence is removed.
-            '''            
+            '''
+            
             # Arguments for parallelization of importing all data 
             data_argu = [sx + f' {shot_number}' for sx in dfs.get_dictionaries('merged').keys()]
             
