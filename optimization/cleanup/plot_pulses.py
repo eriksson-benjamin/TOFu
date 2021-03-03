@@ -16,7 +16,7 @@ import tofu_functions as dfs
 with open('/common/scratch/beriksso/TOFu/optimization/pulses.pickle', 'rb') as handle:
     pulses = pickle.load(handle)
     
-n_pulses = 1000
+n_pulses = 500
 colors = [(np.random.random_sample(), 
            np.random.random_sample(), 
            np.random.random_sample()) for i in range(n_pulses)]

@@ -11,9 +11,9 @@ sys.path.insert(0, '../functions/')
 import tofu_functions as dfs
 import pickle
 
-shot_number = 94874
+shot_number = 97002
 
-detectors = ['S1_05', 'S2_05']
+detectors = ['S1_05', 'S2_05', 'S2_17', 'S2_26']
 
 pulses = {}
 time_stamps = {}
