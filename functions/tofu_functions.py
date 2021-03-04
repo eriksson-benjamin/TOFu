@@ -438,13 +438,35 @@ def remove_led(time_stamps, timer = False):
     t = time_stamps[0:led_start - 10]
     return t, led_start - 10
 
-def find_threshold(pulse_data, trig_level, timer = False, detector_name = 'None'):
+def find_threshold(pulse_data, trig_level, timer = False):
     '''
-    Finds the point in the pulse which crosses the trigger level (generally 16, 17, 18 or 19 ns for ADQ14).
-    Mainly relevant for ADQ14 cards since the number of pre trigger samples varies.
-    pulse_data: array of pulse height data where each row corresponds to one record.
-    trig_level: trigger level used during acquisition of the data set
+    Finds the point in the pulse which crosses the trigger level 
+    (generally sample 16, 17, 18 or 19 ns for ADQ14). Mainly relevant for ADQ14
+    cards since the number of pre trigger samples varies.
+    
+    Parameters
+    ----------
+    pulse_data : ndarray
+               2D array of pulse waveforms where each row corresponds to one 
+               pulse. Typically 64 samples in each row for ADQ14 (board 1-5) 
+               and 56 samples for ADQ412 (board 6-10).
+    trig_level : int
+               Trigger level used during acquisition in codes.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+    
+    Returns
+    -------
+    thr_crossing : ndarray
+                 1D array of indices at which each pulse crosses the given
+                 threshold.
+    
+    Examples
+    --------
+    >>> find_threshold(pulse_data, 26000)
+    array([16, 16, 16, ..., 16, 18, 16])
     '''
+    
     if timer: t_start = elapsed_time()
     # Subtract the trigger level from pulse data
     pulse_data = pulse_data - trig_level
@@ -928,6 +950,7 @@ def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 
 
     # Remove anything with points on the baseline far from requested baseline 
     if bias_level not in [27000, 30000, 1600]: print('WARNING: The function cleanup() bases it\'s cuts on a bias level of 27k or 30k for ADQ14 and 1.6k codes for ADQ412. This shot has a bias level of ' + str(bias_level) + ' codes.')
+    if np.abs(np.mean(pulses[0, 0:10])) > 10: print('WARNING: The function cleanup() requires pulses with a baseline centred around 0.')
     
     '''
     Left hand side baseline
