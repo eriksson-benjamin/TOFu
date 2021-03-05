@@ -32,7 +32,7 @@ for sx in pulses.keys():
     
     # Choose random pulses
     pulse_indices[sx] = np.random.randint(low = 0, high = len(pulses[sx]), 
-                                      size = n_pulses)
+                                          size = n_pulses)
     
     # Baseline reduction
     pulses_bl[sx] = dfs.baseline_reduction(pulses[sx][pulse_indices[sx]])
