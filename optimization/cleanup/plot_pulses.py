@@ -22,6 +22,7 @@ colors = [(np.random.random_sample(),
            np.random.random_sample()) for i in range(n_pulses)]
 pulse_indices = {}
 pulses_bl = {}
+
 # Plot pulses pre-cleanup
 figs = {}
 axes = {}
