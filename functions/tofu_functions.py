@@ -233,7 +233,7 @@ def get_trigger_level(board, channel, shot_number, timer = False):
     
     Parameters
     ----------
-    board : int or string, optional
+    board : int or string
           Board number (between 1-10) for requested trigger level.
     channel : string
             Channel name for requested data (A, B, C or D).
