@@ -196,7 +196,7 @@ def create_TOF(arguments):
         trig_level = dfs.get_trigger_level(boa, cha, shot_number, timer = timer_level)
 
         # Get pre trigger adjustment
-        pre_trig_adjustment = dfs.find_threshold(pulse_data, trig_level = trig_level, timer = timer_level, detector_name = detector_name)            
+        pre_trig_adjustment = dfs.find_threshold(pulse_data, trig_level = trig_level, timer = timer_level)            
 
         # Find where pulses trigger as normal
         normal_trig = np.where(pre_trig_adjustment > pre_trig_samples - 1)[0] 
@@ -227,9 +227,10 @@ def create_TOF(arguments):
 #    pulse_data = pulse_data[good_indices]
 #    time_data = time_data[good_indices]
 #    pre_trig_adjustment = pre_trig_adjustment[good_indices]
-    pulse_data_bl, bad_indices = dfs.cleanup(pulses = pulse_data_bl, dx = 1, bias_level = bias_level, detector_name = detector_name)
-    time_data = np.delete(time_data, bad_indices)
-    pre_trig_adjustment = np.delete(pre_trig_adjustment, bad_indices)
+    if not disable_cleanup:
+        pulse_data_bl, bad_indices = dfs.cleanup(pulses = pulse_data_bl, dx = 1, bias_level = bias_level, detector_name = detector_name)
+        time_data = np.delete(time_data, bad_indices)
+        pre_trig_adjustment = np.delete(pre_trig_adjustment, bad_indices)
     
     # Set up x-axes for sinc interpolation
     u_factor = 10
@@ -290,6 +291,7 @@ if __name__=="__main__":
     disable_cuts            = False
     disable_bgs             = False
     disable_scratch         = False
+    disable_cleanup         = False
     ohmic_spectrum          = False
     interactive_plot        = True
     sum_shots               = False
@@ -450,6 +452,9 @@ if __name__=="__main__":
             
             # Disable get data from scratch
             elif sys.argv[i] == '--disable-scratch': disable_scratch = True
+            
+            # Disable cleanup function
+            elif sys.argv[i] == '--disable-cleanup': disable_cleanup = True
             
             # Disable given detectors
             elif sys.argv[i] == '--disable-detectors': 
