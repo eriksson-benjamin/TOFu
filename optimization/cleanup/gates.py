@@ -33,7 +33,6 @@ x_region_1 = {'S1_01':[0.020, 0.025],
               'S2_05':[0.024, 0.032],
               'S2_17':[0.020, 0.025],
               'S2_26':[0.030, 0.040],}
-
 y_region_1 = {'S1_01':[2.3, 3.0],
               'S1_03':[2.3, 3.0],
               'S1_05':[2.3, 3.0],
@@ -69,16 +68,30 @@ y_region_4 = {'S1_01':[5.000, 5.600],
               'S1_03':[5.000, 5.600],
               'S1_05':[5.000, 5.600]}
 
+x_region_5 = {'S1_01':[0.20, 0.27],
+              'S1_03':[0.20, 0.27],
+              'S1_05':[0.20, 0.27]}
+y_region_5 = {'S1_01':[1.85, 2.25],
+              'S1_03':[1.85, 2.25],
+              'S1_05':[1.85, 2.25]}
+
 # Create nested dictionary to loop over
 x_regions = {'region_1':x_region_1,
              'region_2':x_region_2,
              'region_3':x_region_3, 
-             'region_4':x_region_4}
+             'region_4':x_region_4,
+             'region_5':x_region_5}
 y_regions = {'region_1':y_region_1,
              'region_2':y_region_2,
              'region_3':y_region_3,
-             'region_4':y_region_4}
-colors = {'region_1':'C0', 'region_2':'C1', 'region_3':'C2', 'region_4':'C3'}
+             'region_4':y_region_4,
+             'region_5':y_region_5}
+
+colors = {'region_1':'C0',
+          'region_2':'C1',
+          'region_3':'C2',
+          'region_4':'C3',
+          'region_5':'C4'}
 
 
 for sx, pulses in pulse_dict.items():
@@ -99,10 +112,10 @@ for sx, pulses in pulse_dict.items():
     # Baseline reduction
     pulses = dfs.baseline_reduction(pulses)
     
-    # First cleanup
+#    # First cleanup
     pulses, bad_indices = dfs.cleanup(pulses, dx = 1, detector_name = sx, 
                          bias_level = bias_level)
-        
+
     # Choose gates, remove bad indices from cleanup
     total = np.delete(total_gates[sx], bad_indices)
     ratio = np.delete(ratios[sx], bad_indices)
@@ -110,11 +123,16 @@ for sx, pulses in pulse_dict.items():
         threshold = 16 - np.delete(thresholds[sx], bad_indices)
     else:
         threshold = np.zeros(len(pulses))
-        
+    
     # Plot 2D histogram
-    fig, ax = plt.subplots(2, 2)
-#    gs = gridspec.GridSpec(2, 4)
-#    ax = np.array([[gs[0, :2], gs[0, 2:]], [None, gs[1, 1:3]]])
+#    fig, ax = plt.subplots(2, 2, sharey = 'row')
+    fig = plt.figure()
+    ax1 = fig.add_subplot(2, 2, 1)
+    ax2 = fig.add_subplot(2, 2, 2, sharey = ax1)
+    ax3 = fig.add_subplot(2, 2, 3)
+    ax4 = fig.add_subplot(2, 2, 4, sharex = ax2)
+    ax = np.array([[ax1, ax2], [ax3, ax4]])
+    
     y_bins = np.arange(-20, 20, 0.1)
     x_bins = np.arange(-5, 20, 0.001)
     my_cmap = plt.cm.jet
@@ -128,6 +146,20 @@ for sx, pulses in pulse_dict.items():
     fig.colorbar(hist[3], ax = ax[0, 1])
     fig.set_figheight(8)
     fig.set_figwidth(16)
+
+    # Plot projection on y-axis
+    y_projection, _ = np.histogram(ratio, bins = y_bins)
+    y_bin_centres = y_bins[1:] - np.diff(y_bins)[0]
+    ax[0, 0].step(y_projection, y_bin_centres, 'k')
+    ax[0, 0].set_xlabel('Counts')
+    ax[0, 0].set_ylabel('$q_{short}$/$q_{long}$')
+    
+    # Plot projection on x-asxis
+    x_projection, _ = np.histogram(total, bins = x_bins)
+    x_bin_centres = x_bins[1:] - np.diff(x_bins)[0]
+    ax[1, 1].step(x_bin_centres, x_projection, 'k')
+    ax[1, 1].set_xlabel('$q_{short} + q_{long}$')
+    ax[1, 1].set_ylabel('Counts')
 
 
     for x_key, y_key in zip(x_regions, y_regions):
@@ -147,8 +179,11 @@ for sx, pulses in pulse_dict.items():
         random_indices = np.random.choice(indices, size = n_pulses)
         random_pulses = pulses[random_indices]
         x_axis = np.tile(np.arange(0, rec_len), (n_pulses, 1)) + threshold[random_indices][:, np.newaxis]
-        ax[1, 1].plot(np.transpose(x_axis), np.transpose(random_pulses), color = colors[x_key])
-    
+        ax[1, 0].plot(np.transpose(x_axis), np.transpose(random_pulses), color = colors[x_key])
+        ax[1, 0].set_xlabel('Time [ns]')
+        ax[1, 0].set_ylabel('Pulse height [a.u.]')
+        
+        
 plt.show()
     
     
