@@ -14,22 +14,27 @@ import matplotlib.pyplot as plt
 import scipy.constants as constant
 import scipy.optimize as optimize
 from matplotlib.lines import Line2D
-import sys
-sys.path.insert(0, '/home/beriksso/TOFu/analysis/benjamin/github/TOFu/functions/cythonized/CyTOF')
-import CyTOF
+#import sys
+#sys.path.insert(0, '/home/beriksso/TOFu/analysis/benjamin/github/TOFu/functions/cythonized/CyTOF')
+#import CyTOF
 
-def get_pulses(board, channel, shot_number, pulse_start = -1, pulse_end = -1, timer = False):
+def get_pulses(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A', pulse_start = -1, pulse_end = -1, timer = False):
     '''
     Returns pulse data for a given board, channel and shot number.
     
     Parameters
     ----------
-    board : int or string
-          Board number (between 1-10) for requested data.
-    channel : string
-            Channel name for requested data (A, B, C or D).
     shot_number : int or string
                 JET pulse number.
+    board : int or string, optional
+          Board number (between 1-10) for requested data. Must be given if
+          detector_name is not.
+    channel : string, optional
+            Channel name for requested data (A, B, C or D). Must be given if 
+            detector_name is not.
+    detector_name : string, optional
+                  Detector name for requested data. Must be given if board and
+                  channel are not. E.g. "S1_01", "S1_02", "S2_01", "S2_02" etc.
     pulse_start : int, optional
                 Index before which pulses are not returned.
     pulse_end : int, optional
@@ -46,13 +51,18 @@ def get_pulses(board, channel, shot_number, pulse_start = -1, pulse_end = -1, ti
            
     Examples
     --------
-    >>> get_pulses(4, 'A', 94206)
+    >>> get_pulses(94206, 4, 'A')
     array([[29996, 29978, 30005, ..., 29911, 29938, 29929],
            ...,
-           [29978, 29969, 29955, ..., 29884, 29920, 29920]], dtype=int16)    
+           [29978, 29969, 29955, ..., 29884, 29920, 29920]], dtype=int16)   
+    >>> get_pulses(94206, detector_name = 'S1_04')
+    array([[29996, 29978, 30005, ..., 29911, 29938, 29929],
+           ...,
+           [29978, 29969, 29955, ..., 29884, 29920, 29920]], dtype=int16)   
     '''
     
     if timer: t_start = elapsed_time()
+    if detector_name != 'N/A': board, channel = get_board_name(detector_name)
     if int(board) < 10: board = f'0{int(board)}'
     
     file_name = f'M11D-B{board}<DT{channel}'
@@ -139,7 +149,6 @@ def get_times(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A'
     
     if timer: elapsed_time(t_start, 'get_times()')
     return time_stamps * mult_factor
-
 def get_offset(board, shot_number, timer = False):
     '''
     Returns the time from board initialization to JET PRE for given board and 
@@ -487,6 +496,14 @@ def find_threshold(pulse_data, trig_level, timer = False):
 def sinc_interpolation(pulse_data, x_values, ux_values, timer = False):
     '''
     Performs sinc interpolation on the pulse data set.
+    
+    Parameters
+    ----------
+    pulse_data : ndarray
+    2D array of pulse waveforms where each row corresponds to one 
+               pulse. Typically 64 samples in each row for ADQ14 (board 1-5) 
+               and 56 samples for ADQ412 (board 6-10).
+    
     pulse_data: array of pulse height data where each row corresponds to one record. 
                 NOTE: pulse_data must be baseline reduced (see baseline_reduction() function), otherwise sinc interpolation fails.
     x_values:   one dimensional array of values corresponding to pulse_data's x-axis.
@@ -650,30 +667,63 @@ def find_points(pulse_data, value, timer = False):
     if timer: elapsed_time(t_start, 'find_points()')
     return index   
     
-def find_coincidences(S1_times, S2_times, t_back = 100, t_forward = 100, return_indices = False, timer = False):
-    '''
-    
-    '''
-    if timer: t_start = elapsed_time()
-    coincidences = CyTOF.CyTOF(S1_times, S2_times, t_back, t_forward, return_indices)
-    if timer: elapsed_time(t_start, 'CyTOF()')
-    if return_indices:
-        return coincidences[0], coincidences[1]
-    else:
-        return coincidences
-    
-def sTOF4(S1_times, S2_times, t_back = 100, t_forward = 100, return_indices = False, timer = False):
+#def find_coincidences(S1_times, S2_times, t_back = 100, t_forward = 100, return_indices = False, timer = False):
+#    '''
+#    
+#    '''
+#    if timer: t_start = elapsed_time()
+#    coincidences = CyTOF.CyTOF(S1_times, S2_times, t_back, t_forward, return_indices)
+#    if timer: elapsed_time(t_start, 'CyTOF()')
+#    if return_indices:
+#        return coincidences[0], coincidences[1]
+#    else:
+#        return coincidences
+
+def sTOF4(S1_times, S2_times, t_back, t_forward, return_indices = False, timer = False):
 
     '''
-    We choose an event in S2, define the width of the window in which we want
-    to search for an event in S1 and calculate the time difference between 
-    the chosen S2 time stamp and the found S1 time stamp(s)
-    S1_times: 1D array of time stamps for one S1
-    S2_times: 1D array of time stamps for one S2
-    t_back: Number of time units (usually ns) to look back in time to find coincidences between S2 and S1 (gives positive TOF's)
-    t_forward: Number of time units (usually ns) to look forwards in time to find coincidences between S2 and S1 (gives negative TOF's)
-    Example: coincidences = sTOF3(S1_time_stamps, S2_time_stamps, t_back = 400, t_forward = 200)
+    Returns the time differences between S1_times and S2_times given a search
+    window. We loop over the time stamps in S2, for each S2 time stamp we 
+    search for an event in S1 within a given time window for events. If such an
+    event is found the time difference is calculated.
+    
+    Parameters
+    ----------
+    S1_times : ndarray
+             1D array of time stamps for one S1, typically given in ns.
+    S2_times : ndarray
+             1D array of time stamps for one S2, typically given in ns.
+    t_back : int or float
+           Time to look backwards in time from any given S2 time stamp. 
+           Constitutes together with t_forward, the time window in which we 
+           search for S1 events.
+    t_forward : int or float
+              Time to look forwards in time from any given S2 time stamp. 
+              Constitutes together with t_back, the time window in which we 
+              search for S1 events.
+    return_indices : bool, optional
+                   If set to true, returns S1 and S2 indices for each found
+                   coincidence.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+                 
+    Returns
+    -------
+    delta_t : ndarray
+            1D array of time differences between S1 and S2 time stamps (i.e. 
+            times-of-flight).
+    indices : ndarray
+            2D array of indices for each coincidence. First column
+            corresponds to S1, second column to S2.
+            
+    Examples
+    --------
+    >>> s1_times = np.array([10, 20, 30, 31, 32, 34])
+    >>> s2_times = np.array([9, 15, 33])
+    >>> sTOF(s1_times, s2_times, 4, 4)
+    array([-1.,  3.,  2.,  1., -1.])
     '''
+    
     if timer: t_start = elapsed_time()
     # Define time windows
     w_low = S2_times - t_back
@@ -689,42 +739,75 @@ def sTOF4(S1_times, S2_times, t_back = 100, t_forward = 100, return_indices = Fa
     for i in range(0, len(S2_times)):
         lowest_index = lowest_indices[i]
         search_sorted = 0
-        # Find the time stamp in S1 closest to wLow (rounded up, i.e. just outside the window)
+        # Find the time stamp in S1 closest to wLow (rounded up, i.e. just inside the window)
         while True:
+
             # Increase to next event
             low_index = lowest_index + search_sorted
-            # If the time stamp is the final one in S1 we break
-            if lowest_index >= len(S1_times) - 1 or low_index >= len(S1_times): 
+            
+            '''
+            Is the lowest time window beyond the final event in S1?
+            I.e. S2[i] - t_back > S1[-1]. Then we can stop searching.
+            '''
+            if lowest_index == len(S1_times): 
                 finished = True
                 break
-        
+            
+            '''
+            Have we run out of S1 events in our search?
+            There may however be more S2 events that produce coincidences 
+            with S1[-1]. We go to next S2 event and check if S1[-1] is within
+            the next S2 time window.
+            '''
+            if low_index == len(S1_times):
+                break
+            
             # If the time stamp in S1 is beyond the window we go to next S2 time (there are no more time stamps within this window)
             if S1_times[low_index] >= w_high[i]: break
-            # If the time stamp in S1 is before the window check the next time stamp    
+            # If the time stamp in S1 is before the window check the next time stamp (should never happen currently)
             if S1_times[low_index] <= w_low[i]: 
                 search_sorted += 1
                 continue
         
+            # If dt is not big enough to fit all events
+            if counter == len(dt):
+                # Copy arrays
+                temp_dt = np.copy(dt)
+                temp_ind = np.copy(ind)
+                
+                # Increase array size by factor 2
+                dt = -9999 * np.ones(2 * len(dt))
+                ind = -9999 * np.ones([2 * len(ind), 2])
+                
+                # Fill arrays with values
+                dt[:len(temp_dt)] = temp_dt
+                ind[:len(temp_ind)] = temp_ind
+                
+            
             # If there is an event we calculate the time difference
             dt[counter] =  S2_times[i] - S1_times[low_index]
+            
             # Save the S1 and S2 index of the event
             ind[counter][0] = low_index
             ind[counter][1] = i
             counter += 1
             search_sorted += 1
+            
+            
+            
         if finished: break
     
     # Find and remove all fails from dt
-    dtx = dt[(dt != -9999)]
+    delta_t = dt[(dt != -9999)]
 
     ind_S1 = ind[:, 0][ind[:, 0] != -9999]
     ind_S2 = ind[:, 1][ind[:, 1] != -9999]
 
     if timer: elapsed_time(t_start, 'sTOF4()')
     if return_indices:
-        indx = np.array([ind_S1, ind_S2], dtype = 'int')
-        return dtx, indx
-    else: return dtx
+        indices = np.array([ind_S1, ind_S2], dtype = 'int')
+        return delta_t, indices
+    else: return delta_t
     
 
     
