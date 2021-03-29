@@ -115,7 +115,7 @@ for sx, pulses in pulse_dict.items():
 #    # First cleanup
     pulses, bad_indices = dfs.cleanup(pulses, dx = 1, detector_name = sx, 
                          bias_level = bias_level)
-
+#    bad_indices = []
     # Choose gates, remove bad indices from cleanup
     total = np.delete(total_gates[sx], bad_indices)
     ratio = np.delete(ratios[sx], bad_indices)
@@ -149,14 +149,14 @@ for sx, pulses in pulse_dict.items():
 
     # Plot projection on y-axis
     y_projection, _ = np.histogram(ratio, bins = y_bins)
-    y_bin_centres = y_bins[1:] - np.diff(y_bins)[0]
+    y_bin_centres = y_bins[1:] - np.diff(y_bins)[0]/2
     ax[0, 0].step(y_projection, y_bin_centres, 'k')
     ax[0, 0].set_xlabel('Counts')
     ax[0, 0].set_ylabel('$q_{short}$/$q_{long}$')
     
     # Plot projection on x-asxis
     x_projection, _ = np.histogram(total, bins = x_bins)
-    x_bin_centres = x_bins[1:] - np.diff(x_bins)[0]
+    x_bin_centres = x_bins[1:] - np.diff(x_bins)[0]/2
     ax[1, 1].step(x_bin_centres, x_projection, 'k')
     ax[1, 1].set_xlabel('$q_{short} + q_{long}$')
     ax[1, 1].set_ylabel('Counts')
@@ -175,7 +175,7 @@ for sx, pulses in pulse_dict.items():
                            (total < x_regions[x_key][sx][1]))[0]
         
         # Choose and plot random pulses 
-        n_pulses = 25
+        n_pulses = 4
         random_indices = np.random.choice(indices, size = n_pulses)
         random_pulses = pulses[random_indices]
         x_axis = np.tile(np.arange(0, rec_len), (n_pulses, 1)) + threshold[random_indices][:, np.newaxis]
