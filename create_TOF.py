@@ -139,7 +139,12 @@ def import_all_data(arguments):
     if len(time_stamps) == 0: return np.array([]), detector_name, np.array([])
     
     # Import pulse data and remove the chunk we don't need 
-    pulse_data = dfs.get_pulses(boa, cha, shot_number, pulse_start = pulse_start, pulse_end = pulse_end, timer = timer_level)    
+    pulse_data = dfs.get_pulses(board = boa, 
+                                channel = cha, 
+                                shot_number = shot_number, 
+                                pulse_start = pulse_start, 
+                                pulse_end = pulse_end, 
+                                timer = timer_level)    
     
     print(f'{detector_name} data downloaded.')
     if timer_level: dfs.elapsed_time(t_start, 'import_all_data()')
@@ -257,9 +262,9 @@ def create_TOF(arguments):
         time_data = time_data[pulse_energy_thr]
         pre_trig_adjustment = pre_trig_adjustment[pulse_energy_thr]
     else: pulse_energy = 0
+
     # Perform time pickoff method
     time_pickoff = dfs.time_pickoff_CFD(pulse_data_sinc, fraction = 0.05 ,timer = timer_level) * 1. / u_factor
-
     # Calculate how much to adjust the ADQ14 time stamps by
     if boa in ['01', '02', '03', '04', '05']: time_adjustment = time_pickoff - pre_trig_adjustment
     # Calculate how much to adjust the ADQ412 time stamps

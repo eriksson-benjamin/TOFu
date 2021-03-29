@@ -495,27 +495,39 @@ def find_threshold(pulse_data, trig_level, timer = False):
 
 def sinc_interpolation(pulse_data, x_values, ux_values, timer = False):
     '''
-    Performs sinc interpolation on the pulse data set.
+    Returns since-interpolation of given pulse data set.
+    See Matlab example: 
+    http://phaseportrait.blogspot.com/2008/06/sinc-interpolation-in-matlab.html
     
     Parameters
     ----------
     pulse_data : ndarray
-    2D array of pulse waveforms where each row corresponds to one 
+               2D array of pulse waveforms where each row corresponds to one 
                pulse. Typically 64 samples in each row for ADQ14 (board 1-5) 
-               and 56 samples for ADQ412 (board 6-10).
-    
-    pulse_data: array of pulse height data where each row corresponds to one record. 
-                NOTE: pulse_data must be baseline reduced (see baseline_reduction() function), otherwise sinc interpolation fails.
-    x_values:   one dimensional array of values corresponding to pulse_data's x-axis.
-                must have a constant period.
-    ux_values:  one dimensional array similar to x_values but upsampled.
-    Example:
-        pulse_data is the regular m*n array where m = number of records and n = number of samples per record
-        x_axis = np.arange(0, n)
-        u_factor = 10 is the upsampling factor
-        ux_axis = np.arange(0, n, 1./u_factor)
-        u_pulse_data = sinc_interpolation(pulse_data, x_axis, ux_axis)
-    From Matlab example: http://phaseportrait.blogspot.com/2008/06/sinc-interpolation-in-matlab.html
+               and 56 samples for ADQ412 (board 6-10). NOTE: pulse_data must be
+               baseline reduced (see baseline_reduction() function).
+    x_values : ndarray
+             1D array of values corresponding to x_axis 
+             corresponding to pulse_data. Length between each point in x_values
+             must be constant.
+    ux_values: ndarray 
+             1D array similar to x_values but upsampled. Length between each
+             point in ux_values must be constant.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+          
+    Returns
+    -------
+    u_pulse_data : ndarray
+                 2D array of sinc-interpolated pulse waveforms where each row
+                 corresponds to one pulse.
+        
+    Examples
+    --------
+    >>> # Let n be the number of records and m the number of samples per record
+    >>> x_values = np.arange(0, n)
+    >>> ux_values = np.arange(0, n, 0.1) # Upsampled 10 times
+    >>> u_pulse_data = since_interpolation(pulse_data, x_values, ux_values)    
     '''
     if timer: t_start = elapsed_time()
     
@@ -558,10 +570,29 @@ def sinc_interpolation(pulse_data, x_values, ux_values, timer = False):
 def time_pickoff_CFD(pulse_data, fraction = 0.3, timer = False):
     '''
     Returns the times of arrival for a 2D array of pulses using a constant
-    fraction + linear interpolation method.
-    pulse_data: 2D array of pulses where each row corresponds to one pulse
-    fraction: fraction at which to perform linear interpolation
-    return a 1D array of times-of-arrival for each pulse.
+    fraction and a linear interpolation method.
+    
+    Parameters
+    ----------
+    pulse_data : ndarray,
+               2D array of pulse waveforms where each row corresponds to one 
+               pulse. Typically 64 samples in each row for ADQ14 (board 1-5) 
+               and 56 samples for ADQ412 (board 6-10). NOTE: pulse_data must be
+               baseline reduced (see baseline_reduction function).
+    fraction : float
+             Fraction at which to perform the linear interpolation
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+          
+    Returns
+    -------
+    new_time : ndarray
+             1D array of times-of-arrival for each pulse.
+
+    Examples
+    --------
+    >>> time_pickoff_CFD(pulse_data, fraction = 0.05)
+    [12.5149318,  14.97846766, ... 12.53181554, 12.39070941, 12.94160379]
     '''
     
     new_time = np.zeros([len(pulse_data)])
@@ -793,8 +824,6 @@ def sTOF4(S1_times, S2_times, t_back, t_forward, return_indices = False, timer =
             counter += 1
             search_sorted += 1
             
-            
-            
         if finished: break
     
     # Find and remove all fails from dt
@@ -808,8 +837,6 @@ def sTOF4(S1_times, S2_times, t_back, t_forward, return_indices = False, timer =
         indices = np.array([ind_S1, ind_S2], dtype = 'int')
         return delta_t, indices
     else: return delta_t
-    
-
     
 
 def get_detector_name(board, channel, timer = False):
