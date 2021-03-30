@@ -552,7 +552,7 @@ if __name__=="__main__":
         
         # Check if data available in scratch
         scratch_path = f'/common/scratch/beriksso/TOFu/data/{shot_number}/'
-        scratch_exists = os.path.exists(scratch_path)
+        scratch_exists = os.path.exists(f'{scratch_path}{shot_number}.pickle')
 
 
         # If scratch disabled perform full analysis
@@ -720,7 +720,7 @@ if __name__=="__main__":
             
             # Save data to scratch
             if not disable_scratch:
-                if not scratch_exists: os.mkdir(scratch_path)
+                if not os.path.exists(scratch_path): os.mkdir(scratch_path) 
                 with open(f'{scratch_path}{shot_number}.pickle', 'wb') as handle:
                     to_pickle = {'new_times_S1':new_times_S1,
                                  'new_times_S2':new_times_S2,
