@@ -472,14 +472,30 @@ if __name__=="__main__":
                         if sys.argv[i + j + 1][0:2] == '--': break
                         disabled_detectors = np.append(disabled_detectors, 
                                                        sys.argv[i + j + 1])
-                        #    Remove detectors from dictionary
+                        # Remove detectors from dictionary
                         s1_dicts.pop(sys.argv[i + j + 1], None)
                         s2_dicts.pop(sys.argv[i + j + 1], None)                        
                         j += 1
                     skip_flag = j
-#                    
-#                    disabled_detectors = sys.argv[i + 1]
-#                    skip_flag = 1
+                    
+            # Disable given boards
+            elif sys.argv[i] == '--disable-boards':
+                if sys.argv[i +1][0:2] == '--':
+                    error_message = '--disable-boards requires an additional argument.'
+                    sys_ext = True
+                else:
+                    j = 0
+                    while i + j + 1 < len(sys.argv):
+                        if sys.argv[i + j + 1][0:2] == '--': break
+                        for channel in ['A', 'B', 'C', 'D']:
+                            det_name = dfs.get_detector_name(board = sys.argv[i + j + 1], channel = channel)
+                            disabled_detectors = np.append(disabled_detectors, det_name)
+                            
+                            # Remove detectors from dictionary
+                            s1_dicts.pop(det_name, None)
+                            s2_dicts.pop(det_name, None)
+                        j += 1
+                    skip_flag = j
             
             # Enable given detectors
             elif sys.argv[i] == '--enable-detectors': 
