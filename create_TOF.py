@@ -12,7 +12,6 @@ Produces a time of flight spectrum from given shot number
 
 import sys
 from functions import tofu_functions as dfs
-#import definitions as dfs
 import numpy as np
 import matplotlib.pyplot as plt
 import multiprocessing as mp
@@ -310,6 +309,8 @@ if __name__=="__main__":
     tof_vals                = np.zeros(len(bins) - 1)
     erg_S1_vals             = np.zeros(len(bins_energy) - 1)
     erg_S2_vals             = np.zeros(len(bins_energy) - 1)
+    hist2d_S1_vals          = np.zeros([len(bins) - 1, len(bins_energy) - 1])
+    hist2d_S2_vals          = np.zeros([len(bins) - 1, len(bins_energy) - 1])
     processed_shots         = np.array([])
     thr_l                   = 0
     thr_u                   = np.inf
@@ -852,9 +853,11 @@ if __name__=="__main__":
                          disable_cuts = disable_cuts, energy_S1_cut = energies_S1_cut, 
                          energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
                          disable_bgs = disable_bgs, sum_shots = sum_shots, proton_recoil = proton_recoil, timer = time_level)
-            tof_vals    += tof_hist[0]
-            erg_S1_vals += erg_S1_hist[0]
-            erg_S2_vals += erg_S2_hist[0]
+            tof_vals    += tof_hist
+            erg_S1_vals += erg_S1_hist
+            erg_S2_vals += erg_S2_hist
+            hist2d_S1_vals += hist2d_S1
+            hist2d_S2_vals += hist2d_S2
             
             # If final loop for summed shots, plot 2D spectrum unless data is to be saved
             if len(shots) > 1 and counter == len(shots) - 1 and not save_NES:
@@ -891,13 +894,15 @@ if __name__=="__main__":
                 start = np.searchsorted(bin_centres, -100)
                 stop = np.searchsorted(bin_centres, -50)
                 background = np.mean(tof_vals[start:stop])
-                erg_bin_centres = erg_S1_hist[1][:-1] + np.diff(erg_S1_hist[1])[0] / 2 
+                erg_bin_centres = bins_energy[:-1] + np.diff(bins_energy)[0] / 2 
                 processed_shots = np.append(processed_shots, shot_number)
                 to_pickle = {'bins':bin_centres,
                              'counts':tof_vals,
                              'bgr_level':background,
                              'erg_S1':erg_S1_vals,
                              'erg_S2':erg_S2_vals,
+                             'hist2d_S1':hist2d_S1_vals,
+                             'hist2d_S2':hist2d_S2_vals,
                              'erg_bins':erg_bin_centres,
                              'shots':processed_shots}
                 pickle.dump(to_pickle, handle, protocol = pickle.HIGHEST_PROTOCOL)

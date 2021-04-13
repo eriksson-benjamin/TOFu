@@ -1662,19 +1662,19 @@ def background_subtraction_(disable_cuts, TOF_hist, timer = False):
     if timer: elapsed_time(t_start, 'background_subtraction()')
     return tof_bg
 
-def background_subtraction(disable_cuts, TOF_hist, timer = False):
+def background_subtraction(disable_cuts, tof_info, timer = False):
     '''
     Perform background subtraction of TOF spectrum. If disable_cuts is true an average
     is calculated between -100ns to -50 ns. If disable_cuts is false a model is fit to
     the background and mirrored to the positive TOF side.
     disable_cuts: boolean from user input for disabling/enabling kinematic cuts
-    TOF_hist: tuple of histogram information (events, bins)
+    tof_info: tuple of histogram information (events, bin_edges)
     '''
     if timer: t_start = elapsed_time()
     
     # Get events and bins
-    events = TOF_hist[0]
-    bins = TOF_hist[1]
+    events = tof_info[0]
+    bins = tof_info[1]
     
     # Without kinematic cuts use average background between -100 ns and -50 ns
     if disable_cuts: 
@@ -1812,7 +1812,6 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
             weights = False, hist2D_S1 = None, hist2D_S2 = None, sum_shots = False, proton_recoil = False, timer = False):
     '''
     Plots 2D histogram of TOF vs energy with projections onto time and energy axis.
-    Returns nothing.
     times_of_flight: 1D array of times of flight.
     energy_S1: 1D array of energies for S1
     energy_S2: 1D array of energies for S2
@@ -1826,6 +1825,11 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     projection: used in replot_projections() function, allows for red lines to be plotted along the limits of the cuts
     '''
     if timer: t_start = elapsed_time()
+    
+    cap_size = 1.5
+    line_width = 1
+    marker = '.'
+    marker_size = 1
     
     # Add lines for cuts
     if projection != 0: add_lines = True
@@ -1855,28 +1859,61 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         
     TOF_fig = plt.subplot(326)
     bins_tof_centres = bins_tof[1:] - np.diff(bins_tof)[0] / 2
-    if weights: TOF_hist = plt.hist(bins_tof_centres, bins_tof, weights = tof, log = log, histtype = 'step')
-    else: TOF_hist = plt.hist(tof, bins = bins_tof, log = log, histtype = 'step')
-    
+    if weights: 
+        TOF_hist = tof
+        TOF_plot = tof
+        
+    else: 
+        TOF_hist, _ = np.histogram(tof, bins = bins_tof)
+        TOF_plot = TOF_hist
+
     # Apply background subtraction
     if not disable_bgs:
-        tof_bg_vals = background_subtraction(disable_cuts, TOF_hist)
-        
         # Remove background from binned values
-        tof_bgs = TOF_hist[0] - tof_bg_vals
+        tof_bg_vals = background_subtraction(disable_cuts, (TOF_hist, bins_tof))
+        TOF_plot = TOF_hist - tof_bg_vals
         
-        # Add to figure
-        plt.hist(TOF_hist[1][:-1], bins = TOF_hist[1], weights = tof_bgs, 
-                 log = log, histtype = 'step', linestyle = 'dashed', color = 'C1')
-        plt.plot(bins_tof_centres, tof_bg_vals, 'r--')
+        # Plot background component + fit
+        plt.plot(bins_tof_centres, tof_bg_vals, 'r--')     
+        plt.plot(bins_tof_centres[bins_tof_centres < 0], 
+                 TOF_hist[bins_tof_centres < 0], 
+                 marker = marker,
+                 markersize = marker_size,
+                 color = 'r',
+                 linestyle = 'None')
+        plt.errorbar(bins_tof_centres[bins_tof_centres < 0],
+                     TOF_hist[bins_tof_centres < 0],
+                     yerr = np.sqrt(TOF_hist[bins_tof_centres < 0]),
+                     linestyle = 'None',
+                     capsize = cap_size,
+                     elinewidth = line_width,
+                     color = 'r')
         
-    ax_TOF = plt.gca() # Get current axis
+    # Plot        
+    plt.plot(bins_tof_centres, 
+             TOF_plot,
+             marker = marker,
+             markersize = marker_size,
+             color = 'k',
+             linestyle = 'None')
+        
+    plt.errorbar(bins_tof_centres, 
+                 TOF_plot,
+                 yerr = np.sqrt(TOF_hist), 
+                 linestyle = 'None',
+                 capsize = cap_size,
+                 elinewidth = line_width,
+                 color = 'k')
+    plt.yscale('log')
+    
+    # Get current axis
+    ax_TOF = plt.gca() 
     ax_TOF.set_xlabel('Time [ns]')
     ax_TOF.set_ylabel('Counts')
     tof_x_low = tof_lim[0]
     tof_x_high = tof_lim[1]
     ax_TOF.set_xlim([tof_x_low, tof_x_high]) 
-    ax_TOF.set_ylim(bottom = np.min(TOF_hist[0]) / 2 + 1)
+    ax_TOF.set_ylim(bottom = np.min(TOF_hist) / 2 + 1)
     
     # Add lines for interactive plot
     if add_lines:
@@ -1915,10 +1952,20 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         energy_repeated = np.repeat(bins_energy_centres, len(bins_tof_centres))
         weights2D_S1 = np.ndarray.flatten(np.transpose(hist2D_S1))
         # Create 2D histogram using weights
-        hist2d_S1 = plt.hist2d(tof_repeated, energy_repeated, bins = bins_2D, weights = weights2D_S1,
-                               cmap = my_cmap, vmin = 1, vmax = vmax)
+        hist2d_S1 = plt.hist2d(tof_repeated, 
+                               energy_repeated, 
+                               bins = bins_2D, 
+                               weights = weights2D_S1,
+                               cmap = my_cmap, 
+                               vmin = 1, 
+                               vmax = vmax)[0]
     else:
-        hist2d_S1 = plt.hist2d(times_of_flight, energy_S1, bins = bins_2D, cmap = my_cmap, vmin = 1, vmax = vmax)
+        hist2d_S1 = plt.hist2d(times_of_flight, 
+                               energy_S1, 
+                               bins = bins_2D, 
+                               cmap = my_cmap, 
+                               vmin = 1, 
+                               vmax = vmax)[0]
     ax_S1_2D = plt.gca()
     plt.setp(ax_S1_2D.get_xticklabels(), visible = False)
     plt.setp(ax_S1_2D.get_yticklabels(), visible = False)
@@ -1951,10 +1998,20 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     if weights:        
         # Create 2D histogram using weights
         weights2D_S2 = np.ndarray.flatten(np.transpose(hist2D_S2))
-        hist2d_S2 = plt.hist2d(tof_repeated, energy_repeated, bins = bins_2D, weights = weights2D_S2,
-                               cmap = my_cmap, vmin = 1, vmax = vmax)   
+        hist2d_S2 = plt.hist2d(tof_repeated, 
+                               energy_repeated, 
+                               bins = bins_2D, 
+                               weights = weights2D_S2,
+                               cmap = my_cmap, 
+                               vmin = 1, 
+                               vmax = vmax)[0]
     else:
-        hist2d_S2 = plt.hist2d(times_of_flight, energy_S2, bins = bins_2D, cmap = my_cmap, vmin = 1, vmax = vmax)
+        hist2d_S2 = plt.hist2d(times_of_flight, 
+                               energy_S2, 
+                               bins = bins_2D, 
+                               cmap = my_cmap, 
+                               vmin = 1, 
+                               vmax = vmax)[0]
     ax_S2_2D = plt.gca()
     plt.setp(ax_S2_2D.get_xticklabels(), visible = False)
     plt.setp(ax_S2_2D.get_yticklabels(), visible = False)
@@ -1985,10 +2042,37 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     S2 energy projection
     '''
     plt.subplot(323, sharey = ax_S2_2D)
-    if weights: S2_E_hist = plt.hist(bins_energy_centres, bins = bins_energy, weights = erg_S2,
-                                     orientation = 'horizontal', histtype = 'step', log = log)
-    else: S2_E_hist = plt.hist(erg_S2, bins = bins_energy, orientation = 'horizontal', 
-                               histtype = 'step', log = log)
+    if weights: 
+        plt.plot(erg_S2, 
+                 bins_energy_centres, 
+                 marker = marker,
+                 markersize = marker_size,
+                 color = 'k',
+                 linestyle = 'None')
+        plt.errorbar(erg_S2, 
+                     bins_energy_centres, 
+                     xerr = np.sqrt(erg_S2), 
+                     linestyle = 'None',
+                     capsize = cap_size,
+                     elinewidth = line_width,
+                     color = 'k')
+        S2_E_hist = erg_S2
+    else: 
+        S2_E_hist, _ = np.histogram(erg_S2, bins = bins_energy)
+        plt.plot(S2_E_hist,
+                 bins_energy_centres,
+                 marker = marker,
+                 markersize = marker_size,
+                 color = 'k',
+                 linestyle = 'None')
+        plt.errorbar(S2_E_hist, 
+                     bins_energy_centres, 
+                     xerr = np.sqrt(S2_E_hist),
+                     linestyle = 'None',
+                     capsize = cap_size,
+                     elinewidth = line_width,
+                     color = 'k')
+        
     ax_S2_E = plt.gca()
     ax_S2_E.set_xlabel('Counts')
     y_lower = energy_lim[0]
@@ -2000,7 +2084,6 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
             plt.plot([-big_value, big_value], [proj_lims[0], proj_lims[0]], '--r')
             plt.plot([-big_value, big_value], [proj_lims[1], proj_lims[1]], '--r')
     ax_S2_E.set_ylim([y_lower, y_upper])
-#    ax_S2_E.set_xlim(xmin = np.min(S2_E_hist[0][S2_E_hist[0] > 0]))
     '''
     S1 energy projection
     '''
@@ -2012,19 +2095,45 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
             plt.plot([-big_value, big_value], [proj_lims[0], proj_lims[0]], '--r')
             plt.plot([-big_value, big_value], [proj_lims[1], proj_lims[1]], '--r')
     
-    if weights: S1_E_hist = plt.hist(bins_energy_centres, bins = bins_energy, 
-                                     weights = erg_S1, orientation = 'horizontal',
-                                     histtype = 'step', log = log)
-    else: S1_E_hist = plt.hist(erg_S1, bins = bins_energy, orientation = 'horizontal', 
-                               histtype = 'step', log = log)
+    if weights:
+        plt.plot(erg_S1, 
+                 bins_energy_centres, 
+                 marker = marker,
+                 markersize = marker_size,
+                 color = 'k',
+                 linestyle = 'None')
+        plt.errorbar(erg_S1, 
+                     bins_energy_centres, 
+                     xerr = np.sqrt(erg_S1), 
+                     linestyle = 'None',
+                     capsize = cap_size,
+                     elinewidth = line_width,
+                     color = 'k')
+        S1_E_hist = erg_S1
+        
+    else: 
+        S1_E_hist, _ = np.histogram(erg_S1, bins = bins_energy)
+        plt.plot(S1_E_hist, 
+                 bins_energy_centres, 
+                 marker = marker,
+                 markersize = marker_size,
+                 color = 'k',
+                 linestyle = 'None')
+        plt.errorbar(S1_E_hist, 
+                     bins_energy_centres, 
+                     xerr = np.sqrt(S1_E_hist),
+                     linestyle = 'None',
+                     capsize = cap_size,
+                     elinewidth = line_width,
+                     color = 'k')
     ax_S1_E = plt.gca()
     plt.setp(ax_S1_E.get_xticklabels(), visible = False)
     ax_S1_E.set_ylim([y_lower, y_upper])
     
     # Set the x-axis limits
     x_lower = 0.1
-    S2_events = S2_E_hist[0]
-    S1_events = S1_E_hist[0]
+    S2_events = S2_E_hist
+    S1_events = S1_E_hist
     if np.sum(S2_events) == 0: x_upper = 1
     elif np.max(S2_events) >= np.max(S1_events): x_upper = np.max(S2_events)
     else: x_upper = np.max(S1_events)
