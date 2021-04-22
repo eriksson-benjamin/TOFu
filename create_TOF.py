@@ -904,7 +904,8 @@ if __name__=="__main__":
                              'hist2d_S1':hist2d_S1_vals,
                              'hist2d_S2':hist2d_S2_vals,
                              'erg_bins':erg_bin_centres,
-                             'shots':processed_shots}
+                             'shots':processed_shots,
+                             'input_arguments':sys.argv}
                 pickle.dump(to_pickle, handle, protocol = pickle.HIGHEST_PROTOCOL)
             
 
