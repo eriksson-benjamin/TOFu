@@ -14,9 +14,6 @@ import matplotlib.pyplot as plt
 import scipy.constants as constant
 import scipy.optimize as optimize
 from matplotlib.lines import Line2D
-#import sys
-#sys.path.insert(0, '/home/beriksso/TOFu/analysis/benjamin/github/TOFu/functions/cythonized/CyTOF')
-#import CyTOF
 
 def get_pulses(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A', pulse_start = -1, pulse_end = -1, timer = False):
     '''
@@ -1121,7 +1118,7 @@ def inverted_light_yield(light_yield, timer = False):
     '''
     if timer: t_start = elapsed_time()
     # Import look-up table
-    table = np.loadtxt('inverted_light_yield/look_up/look_up.txt')
+    table = np.loadtxt('inverted_light_yield/look_up.txt')
     
     # Find closest value in look-up table for the light yield
     proton_recoil = np.zeros(np.shape(light_yield))
@@ -1178,7 +1175,6 @@ def light_yield_function(energy, timer = False):
     return light_yield
 
 
-
 def get_kincut_function(tof, timer = False):
     '''
     Takes an array of times of flight [ns] and returns the corresponding maximal/minimal
@@ -1218,7 +1214,6 @@ def get_kincut_function(tof, timer = False):
     E_S1_max = 0.5 * constant.neutron_mass * (l_min / (tof*1E-9))**2 * (1 / np.cos(alpha_max)**2 - 1) * J_to_MeV
     E_S1_min = 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * (1 / np.cos(alpha_min)**2 - 1) * J_to_MeV
     E_S2_max = 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * J_to_MeV
-
 
     # Translate to light yield
     ly_S1_max = light_yield_function(E_S1_max)
@@ -1939,8 +1934,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         S1_max = np.max(hist2D_S1)
         S2_max = np.max(hist2D_S2)
     else:
-        S1_max = np.max(plt.hist2d(times_of_flight, energy_S1, bins = bins_2D, cmap = my_cmap, vmin = 1)[0])
-        S2_max = np.max(plt.hist2d(times_of_flight, energy_S2, bins = bins_2D, cmap = my_cmap, vmin = 1)[0])
+        S1_max = np.max(plt.hist2d(tof, erg_S1, bins = bins_2D, cmap = my_cmap, vmin = 1)[0])
+        S2_max = np.max(plt.hist2d(tof, erg_S2, bins = bins_2D, cmap = my_cmap, vmin = 1)[0])
     if S1_max >= S2_max: vmax = S1_max
     else: vmax = S2_max
     
@@ -1960,8 +1955,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
                                vmin = 1, 
                                vmax = vmax)[0]
     else:
-        hist2d_S1 = plt.hist2d(times_of_flight, 
-                               energy_S1, 
+        hist2d_S1 = plt.hist2d(tof, 
+                               erg_S1, 
                                bins = bins_2D, 
                                cmap = my_cmap, 
                                vmin = 1, 
@@ -2006,8 +2001,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
                                vmin = 1, 
                                vmax = vmax)[0]
     else:
-        hist2d_S2 = plt.hist2d(times_of_flight, 
-                               energy_S2, 
+        hist2d_S2 = plt.hist2d(tof, 
+                               erg_S2, 
                                bins = bins_2D, 
                                cmap = my_cmap, 
                                vmin = 1, 
