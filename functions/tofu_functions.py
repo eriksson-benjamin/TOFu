@@ -504,9 +504,8 @@ def sinc_interpolation(pulse_data, x_values, ux_values, timer = False):
                and 56 samples for ADQ412 (board 6-10). NOTE: pulse_data must be
                baseline reduced (see baseline_reduction() function).
     x_values : ndarray
-             1D array of values corresponding to x_axis 
-             corresponding to pulse_data. Length between each point in x_values
-             must be constant.
+             1D array of values corresponding to x_axis of pulse_data. 
+             Length between each point in x_values must be constant.
     ux_values: ndarray 
              1D array similar to x_values but upsampled. Length between each
              point in ux_values must be constant.
@@ -946,7 +945,7 @@ def get_pulse_area(pulses, u_factor, timer = False):
         
     if timer: elapsed_time(t_start, 'get_pulse_area()')
     return pulse_area
-
+import os
 def get_energy_calibration(areas, detector_name, timer = False):
     '''
     Takes an array of baseline reduced pulse areas and the detector type (S1_01 to S1_05 or S2_01 to S2_32) 
@@ -959,10 +958,16 @@ def get_energy_calibration(areas, detector_name, timer = False):
     raise_exception = False
     # Load calibration data for given detector
     if detector_name[0:2] == 'S1':
-        cal = np.loadtxt('energy_calibration/energy_calibration_S1.txt', usecols = (0,1))[int(detector_name[3:]) - 1]
+        dirname = os.path.dirname(__file__)
+        filename = os.path.join(dirname, '../energy_calibration/energy_calibration_S1.txt')
+        cal = np.loadtxt(filename, usecols = (0,1))[int(detector_name[3:]) - 1]
+
         cal_factor = 3000.
     elif detector_name[0:2] == 'S2':
-        cal = np.loadtxt('energy_calibration/energy_calibration_S2.txt', usecols = (0,1))[int(detector_name[3:]) - 1]
+        dirname = os.path.dirname(__file__)
+        filename = os.path.join(dirname, '../energy_calibration/energy_calibration_S2.txt')
+        cal = np.loadtxt(filename, usecols = (0,1))[int(detector_name[3:]) - 1]
+        
         if int(detector_name[3:]) <= 15: cal_factor = 3000.
         elif int(detector_name[3:]) > 15: cal_factor = 350.
         else: raise_exception = True   
@@ -1118,7 +1123,9 @@ def inverted_light_yield(light_yield, timer = False):
     '''
     if timer: t_start = elapsed_time()
     # Import look-up table
-    table = np.loadtxt('inverted_light_yield/look_up.txt')
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, '../inverted_light_yield/look_up.txt')
+    table = np.loadtxt(filename)
     
     # Find closest value in look-up table for the light yield
     proton_recoil = np.zeros(np.shape(light_yield))
@@ -2295,5 +2302,6 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--ohmic-spectrum: Analysis is only performed for the Ohmic phase of the shot.')
     print('--run-timer: Print the elapsed time for each function.')
     print('--set-thresholds thr_l thr_u: Set lower and upper energy thresholds where \"thr_l\" and \"thr_u\" are given in MeVee. If \"thr_u\" is omitted it is set to +inf.')
+    print('--proton-recoil-energy: Convert the energy axis from MeVee to MeV scale.')
     print('--help: Print this help text.')
     
