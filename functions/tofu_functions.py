@@ -1462,8 +1462,8 @@ def cTOF(S1,S2,dtlow,dthigh,nbins):
 
 
 # Plot 1D histogram, allows looping several plots into same window with legend
-def hist_1D_s(x_data, title = '', label = 'data set', log = True, bins = 0, ax = -1, 
-              normed = 0, density = False, x_label = 'Time [ns]', y_label = '', hist_type = 'step', 
+def hist_1D_s(x_data, title = '', log = True, bins = 0, ax = -1, 
+              normed = 0, density = False, x_label = 't$_{tof}$ [ns]', y_label = 'Counts', hist_type = 'standard', 
               alpha = 1, linewidth = 1, color = 'k', weights = None, linestyle = '-', timer = False):
     '''
     Example of how to use legend:
@@ -1485,18 +1485,34 @@ def hist_1D_s(x_data, title = '', label = 'data set', log = True, bins = 0, ax =
     if normed: bin_vals = hist[0] / np.max(hist[0])
     else: bin_vals = hist[0]
     
-    # Plot crosses instead of step
-    if hist_type == 'crosses':
-        plt.plot(bin_centres, bin_vals, '+', label = label, color = color, alpha = alpha)
-        plt.legend()
+    # Plot with uncertainties
+    if hist_type == 'standard':
+        cap_size = 1.5
+        line_width = 1
+        marker = '.'
+        marker_size = 1.5
+        plt.plot(bin_centres, 
+                 bin_vals, 
+                 marker = marker, 
+                 alpha = alpha,
+                 markersize = marker_size,
+                 color = color,
+                 linestyle = 'None')
+        plt.errorbar(bin_centres, 
+                     bin_vals, 
+                     np.sqrt(bin_vals), 
+                     color = color, 
+                     alpha = alpha,
+                     elinewidth = line_width,
+                     capsize = cap_size,
+                     linestyle = 'None')
+        plt.yscale('log')
         ax = -1
     else:
         plt.hist(bin_centres, bins = bins, weights = bin_vals, log = log,
                  histtype = hist_type, alpha = alpha, linewidth = linewidth,
                  color = color, linestyle = linestyle, density = density)        
-#        hist = plt.hist(x_data, label = label, bins = bins, log = log, 
-#                    histtype = hist_type, alpha = alpha, 
-#                    linewidth = linewidth, weights = weights, color = color, linestyle = linestyle)
+
     plt.title(title)
     plt.xlim([bins[0], bins[-1]])
     

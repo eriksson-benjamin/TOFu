@@ -871,8 +871,7 @@ if __name__=="__main__":
             else: plt.close('all')
         else:
             # Create histogram
-            dfs.hist_1D_s(coincidences, bins = np.arange(cut_low, cut_high, 0.4), 
-                          y_label = 'Counts', x_label = 'Time [ns]', normed = False)
+            dfs.hist_1D_s(coincidences, bins = np.arange(cut_low, cut_high, 0.4), normed = False, title = f'JPN {shot_number}')
             plt.show()
             
     
