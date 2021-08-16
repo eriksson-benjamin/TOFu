@@ -131,8 +131,6 @@ def import_all_data(arguments):
 
     # Select appropriate chunk of time stamps
     time_stamps = time_stamps_LED[pulse_start:pulse_end]
-    if detector_name[0:2] == 'S2' and len(time_stamps_LED) / 8. > 70000: 
-        print('WARNING: Suspiciously large number of pulses on ' + detector_name + ', LED may have been switched on during pulse.')
 
     # If there is no data in time_stamps within this range return empty arrays
     if len(time_stamps) == 0: return np.array([]), detector_name, np.array([])
