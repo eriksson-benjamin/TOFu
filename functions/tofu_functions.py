@@ -1116,7 +1116,7 @@ def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 
     if timer: elapsed_time(t_start, 'cleanup()')
     return new_pulses, bad_indices
 
-def inverted_light_yield(light_yield, timer = False):
+def inverted_light_yield(light_yield, function = 'gatu', timer = False):
     '''
     Takes array of light yields in MeVee and translates to proton recoil using
     look-up table of the inverted light yield function from M. Gatu Johnson.
@@ -1124,7 +1124,7 @@ def inverted_light_yield(light_yield, timer = False):
     if timer: t_start = elapsed_time()
     # Import look-up table
     dirname = os.path.dirname(__file__)
-    filename = os.path.join(dirname, '../inverted_light_yield/look_up.txt')
+    filename = os.path.join(dirname, f'../inverted_light_yield/look_up_{function}.txt')
     table = np.loadtxt(filename)
     
     # Find closest value in look-up table for the light yield
@@ -1136,48 +1136,63 @@ def inverted_light_yield(light_yield, timer = False):
     if timer: elapsed_time(t_start, 'inverted_light_yield()')
     return proton_recoil
     
-def light_yield_function(energy, timer = False):
+def light_yield_function(energy, function = 'gatu', timer = False):
     '''
     Takes array of proton recoil energies in MeV and translates to light yield
     in MeVee using light yield function from M. Gatu Johnson thesis.
     '''
     if timer: t_start = elapsed_time()
-    # Different energy ranges
-    low_mask    = energy <= 1.9
-    medium_mask = (energy > 1.9) & (energy <= 9.3)
-    high_mask   = energy > 9.3
+    if function == 'gatu':
+        '''
+        Light yield function from M. Gatu Johnson's thesis
+        '''
+        # Different energy ranges
+        low_mask    = energy <= 1.9
+        medium_mask = (energy > 1.9) & (energy <= 9.3)
+        high_mask   = energy > 9.3
+        
+        a1 = 0.0469
+        b1 = 0.1378
+        c1 = -0.0183
+        
+        a2 = -0.01420
+        b2 =  0.12920
+        c2 =  0.06970
+        d2 = -0.00315
+        
+        a3 = -1.8899
+        b3 = 0.7067
     
-    a1 = 0.0469
-    b1 = 0.1378
-    c1 = -0.0183
+        light_yield = np.zeros(np.shape(energy))
     
-    a2 = -0.01420
-    b2 =  0.12920
-    c2 =  0.06970
-    d2 = -0.00315
+        light_yield[low_mask] = (
+                                 a1 * energy[low_mask]    + 
+                                 b1 * energy[low_mask]**2 + 
+                                 c1 * energy[low_mask]**3
+                                 )
     
-    a3 = -1.8899
-    b3 = 0.7067
-
-    light_yield = np.zeros(np.shape(energy))
-
-    light_yield[low_mask] = (
-                             a1 * energy[low_mask]    + 
-                             b1 * energy[low_mask]**2 + 
-                             c1 * energy[low_mask]**3
-                             )
-
-    light_yield[medium_mask] = (
-                                a2 + 
-                                b2 * energy[medium_mask] +  
-                                c2 * energy[medium_mask]**2 +
-                                d2 * energy[medium_mask]**3
-                                )
-
-    light_yield[high_mask] = (
-                              a3 + 
-                              b3 * energy[high_mask]
-                              )
+        light_yield[medium_mask] = (
+                                    a2 + 
+                                    b2 * energy[medium_mask] +  
+                                    c2 * energy[medium_mask]**2 +
+                                    d2 * energy[medium_mask]**3
+                                    )
+    
+        light_yield[high_mask] = (
+                                  a3 + 
+                                  b3 * energy[high_mask]
+                                  )
+    elif function == 'stevanato':
+        '''
+        Light yield function from
+        Stevanato, L., et al. 
+        "Light output of EJ228 scintillation neutron detectors." 
+        Applied Radiation and Isotopes 69.2 (2011): 369-372.
+        '''
+        
+        L_0 = 0.606
+        L_1 = 2.97
+        light_yield = L_0*energy**2/(energy+L_1)
     if timer: elapsed_time(t_start)
     return light_yield
 
