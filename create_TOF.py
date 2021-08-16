@@ -75,13 +75,15 @@ def get_tof(arguments):
     s2_timer_level = set_timer_level(s2)
     timer_level = s1_timer_level or s2_timer_level
     
-    if s1 in disabled_detectors or s2 in disabled_detectors: return np.array([]), np.array([]), s1, s2
-    if s1 not in enabled_detectors or s2 not in enabled_detectors: return np.array([]), np.array([]), s1, s2
+    if s1 in disabled_detectors or s2 in disabled_detectors: 
+        return np.array([]), [np.array([]), np.array([])], s1, s2
+    if s1 not in enabled_detectors or s2 not in enabled_detectors: 
+        return np.array([]), [np.array([]), np.array([])], s1, s2
     
     s1_times = arguments[1][s1]
     s2_times = arguments[1][s2]
     tof, inds = dfs.sTOF4(s1_times, s2_times, t_back = time_window, t_forward = time_window, return_indices = True, timer = timer_level)
-
+    print(f'Outside: {np.shape(tof)}, {np.shape(inds)}')
     return tof, inds, s1, s2
 
 def import_all_data(arguments):
@@ -113,7 +115,7 @@ def import_all_data(arguments):
     # Import time stamps
     time_stamps_LED = dfs.get_times(board = boa, channel = cha, shot_number = shot_number, timer = timer_level)
     if np.shape(time_stamps_LED) == (): 
-        print(detector_name + ': Missing data')
+        print(f'{detector_name}: Missing data')
         return np.array([]), detector_name, np.array([])
     
     # Import time offsets from INI to PRE for ADQ412's
@@ -133,7 +135,9 @@ def import_all_data(arguments):
     time_stamps = time_stamps_LED[pulse_start:pulse_end]
 
     # If there is no data in time_stamps within this range return empty arrays
-    if len(time_stamps) == 0: return np.array([]), detector_name, np.array([])
+    if len(time_stamps) == 0: 
+        print(f'{detector_name}: No data in given time range')
+        return np.array([]), detector_name, np.array([])
     
     # Import pulse data and remove the chunk we don't need 
     pulse_data = dfs.get_pulses(board = boa, 
@@ -143,7 +147,7 @@ def import_all_data(arguments):
                                 pulse_end = pulse_end, 
                                 timer = timer_level)    
     
-    print(f'{detector_name} data downloaded.')
+    print(f'{detector_name}: Data downloaded')
     if timer_level: dfs.elapsed_time(t_start, 'import_all_data()')
     return time_stamps, detector_name, pulse_data
 
@@ -162,8 +166,13 @@ def create_TOF(arguments):
     
     # Skip the channels without data
     detector_name = dfs.get_detector_name(boa, cha)
-    if detector_name in ['ABS_REF', '1kHz_CLK', 'DEAD']:
-        return 0, detector_name
+
+    if detector_name in empty_detectors:
+        return np.array([]), detector_name, np.array([])
+
+    if len(time_stamps[detector_name]) == 0:
+        print(f'{detector_name}: Missing data')  
+        return np.array([]), detector_name, np.array([])
 
     # Skip detectors requested by user
     if detector_name in disabled_detectors:
@@ -225,10 +234,7 @@ def create_TOF(arguments):
 
     # Remove junk pulses and corresponding times
     bias_level = dfs.get_bias_level(shot_number = shot_number, board = boa)
-#    pulse_data_bl, good_indices = dfs.cleanup(pulses = pulse_data_bl, dx = 1, bias_level = bias_level, detector_name = detector_name)
-#    pulse_data = pulse_data[good_indices]
-#    time_data = time_data[good_indices]
-#    pre_trig_adjustment = pre_trig_adjustment[good_indices]
+
     if not disable_cleanup:
         pulse_data_bl, bad_indices = dfs.cleanup(pulses = pulse_data_bl, dx = 1, bias_level = bias_level, detector_name = detector_name)
         time_data = np.delete(time_data, bad_indices)
@@ -278,7 +284,7 @@ def create_TOF(arguments):
 if __name__=="__main__":
     t_start = dfs.elapsed_time()
 
-    # Constants, arguments
+    # Constants, arguments, arrays
     time_level              = 0
     time_slice              = np.array([0., 0.])
     time_range_file         = 0
@@ -300,6 +306,7 @@ if __name__=="__main__":
     proton_recoil           = False
     shots                   = np.array([])
     disabled_detectors      = []
+    empty_detectors         = ['ABS_REF', '1kHz_CLK', 'DEAD']
     s1_dicts , s2_dicts     = dfs.get_dictionaries()
     enabled_detectors       = dfs.get_dictionaries('merged')
     bins                    = np.arange(-199.8, 200, 0.4)
