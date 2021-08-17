@@ -83,7 +83,6 @@ def get_tof(arguments):
     s1_times = arguments[1][s1]
     s2_times = arguments[1][s2]
     tof, inds = dfs.sTOF4(s1_times, s2_times, t_back = time_window, t_forward = time_window, return_indices = True, timer = timer_level)
-    print(f'Outside: {np.shape(tof)}, {np.shape(inds)}')
     return tof, inds, s1, s2
 
 def import_all_data(arguments):
@@ -171,7 +170,6 @@ def create_TOF(arguments):
         return np.array([]), detector_name, np.array([])
 
     if len(time_stamps[detector_name]) == 0:
-        print(f'{detector_name}: Missing data')  
         return np.array([]), detector_name, np.array([])
 
     # Skip detectors requested by user
