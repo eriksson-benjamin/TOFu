@@ -248,7 +248,7 @@ def create_TOF(arguments):
     pulse_data_sinc = dfs.sinc_interpolation(pulse_data_bl, x_axis, ux_axis, timer = timer_level)
     
     # If 2D plotting enabled
-    if not plot_1D: 
+    if not plot_1D and not pulse_height_spectrum: 
         
         # Get area under pulse
         pulse_area = dfs.get_pulse_area(pulse_data_sinc, u_factor, timer = timer_level)
@@ -262,6 +262,8 @@ def create_TOF(arguments):
         pulse_data_sinc = pulse_data_sinc[pulse_energy_thr]
         time_data = time_data[pulse_energy_thr]
         pre_trig_adjustment = pre_trig_adjustment[pulse_energy_thr]
+    elif pulse_height_spectrum:
+        pulse_energy = -np.min(pulse_data_sinc, axis = 1)
     else: pulse_energy = 0
 
     # Perform time pickoff method
@@ -302,13 +304,14 @@ if __name__=="__main__":
     interactive_plot        = True
     sum_shots               = False
     proton_recoil           = False
+    pulse_height_spectrum   = False
     shots                   = np.array([])
     disabled_detectors      = []
     empty_detectors         = ['ABS_REF', '1kHz_CLK', 'DEAD']
     s1_dicts , s2_dicts     = dfs.get_dictionaries()
     enabled_detectors       = dfs.get_dictionaries('merged')
     bins                    = np.arange(-199.8, 200, 0.4)
-    bins_energy             = np.arange(-1, 8, 0.02)
+    bins_energy             = np.arange(-1, 15, 0.05)
     tof_vals                = np.zeros(len(bins) - 1)
     erg_S1_vals             = np.zeros(len(bins_energy) - 1)
     erg_S2_vals             = np.zeros(len(bins_energy) - 1)
@@ -507,8 +510,13 @@ if __name__=="__main__":
                     error_message = '--enable-detectors requires an additional argument.'
                     sys_exit = True
                 else:
-                    enabled_detectors = sys.argv[i + 1]
-                    skip_flag = 1
+                    j = 0
+                    while i + j + 1 < len(sys.argv):
+                        if sys.argv[i + j + 1][0:2] == '--': break
+                        enabled_detectors = np.append(enabled_detectors, 
+                                                       sys.argv[i + j + 1])
+                        j += 1
+                    skip_flag = j
             
             # Only plot Ohmic phase
             elif sys.argv[i] == '--ohmic-spectrum': ohmic_spectrum = True
@@ -516,10 +524,24 @@ if __name__=="__main__":
             # Enable light yield function
             elif sys.argv[i] == '--proton-recoil-energy': 
                 proton_recoil = True
-                bins_energy = np.arange(0, 10, 0.01)
+                E_low = 0
+                E_high = 14
+                bins_energy = np.arange(0, 20, 0.1)
                 erg_S1_vals = np.zeros(len(bins_energy) - 1)
                 erg_S2_vals = np.zeros(len(bins_energy) - 1)
+                
             
+            # Plot as codes instead of light yield
+            elif sys.argv[i] == '--pulse-height-spectrum':
+                pulse_height_spectrum = True
+                bins_energy = np.arange(0, 64000, 500)
+                E_low = 0
+                E_high = 64000
+                erg_S1_vals = np.zeros(len(bins_energy) - 1)
+                erg_S2_vals = np.zeros(len(bins_energy) - 1)
+                
+
+                
             # Sum several shots
             elif sys.argv[i] == '--sum-shots':
                 interactive_plot = False
@@ -855,7 +877,8 @@ if __name__=="__main__":
                          title = f'#{shot_number} {time_slice[0]:.1f}-{time_slice[1]:.1f} s', 
                          disable_cuts = disable_cuts, energy_S1_cut = energies_S1_cut, 
                          energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
-                         disable_bgs = disable_bgs, sum_shots = sum_shots, proton_recoil = proton_recoil, timer = time_level)
+                         disable_bgs = disable_bgs, sum_shots = sum_shots, 
+                         proton_recoil = proton_recoil, pulse_height_spectrum = pulse_height_spectrum, timer = time_level)
             tof_vals    += tof_hist
             erg_S1_vals += erg_S1_hist
             erg_S2_vals += erg_S2_hist
@@ -870,7 +893,8 @@ if __name__=="__main__":
                          disable_cuts = disable_cuts, energy_S1_cut = energies_S1_cut, 
                          energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
                          hist2D_S1 = hist2d_S1[0], hist2D_S2 = hist2d_S2[0],
-                         disable_bgs = disable_bgs, weights = True, proton_recoil = proton_recoil, timer = time_level)
+                         disable_bgs = disable_bgs, weights = True, 
+                         proton_recoil = proton_recoil, pulse_height_spectrum = pulse_height_spectrum, timer = time_level)
             else: plt.close('all')
         else:
             # Create histogram
