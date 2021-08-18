@@ -311,12 +311,7 @@ if __name__=="__main__":
     s1_dicts , s2_dicts     = dfs.get_dictionaries()
     enabled_detectors       = dfs.get_dictionaries('merged')
     bins                    = np.arange(-199.8, 200, 0.4)
-    bins_energy             = np.arange(-1, 15, 0.05)
     tof_vals                = np.zeros(len(bins) - 1)
-    erg_S1_vals             = np.zeros(len(bins_energy) - 1)
-    erg_S2_vals             = np.zeros(len(bins_energy) - 1)
-    hist2d_S1_vals          = np.zeros([len(bins) - 1, len(bins_energy) - 1])
-    hist2d_S2_vals          = np.zeros([len(bins) - 1, len(bins_energy) - 1])
     processed_shots         = np.array([])
     thr_l                   = 0
     thr_u                   = np.inf
@@ -524,23 +519,52 @@ if __name__=="__main__":
             # Enable light yield function
             elif sys.argv[i] == '--proton-recoil-energy': 
                 proton_recoil = True
-                E_low = 0
-                E_high = 14
-                bins_energy = np.arange(0, 20, 0.1)
-                erg_S1_vals = np.zeros(len(bins_energy) - 1)
-                erg_S2_vals = np.zeros(len(bins_energy) - 1)
-                
+                S1_info = {'energy limits':[0, 14],
+                           'energy bins':np.arange(0, 20, 0.1)}
+                S2_info = {'energy limits':[0, 14],
+                           'energy bins':np.arange(0, 20, 0.1)}
             
             # Plot as codes instead of light yield
             elif sys.argv[i] == '--pulse-height-spectrum':
                 pulse_height_spectrum = True
-                bins_energy = np.arange(0, 64000, 500)
-                E_low = 0
-                E_high = 64000
-                erg_S1_vals = np.zeros(len(bins_energy) - 1)
-                erg_S2_vals = np.zeros(len(bins_energy) - 1)
+                while True:
+                    print('Pulse height spectrum cannot be shown for ADQ412 and ADQ14 simultaneously.')
+                    ans = input('Select board (ADQ412/ADQ14): ')
+                    if ans in ['ADQ14', 'adq14', '14']:     
+                        boards = [5, 10]
+                        S1_info = {'energy limits':[0, 64000],
+                                   'energy bins':np.arange(0, 64000, 500)}
+                        S2_info = {'energy limits':[0, 64000],
+                                   'energy bins':np.arange(0, 64000, 500)}
+                    elif ans in ['ADQ412', 'adq14', '412']: 
+                        boards = [0, 5]
+                        S1_info = {'energy limits':[0, 64000],
+                                   'energy bins':np.arange(0, 64000, 500)}
+                        S2_info = {'energy limits':[0, 4000],
+                                   'energy bins':np.arange(0, 4000, 100)}
+                    else: 
+                        print('Invalid answer, type "ADQ14" or "ADQ412"')
+                        continue
+                    
+                    # Add channels to disabled detectors
+                    for board in range(boards[0], boards[1]):
+                        for channel in ['A', 'B', 'C', 'D']:
+                            det_name = dfs.get_detector_name(board = board + 1, channel = channel)
+                            if det_name[0:2] == 'S1': continue
+                            disabled_detectors = np.append(disabled_detectors, det_name)
+                            
+                            # Remove detectors from dictionay
+                            s2_dicts.pop(det_name, None)
+                    break
                 
-
+#            # Plot as integrated area instead of light yield
+#            elif sys.argv[i] == '--integrated-charge-spectrum':
+#                integrated_charge_spectrum = True
+#                bins_energy = np.arange(0, 1E6, 1E4)
+#                E_low = 0
+#                E_high = 1E6
+#                erg_S1_vals = np.zeros(len(bins_energy) - 1)
+#                erg_S2_vals = np.zeros(len(bins_energy) - 1)
                 
             # Sum several shots
             elif sys.argv[i] == '--sum-shots':
@@ -565,7 +589,6 @@ if __name__=="__main__":
                     else:
                         thr_l = np.float(sys.argv[i + 1])
                         thr_u = np.float(sys.argv[i + 2])
-                        E_high = thr_u
                         skip_flag = 2
                 except: 
                     thr_l = np.float(sys.argv[i + 1])
@@ -585,6 +608,11 @@ if __name__=="__main__":
     # Give information to user
     if sys_exit: raise Exception(error_message)
         
+    # Set array shapes
+    erg_S1_vals = np.zeros(len(S1_info['energy bins']) - 1)
+    erg_S2_vals = np.zeros(len(S2_info['energy bins']) - 1)
+    hist2d_S1_vals = np.zeros([len(bins) - 1, len(S1_info['energy bins']) - 1])
+    hist2d_S2_vals = np.zeros([len(bins) - 1, len(S2_info['energy bins']) - 1])
     
     # Check number of availible cores
     available_cpu = mp.cpu_count()
@@ -872,8 +900,7 @@ if __name__=="__main__":
             # Plot 2D spectrum
             tof_hist, erg_S1_hist, erg_S2_hist, hist2d_S1, hist2d_S2 = dfs.plot_2D(times_of_flight = coincidences, 
                          bins_tof = bins, energy_S1 = energies_S1, energy_S2 = energies_S2, 
-                         bins_energy = bins_energy, bins_2D = [bins, bins_energy], 
-                         energy_lim = np.array([E_low, E_high]), interactive_plot = interactive_plot, 
+                         S1_info = S1_info, S2_info = S2_info, interactive_plot = interactive_plot, 
                          title = f'#{shot_number} {time_slice[0]:.1f}-{time_slice[1]:.1f} s', 
                          disable_cuts = disable_cuts, energy_S1_cut = energies_S1_cut, 
                          energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
@@ -888,8 +915,7 @@ if __name__=="__main__":
             # If final loop for summed shots, plot 2D spectrum unless data is to be saved
             if len(shots) > 1 and counter == len(shots) - 1 and not save_NES:
                 dfs.plot_2D(times_of_flight = tof_vals, bins_tof = bins, energy_S1 = erg_S1_vals, 
-                         energy_S2 = erg_S2_vals, bins_energy = bins_energy, bins_2D = [bins, bins_energy], 
-                         energy_lim = np.array([E_low, E_high]), interactive_plot = False, title = 'Summed shots', 
+                         energy_S2 = erg_S2_vals, S1_info = S1_info, S2_info = S2_info, interactive_plot = False, title = 'Summed shots', 
                          disable_cuts = disable_cuts, energy_S1_cut = energies_S1_cut, 
                          energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
                          hist2D_S1 = hist2d_S1[0], hist2D_S2 = hist2d_S2[0],

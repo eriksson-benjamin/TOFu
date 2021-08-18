@@ -1838,8 +1838,7 @@ def background_subtraction(disable_cuts, tof_info, timer = False):
     return tof_bg
 
 def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 200, 0.4), 
-            bins_energy = np.arange(-1, 4, 0.02), bins_2D = [np.arange(-199.8, 200, 0.4), np.arange(-1, 4, 0.02)], 
-            energy_lim = np.array([-0.1, 2]), tof_lim = np.array([-150, 200]), title = '', 
+            S1_info = None, S2_info = None, tof_lim = np.array([-150, 200]), title = '', 
             log = True, interactive_plot = False, projection = 0, disable_cuts = False,
             times_of_flight_cut = 0, energy_S1_cut = 0, energy_S2_cut = 0, disable_bgs = False, 
             weights = False, hist2D_S1 = None, hist2D_S2 = None, sum_shots = False, 
@@ -1860,6 +1859,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     '''
     if timer: t_start = elapsed_time()
     
+    # Configure plots
     cap_size = 1.5
     line_width = 1
     marker = '.'
@@ -1970,27 +1970,33 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     my_cmap = plt.cm.jet
     my_cmap.set_under('w', 1)
     
+    # Get 2D binning
+    bins_2D_S1 = [bins_tof, S1_info['energy bins']]
+    bins_2D_S2 = [bins_tof, S2_info['energy bins']]
+    
     # Find the max value for the z-axis on the 2D plot (no kinematic cuts applied)
     if weights:
         S1_max = np.max(hist2D_S1)
         S2_max = np.max(hist2D_S2)
     else:
-        S1_max = np.max(plt.hist2d(tof, erg_S1, bins = bins_2D, cmap = my_cmap, vmin = 1)[0])
-        S2_max = np.max(plt.hist2d(tof, erg_S2, bins = bins_2D, cmap = my_cmap, vmin = 1)[0])
+        S1_max = np.max(plt.hist2d(tof, erg_S1, bins = bins_2D_S1, cmap = my_cmap, vmin = 1)[0])
+        S2_max = np.max(plt.hist2d(tof, erg_S2, bins = bins_2D_S2, cmap = my_cmap, vmin = 1)[0])
     if S1_max >= S2_max: vmax = S1_max
     else: vmax = S2_max
     
     # Plot first 2D histogram (no kinematic cuts applied)
-    bins_energy_centres = bins_energy[1:] - np.diff(bins_energy)[0] / 2
+    bins_energy_centres_S1 = S1_info['energy bins'][1:] - np.diff(S1_info['energy bins'])[0] / 2
+    bins_energy_centres_S2 = S2_info['energy bins'][1:] - np.diff(S2_info['energy bins'])[0] / 2
+
     if weights:        
         # Create data set to fill 2D spectrum with one count in each bin
-        tof_repeated = np.tile(bins_tof_centres, len(bins_energy_centres))
-        energy_repeated = np.repeat(bins_energy_centres, len(bins_tof_centres))
+        tof_repeated = np.tile(bins_tof_centres, len(bins_energy_centres_S1))
+        energy_repeated = np.repeat(bins_energy_centres_S1, len(bins_tof_centres))
         weights2D_S1 = np.ndarray.flatten(np.transpose(hist2D_S1))
         # Create 2D histogram using weights
         hist2d_S1 = plt.hist2d(tof_repeated, 
                                energy_repeated, 
-                               bins = bins_2D, 
+                               bins = bins_2D_S1, 
                                weights = weights2D_S1,
                                cmap = my_cmap, 
                                vmin = 1, 
@@ -1998,7 +2004,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     else:
         hist2d_S1 = plt.hist2d(tof, 
                                erg_S1, 
-                               bins = bins_2D, 
+                               bins = bins_2D_S1, 
                                cmap = my_cmap, 
                                vmin = 1, 
                                vmax = vmax)[0]
@@ -2036,7 +2042,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         weights2D_S2 = np.ndarray.flatten(np.transpose(hist2D_S2))
         hist2d_S2 = plt.hist2d(tof_repeated, 
                                energy_repeated, 
-                               bins = bins_2D, 
+                               bins = bins_2D_S2, 
                                weights = weights2D_S2,
                                cmap = my_cmap, 
                                vmin = 1, 
@@ -2044,7 +2050,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     else:
         hist2d_S2 = plt.hist2d(tof, 
                                erg_S2, 
-                               bins = bins_2D, 
+                               bins = bins_2D_S2, 
                                cmap = my_cmap, 
                                vmin = 1, 
                                vmax = vmax)[0]
@@ -2079,13 +2085,13 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     plt.subplot(323, sharey = ax_S2_2D)
     if weights: 
         plt.plot(erg_S2, 
-                 bins_energy_centres, 
+                 bins_energy_centres_S2, 
                  marker = marker,
                  markersize = marker_size,
                  color = 'k',
                  linestyle = 'None')
         plt.errorbar(erg_S2, 
-                     bins_energy_centres, 
+                     bins_energy_centres_S2, 
                      xerr = np.sqrt(erg_S2), 
                      linestyle = 'None',
                      capsize = cap_size,
@@ -2093,15 +2099,15 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
                      color = 'k')
         S2_E_hist = erg_S2
     else: 
-        S2_E_hist, _ = np.histogram(erg_S2, bins = bins_energy)
+        S2_E_hist, _ = np.histogram(erg_S2, bins = S2_info['energy bins'])
         plt.plot(S2_E_hist,
-                 bins_energy_centres,
+                 bins_energy_centres_S2,
                  marker = marker,
                  markersize = marker_size,
                  color = 'k',
                  linestyle = 'None')
         plt.errorbar(S2_E_hist, 
-                     bins_energy_centres, 
+                     bins_energy_centres_S2, 
                      xerr = np.sqrt(S2_E_hist),
                      linestyle = 'None',
                      capsize = cap_size,
@@ -2110,15 +2116,13 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         
     ax_S2_E = plt.gca()
     ax_S2_E.set_xlabel('Counts')
-    y_lower = energy_lim[0]
-    y_upper = energy_lim[1]
 
     if add_lines:
         if projection['proj'] == 'S2':
             proj_lims = projection['limits']
             plt.plot([-big_value, big_value], [proj_lims[0], proj_lims[0]], '--r')
             plt.plot([-big_value, big_value], [proj_lims[1], proj_lims[1]], '--r')
-    ax_S2_E.set_ylim([y_lower, y_upper])
+    ax_S2_E.set_ylim(S2_info['energy limits'])
     '''
     S1 energy projection
     '''
@@ -2132,13 +2136,13 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     
     if weights:
         plt.plot(erg_S1, 
-                 bins_energy_centres, 
+                 bins_energy_centres_S1, 
                  marker = marker,
                  markersize = marker_size,
                  color = 'k',
                  linestyle = 'None')
         plt.errorbar(erg_S1, 
-                     bins_energy_centres, 
+                     bins_energy_centres_S1, 
                      xerr = np.sqrt(erg_S1), 
                      linestyle = 'None',
                      capsize = cap_size,
@@ -2147,15 +2151,15 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         S1_E_hist = erg_S1
         
     else: 
-        S1_E_hist, _ = np.histogram(erg_S1, bins = bins_energy)
+        S1_E_hist, _ = np.histogram(erg_S1, bins = S1_info['energy bins'])
         plt.plot(S1_E_hist, 
-                 bins_energy_centres, 
+                 bins_energy_centres_S1, 
                  marker = marker,
                  markersize = marker_size,
                  color = 'k',
                  linestyle = 'None')
         plt.errorbar(S1_E_hist, 
-                     bins_energy_centres, 
+                     bins_energy_centres_S1, 
                      xerr = np.sqrt(S1_E_hist),
                      linestyle = 'None',
                      capsize = cap_size,
@@ -2163,7 +2167,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
                      color = 'k')
     ax_S1_E = plt.gca()
     plt.setp(ax_S1_E.get_xticklabels(), visible = False)
-    ax_S1_E.set_ylim([y_lower, y_upper])
+    ax_S1_E.set_ylim(S1_info['energy limits'])
     
     # Set the x-axis limits
     x_lower = 0.1
@@ -2231,9 +2235,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
             # Replot with new projections
             replot_projections(limits = limits, panel_choice = panel_choice, 
                                times_of_flight = tof, energy_S1 = erg_S1, 
-                               energy_S2 = erg_S2, energy_lim = energy_lim,
-                               bins_tof = bins_tof, bins_energy = bins_energy, 
-                               bins_2D = bins_2D, log = log, 
+                               energy_S2 = erg_S2, bins_tof = bins_tof, 
+                               S1_info = S1_info, S2_info = S2_info, log = log,
                                disable_cuts = disable_cuts, disable_bgs = True, 
                                energy_S1_cut = erg_S1, energy_S2_cut = erg_S2, 
                                times_of_flight_cut = tof, 
@@ -2250,9 +2253,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
 
     
 def replot_projections(limits, panel_choice, times_of_flight, energy_S1, 
-                       energy_S2, bins_tof, bins_energy, bins_2D, 
-                       energy_lim = np.array([-0.1, 2]), log = True, 
-                       disable_cuts = False, disable_bgs = False, 
+                       energy_S2, bins_tof, S1_info = None, S2_info = None,
+                       log = True, disable_cuts = False, disable_bgs = False, 
                        energy_S1_cut = 0, energy_S2_cut = 0, 
                        times_of_flight_cut = 0, proton_recoil = False, 
                        pulse_height_spectrum = False):
@@ -2319,11 +2321,13 @@ def replot_projections(limits, panel_choice, times_of_flight, energy_S1,
     energy_S2 = energy_S2[inds]
     
     plot_2D(times_of_flight = times_of_flight, energy_S1 = energy_S1, 
-              energy_S2 = energy_S2, energy_lim = energy_lim, bins_tof = bins_tof, bins_energy = bins_energy,
-              times_of_flight_cut = times_of_flight, energy_S1_cut = energy_S1, energy_S2_cut = energy_S2_cut,
-              bins_2D = bins_2D, interactive_plot = False, disable_cuts = disable_cuts, 
-              disable_bgs = disable_bgs, title = title, projection = proj, log = log, 
-              proton_recoil = proton_recoil, pulse_height_spectrum = pulse_height_spectrum)
+              energy_S2 = energy_S2, bins_tof = bins_tof, S1_info = S1_info, 
+              S2_info = S2_info, times_of_flight_cut = times_of_flight, 
+              energy_S1_cut = energy_S1, energy_S2_cut = energy_S2_cut,
+              interactive_plot = False, disable_cuts = disable_cuts, 
+              disable_bgs = disable_bgs, title = title, projection = proj, 
+              log = log, proton_recoil = proton_recoil, 
+              pulse_height_spectrum = pulse_height_spectrum)
     
     
 def print_help():
@@ -2347,5 +2351,6 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--run-timer: Print the elapsed time for each function.')
     print('--set-thresholds thr_l thr_u: Set lower and upper energy thresholds where \"thr_l\" and \"thr_u\" are given in MeVee. If \"thr_u\" is omitted it is set to +inf.')
     print('--proton-recoil-energy: Convert the energy axis from MeVee to MeV scale.')
+    print('--pulse-height-spectrum: Use maxima of pulses for the energy axis.')
     print('--help: Print this help text.')
     
