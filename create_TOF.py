@@ -247,10 +247,15 @@ def create_TOF(arguments):
     # Perform sinc interpolation
     pulse_data_sinc = dfs.sinc_interpolation(pulse_data_bl, x_axis, ux_axis, timer = timer_level)
     
-    # If 2D plotting enabled
-    if not plot_1D and not pulse_height_spectrum: 
-        
+    # Get pulse height/charge/energy information
+    if pulse_height_spectrum:
+        # Get minimum
+        pulse_energy = -np.min(pulse_data_sinc, axis = 1)
+    elif integrated_charge_spectrum:
         # Get area under pulse
+        pulse_energy = -dfs.get_pulse_area(pulse_data_sinc, u_factor, timer = timer_level)
+    elif not plot_1D: 
+        # Get deposited energy in MeVee
         pulse_area = dfs.get_pulse_area(pulse_data_sinc, u_factor, timer = timer_level)
         
         # Convert to deposited energy
@@ -262,8 +267,6 @@ def create_TOF(arguments):
         pulse_data_sinc = pulse_data_sinc[pulse_energy_thr]
         time_data = time_data[pulse_energy_thr]
         pre_trig_adjustment = pre_trig_adjustment[pulse_energy_thr]
-    elif pulse_height_spectrum:
-        pulse_energy = -np.min(pulse_data_sinc, axis = 1)
     else: pulse_energy = 0
 
     # Perform time pickoff method
@@ -285,40 +288,45 @@ if __name__=="__main__":
     t_start = dfs.elapsed_time()
 
     # Constants, arguments, arrays
-    time_level              = 0
-    time_slice              = np.array([0., 0.])
-    time_range_file         = 0
-    plot_1D                 = False
-    remove_doubles          = False
-    doubles_mode            = -1
-    sys_exit                = False
-    skip_flag               = 0
-    save_data               = False
-    save_NES                = False
-    warn_LED                = False
-    disable_cuts            = False
-    disable_bgs             = False
-    disable_scratch         = False
-    disable_cleanup         = False
-    ohmic_spectrum          = False
-    interactive_plot        = True
-    sum_shots               = False
-    proton_recoil           = False
-    pulse_height_spectrum   = False
-    shots                   = np.array([])
-    disabled_detectors      = []
-    empty_detectors         = ['ABS_REF', '1kHz_CLK', 'DEAD']
-    s1_dicts , s2_dicts     = dfs.get_dictionaries()
-    enabled_detectors       = dfs.get_dictionaries('merged')
-    bins                    = np.arange(-199.8, 200, 0.4)
-    tof_vals                = np.zeros(len(bins) - 1)
-    processed_shots         = np.array([])
-    thr_l                   = 0
-    thr_u                   = np.inf
-    E_low                   = -0.1
-    E_high                  = 2
-    shift_file              = 'shift_files/shift_V4.txt'
-    time_window             = 500 # Time window (+-) for TOF spectrum [ns]
+    time_level                  = 0
+    time_slice                  = np.array([0., 0.])
+    time_range_file             = 0
+    plot_1D                     = False
+    remove_doubles              = False
+    doubles_mode                = -1
+    sys_exit                    = False
+    skip_flag                   = 0
+    save_data                   = False
+    save_NES                    = False
+    warn_LED                    = False
+    disable_cuts                = False
+    disable_bgs                 = False
+    disable_scratch             = False
+    disable_cleanup             = False
+    ohmic_spectrum              = False
+    interactive_plot            = True
+    sum_shots                   = False
+    proton_recoil               = False
+    pulse_height_spectrum       = False
+    integrated_charge_spectrum  = False
+    shots                       = np.array([])
+    disabled_detectors          = []
+    empty_detectors             = ['ABS_REF', '1kHz_CLK', 'DEAD']
+    s1_dicts , s2_dicts         = dfs.get_dictionaries()
+    enabled_detectors           = dfs.get_dictionaries('merged')
+    bins                        = np.arange(-199.8, 200, 0.4)
+    tof_vals                    = np.zeros(len(bins) - 1)
+    S1_info                     = {'energy limits':[0, 14],
+                                   'energy bins':np.arange(0, 20, 0.1)}
+    S2_info                     = {'energy limits':[0, 14],
+                                   'energy bins':np.arange(0, 20, 0.1)}
+    processed_shots             = np.array([])
+    thr_l                       = 0
+    thr_u                       = np.inf
+    E_low                       = -0.1
+    E_high                      = 2
+    shift_file                  = 'shift_files/shift_V4.txt'
+    time_window                 = 500 # Time window (+-) for TOF spectrum [ns]
 
     
     if len(sys.argv) == 1: 
@@ -557,14 +565,38 @@ if __name__=="__main__":
                             s2_dicts.pop(det_name, None)
                     break
                 
-#            # Plot as integrated area instead of light yield
-#            elif sys.argv[i] == '--integrated-charge-spectrum':
-#                integrated_charge_spectrum = True
-#                bins_energy = np.arange(0, 1E6, 1E4)
-#                E_low = 0
-#                E_high = 1E6
-#                erg_S1_vals = np.zeros(len(bins_energy) - 1)
-#                erg_S2_vals = np.zeros(len(bins_energy) - 1)
+            # Plot as integrated area instead of light yield
+            elif sys.argv[i] == '--integrated-charge-spectrum':
+                integrated_charge_spectrum = True
+                while True:
+                    print('Integrated charge spectrum cannot be shown for ADQ412 and ADQ14 simultaneously.')
+                    ans = input('Select board (ADQ412/ADQ14): ')
+                    if ans in ['ADQ14', 'adq14', '14']:     
+                        boards = [5, 10]
+                        S1_info = {'energy limits':[0, 1E6],
+                                   'energy bins':np.arange(0, 1E6, 1E4)}
+                        S2_info = {'energy limits':[0, 2E6],
+                                   'energy bins':np.arange(0, 2E6, 1E4)}
+                    elif ans in ['ADQ412', 'adq14', '412']: 
+                        boards = [0, 5]
+                        S1_info = {'energy limits':[0, 1E6],
+                                   'energy bins':np.arange(0, 1E6, 1E4)}
+                        S2_info = {'energy limits':[0, 1.5E5],
+                                   'energy bins':np.arange(0, 1.5E5, 1000)}
+                    else: 
+                        print('Invalid answer, type "ADQ14" or "ADQ412"')
+                        continue
+                    
+                    # Add channels to disabled detectors
+                    for board in range(boards[0], boards[1]):
+                        for channel in ['A', 'B', 'C', 'D']:
+                            det_name = dfs.get_detector_name(board = board + 1, channel = channel)
+                            if det_name[0:2] == 'S1': continue
+                            disabled_detectors = np.append(disabled_detectors, det_name)
+                            
+                            # Remove detectors from dictionay
+                            s2_dicts.pop(det_name, None)
+                    break
                 
             # Sum several shots
             elif sys.argv[i] == '--sum-shots':
@@ -905,7 +937,9 @@ if __name__=="__main__":
                          disable_cuts = disable_cuts, energy_S1_cut = energies_S1_cut, 
                          energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
                          disable_bgs = disable_bgs, sum_shots = sum_shots, 
-                         proton_recoil = proton_recoil, pulse_height_spectrum = pulse_height_spectrum, timer = time_level)
+                         proton_recoil = proton_recoil, pulse_height_spectrum = pulse_height_spectrum,
+                         integrated_charge_spectrum = integrated_charge_spectrum,
+                         timer = time_level)
             tof_vals    += tof_hist
             erg_S1_vals += erg_S1_hist
             erg_S2_vals += erg_S2_hist
@@ -920,7 +954,10 @@ if __name__=="__main__":
                          energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
                          hist2D_S1 = hist2d_S1[0], hist2D_S2 = hist2d_S2[0],
                          disable_bgs = disable_bgs, weights = True, 
-                         proton_recoil = proton_recoil, pulse_height_spectrum = pulse_height_spectrum, timer = time_level)
+                         proton_recoil = proton_recoil, 
+                         pulse_height_spectrum = pulse_height_spectrum, 
+                         integrated_charge_spectrum = integrated_charge_spectrum,
+                         timer = time_level)
             else: plt.close('all')
         else:
             # Create histogram
@@ -946,7 +983,9 @@ if __name__=="__main__":
                 start = np.searchsorted(bin_centres, -100)
                 stop = np.searchsorted(bin_centres, -50)
                 background = np.mean(tof_vals[start:stop])
-                erg_bin_centres = bins_energy[:-1] + np.diff(bins_energy)[0] / 2 
+                erg_bin_centres_S1 = S1_info['energy bins'][1:] - np.diff(S1_info['energy bins'])[0]/2
+                erg_bin_centres_S2 = S2_info['energy bins'][1:] - np.diff(S2_info['energy bins'])[0]/2
+#                erg_bin_centres = bins_energy[:-1] + np.diff(bins_energy)[0] / 2 
                 processed_shots = np.append(processed_shots, shot_number)
                 to_pickle = {'bins':bin_centres,
                              'counts':tof_vals,
@@ -955,7 +994,9 @@ if __name__=="__main__":
                              'erg_S2':erg_S2_vals,
                              'hist2d_S1':hist2d_S1_vals,
                              'hist2d_S2':hist2d_S2_vals,
-                             'erg_bins':erg_bin_centres,
+#                             'erg_bins':erg_bin_centres,
+                             'erg_bins_S1':erg_bin_centres_S1,
+                             'erg_bins_S2':erg_bin_centres_S2,
                              'shots':processed_shots,
                              'input_arguments':sys.argv}
                 pickle.dump(to_pickle, handle, protocol = pickle.HIGHEST_PROTOCOL)

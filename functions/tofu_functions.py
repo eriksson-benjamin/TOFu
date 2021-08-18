@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 import scipy.constants as constant
 import scipy.optimize as optimize
 from matplotlib.lines import Line2D
+import os
+
 
 def get_pulses(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A', pulse_start = -1, pulse_end = -1, timer = False):
     '''
@@ -945,7 +947,7 @@ def get_pulse_area(pulses, u_factor, timer = False):
         
     if timer: elapsed_time(t_start, 'get_pulse_area()')
     return pulse_area
-import os
+
 def get_energy_calibration(areas, detector_name, timer = False):
     '''
     Takes an array of baseline reduced pulse areas and the detector type (S1_01 to S1_05 or S2_01 to S2_32) 
@@ -1842,7 +1844,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
             log = True, interactive_plot = False, projection = 0, disable_cuts = False,
             times_of_flight_cut = 0, energy_S1_cut = 0, energy_S2_cut = 0, disable_bgs = False, 
             weights = False, hist2D_S1 = None, hist2D_S2 = None, sum_shots = False, 
-            proton_recoil = False, pulse_height_spectrum = False, timer = False):
+            proton_recoil = False, pulse_height_spectrum = False, integrated_charge_spectrum = False,
+            timer = False):
     '''
     Plots 2D histogram of TOF vs energy with projections onto time and energy axis.
     times_of_flight: 1D array of times of flight.
@@ -1890,6 +1893,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         erg_S2 = inverted_light_yield(erg_S2)
         erg_unit = 'MeV'
     elif pulse_height_spectrum:
+        erg_unit = 'a.u.'
+    elif integrated_charge_spectrum:
         erg_unit = 'a.u.'
     else: erg_unit = 'MeVee'
         
@@ -2241,7 +2246,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
                                energy_S1_cut = erg_S1, energy_S2_cut = erg_S2, 
                                times_of_flight_cut = tof, 
                                proton_recoil = proton_recoil,
-                               pulse_height_spectrum = pulse_height_spectrum)
+                               pulse_height_spectrum = pulse_height_spectrum,
+                               integrated_charge_spectrum = integrated_charge_spectrum)
     elif sum_shots: plt.close(fig)
 
                 
@@ -2250,14 +2256,14 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
 
     if timer: elapsed_time(t_start, 'plot_2D()')
     return TOF_hist, S1_E_hist, S2_E_hist, hist2d_S1, hist2d_S2
-
     
 def replot_projections(limits, panel_choice, times_of_flight, energy_S1, 
                        energy_S2, bins_tof, S1_info = None, S2_info = None,
                        log = True, disable_cuts = False, disable_bgs = False, 
                        energy_S1_cut = 0, energy_S2_cut = 0, 
                        times_of_flight_cut = 0, proton_recoil = False, 
-                       pulse_height_spectrum = False):
+                       pulse_height_spectrum = False,
+                       integrated_charge_spectrum = False):
     '''
     Replot the spectra with a cut on one of the energy projections
     limits: limits of cuts for projections. 1x2 array for 1D spectrum, 2x2 array for 2D spectrum
@@ -2327,7 +2333,8 @@ def replot_projections(limits, panel_choice, times_of_flight, energy_S1,
               interactive_plot = False, disable_cuts = disable_cuts, 
               disable_bgs = disable_bgs, title = title, projection = proj, 
               log = log, proton_recoil = proton_recoil, 
-              pulse_height_spectrum = pulse_height_spectrum)
+              pulse_height_spectrum = pulse_height_spectrum,
+              integrated_charge_spectrum = integrated_charge_spectrum)
     
     
 def print_help():
