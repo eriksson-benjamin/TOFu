@@ -1842,7 +1842,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
             energy_lim = np.array([-0.1, 2]), tof_lim = np.array([-150, 200]), title = '', 
             log = True, interactive_plot = False, projection = 0, disable_cuts = False,
             times_of_flight_cut = 0, energy_S1_cut = 0, energy_S2_cut = 0, disable_bgs = False, 
-            weights = False, hist2D_S1 = None, hist2D_S2 = None, sum_shots = False, proton_recoil = False, timer = False):
+            weights = False, hist2D_S1 = None, hist2D_S2 = None, sum_shots = False, 
+            proton_recoil = False, pulse_height_spectrum = False, timer = False):
     '''
     Plots 2D histogram of TOF vs energy with projections onto time and energy axis.
     times_of_flight: 1D array of times of flight.
@@ -1888,6 +1889,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         erg_S1 = inverted_light_yield(erg_S1)
         erg_S2 = inverted_light_yield(erg_S2)
         erg_unit = 'MeV'
+    elif pulse_height_spectrum:
+        erg_unit = 'a.u.'
     else: erg_unit = 'MeVee'
         
     TOF_fig = plt.subplot(326)
@@ -2070,7 +2073,6 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     plt.colorbar(ax = ax_S1_2D, cax = ax_colorbar, orientation = 'horizontal')
     
 
-    
     '''
     S2 energy projection
     '''
@@ -2227,10 +2229,16 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
                 print('Invalid choice.')
                 continue
             # Replot with new projections
-            replot_projections(limits = limits, panel_choice = panel_choice, times_of_flight = tof,
-                               energy_S1 = erg_S1, energy_S2 = erg_S2, bins_tof = bins_tof, bins_energy = bins_energy, 
-                               bins_2D = bins_2D, log = log, disable_cuts = disable_cuts, disable_bgs = True, 
-                               energy_S1_cut = erg_S1, energy_S2_cut = erg_S2, times_of_flight_cut = tof, proton_recoil = False)
+            replot_projections(limits = limits, panel_choice = panel_choice, 
+                               times_of_flight = tof, energy_S1 = erg_S1, 
+                               energy_S2 = erg_S2, energy_lim = energy_lim,
+                               bins_tof = bins_tof, bins_energy = bins_energy, 
+                               bins_2D = bins_2D, log = log, 
+                               disable_cuts = disable_cuts, disable_bgs = True, 
+                               energy_S1_cut = erg_S1, energy_S2_cut = erg_S2, 
+                               times_of_flight_cut = tof, 
+                               proton_recoil = proton_recoil,
+                               pulse_height_spectrum = pulse_height_spectrum)
     elif sum_shots: plt.close(fig)
 
                 
@@ -2241,9 +2249,13 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     return TOF_hist, S1_E_hist, S2_E_hist, hist2d_S1, hist2d_S2
 
     
-def replot_projections(limits, panel_choice, times_of_flight, energy_S1, energy_S2, bins_tof, bins_energy, bins_2D, 
-                       log = True, disable_cuts = False, disable_bgs = False, energy_S1_cut = 0, energy_S2_cut = 0, 
-                       times_of_flight_cut = 0, proton_recoil = False):
+def replot_projections(limits, panel_choice, times_of_flight, energy_S1, 
+                       energy_S2, bins_tof, bins_energy, bins_2D, 
+                       energy_lim = np.array([-0.1, 2]), log = True, 
+                       disable_cuts = False, disable_bgs = False, 
+                       energy_S1_cut = 0, energy_S2_cut = 0, 
+                       times_of_flight_cut = 0, proton_recoil = False, 
+                       pulse_height_spectrum = False):
     '''
     Replot the spectra with a cut on one of the energy projections
     limits: limits of cuts for projections. 1x2 array for 1D spectrum, 2x2 array for 2D spectrum
@@ -2307,10 +2319,11 @@ def replot_projections(limits, panel_choice, times_of_flight, energy_S1, energy_
     energy_S2 = energy_S2[inds]
     
     plot_2D(times_of_flight = times_of_flight, energy_S1 = energy_S1, 
-              energy_S2 = energy_S2, bins_tof = bins_tof, bins_energy = bins_energy,
+              energy_S2 = energy_S2, energy_lim = energy_lim, bins_tof = bins_tof, bins_energy = bins_energy,
               times_of_flight_cut = times_of_flight, energy_S1_cut = energy_S1, energy_S2_cut = energy_S2_cut,
               bins_2D = bins_2D, interactive_plot = False, disable_cuts = disable_cuts, 
-              disable_bgs = disable_bgs, title = title, projection = proj, log = log, proton_recoil = proton_recoil)
+              disable_bgs = disable_bgs, title = title, projection = proj, log = log, 
+              proton_recoil = proton_recoil, pulse_height_spectrum = pulse_height_spectrum)
     
     
 def print_help():
