@@ -1271,7 +1271,7 @@ def kinematic_cuts(tof, energy_S1, energy_S2, timer = False):
     return tof[accept_inds], energy_S1[accept_inds], energy_S2[accept_inds]                 
 
 
-def get_dictionaries(S = 0):
+def get_dictionaries(S = 0, fill = []):
     '''
     Returns empty dictionaries for S1's or S2's which can be used to store data in.\n
     Set S = 'S1' for S1 dictionary
@@ -1288,22 +1288,24 @@ def get_dictionaries(S = 0):
     S1_dictionary = {}
     for i in range(1, 6):
         dict_key = 'S1_0' + str(i)
-        S1_dictionary.update({dict_key: []})
+        S1_dictionary.update({dict_key: fill})
     if S == 'S1': return S1_dictionary
     
     S2_dictionary = {}
     for i in range(1, 33):
         if i < 10: dict_key = 'S2_0' + str(i)
         else: dict_key = 'S2_' + str(i)
-        S2_dictionary.update({dict_key: []})
+        S2_dictionary.update({dict_key: fill})
     
     if S == 'S2': return S2_dictionary
     if S == 'merged': 
         S1_dictionary.update(S2_dictionary)
         return S1_dictionary
-    if S == 'nested': return {'S1_01':get_dictionaries('S2'), 'S1_02':get_dictionaries('S2'), 
-                              'S1_03':get_dictionaries('S2'), 'S1_04':get_dictionaries('S2'),
-                              'S1_05':get_dictionaries('S2')}
+    if S == 'nested': return {'S1_01':get_dictionaries('S2', fill),
+                              'S1_02':get_dictionaries('S2', fill), 
+                              'S1_03':get_dictionaries('S2', fill), 
+                              'S1_04':get_dictionaries('S2', fill),
+                              'S1_05':get_dictionaries('S2', fill)}
     
     return S1_dictionary, S2_dictionary
 
