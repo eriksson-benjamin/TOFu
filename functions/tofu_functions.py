@@ -1288,24 +1288,24 @@ def get_dictionaries(S = 0, fill = []):
     S1_dictionary = {}
     for i in range(1, 6):
         dict_key = 'S1_0' + str(i)
-        S1_dictionary.update({dict_key: fill})
+        S1_dictionary.update({dict_key: fill.copy()})
     if S == 'S1': return S1_dictionary
     
     S2_dictionary = {}
     for i in range(1, 33):
         if i < 10: dict_key = 'S2_0' + str(i)
         else: dict_key = 'S2_' + str(i)
-        S2_dictionary.update({dict_key: fill})
+        S2_dictionary.update({dict_key: fill.copy()})
     
     if S == 'S2': return S2_dictionary
     if S == 'merged': 
         S1_dictionary.update(S2_dictionary)
         return S1_dictionary
-    if S == 'nested': return {'S1_01':get_dictionaries('S2', fill),
-                              'S1_02':get_dictionaries('S2', fill), 
-                              'S1_03':get_dictionaries('S2', fill), 
-                              'S1_04':get_dictionaries('S2', fill),
-                              'S1_05':get_dictionaries('S2', fill)}
+    if S == 'nested': return {'S1_01':get_dictionaries('S2', fill.copy()),
+                              'S1_02':get_dictionaries('S2', fill.copy()), 
+                              'S1_03':get_dictionaries('S2', fill.copy()), 
+                              'S1_04':get_dictionaries('S2', fill.copy()),
+                              'S1_05':get_dictionaries('S2', fill.copy())}
     
     return S1_dictionary, S2_dictionary
 
