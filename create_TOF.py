@@ -303,6 +303,7 @@ if __name__=="__main__":
     disable_bgs                 = False
     disable_scratch             = False
     disable_cleanup             = False
+    disable_plots               = False
     ohmic_spectrum              = False
     interactive_plot            = True
     sum_shots                   = False
@@ -409,7 +410,7 @@ if __name__=="__main__":
             elif sys.argv[i] == '--save-data':
                 file_name = sys.argv[i + 1]
                 save_data = True
-                interactive_plot = False
+#                interactive_plot = False
                 skip_flag = 1
             
             # Save histogram data to file
@@ -470,6 +471,9 @@ if __name__=="__main__":
             
             # Disable cleanup function
             elif sys.argv[i] == '--disable-cleanup': disable_cleanup = True
+            
+            # Disable plotting
+            elif sys.argv[i] == '--disable-plots': disable_plots = True
             
             # Disable given detectors
             elif sys.argv[i] == '--disable-detectors': 
@@ -928,51 +932,67 @@ if __name__=="__main__":
                 
         dfs.elapsed_time(t_start, 'all boards')
         
-        if not plot_1D:
-            # Plot 2D spectrum
-            tof_hist, erg_S1_hist, erg_S2_hist, hist2d_S1, hist2d_S2 = dfs.plot_2D(times_of_flight = coincidences, 
-                         bins_tof = bins, energy_S1 = energies_S1, energy_S2 = energies_S2, 
-                         S1_info = S1_info, S2_info = S2_info, interactive_plot = interactive_plot, 
-                         title = f'#{shot_number} {time_slice[0]:.1f}-{time_slice[1]:.1f} s', 
-                         disable_cuts = disable_cuts, energy_S1_cut = energies_S1_cut, 
-                         energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
-                         disable_bgs = disable_bgs, sum_shots = sum_shots, 
-                         proton_recoil = proton_recoil, pulse_height_spectrum = pulse_height_spectrum,
-                         integrated_charge_spectrum = integrated_charge_spectrum,
-                         timer = time_level)
-            tof_vals    += tof_hist
-            erg_S1_vals += erg_S1_hist
-            erg_S2_vals += erg_S2_hist
-            hist2d_S1_vals += hist2d_S1
-            hist2d_S2_vals += hist2d_S2
-            
-            # If final loop for summed shots, plot 2D spectrum unless data is to be saved
-            if len(shots) > 1 and counter == len(shots) - 1 and not save_NES:
-                dfs.plot_2D(times_of_flight = tof_vals, bins_tof = bins, energy_S1 = erg_S1_vals, 
-                         energy_S2 = erg_S2_vals, S1_info = S1_info, S2_info = S2_info, interactive_plot = False, title = 'Summed shots', 
-                         disable_cuts = disable_cuts, energy_S1_cut = energies_S1_cut, 
-                         energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
-                         hist2D_S1 = hist2d_S1[0], hist2D_S2 = hist2d_S2[0],
-                         disable_bgs = disable_bgs, weights = True, 
-                         proton_recoil = proton_recoil, 
-                         pulse_height_spectrum = pulse_height_spectrum, 
-                         integrated_charge_spectrum = integrated_charge_spectrum,
-                         timer = time_level)
-            else: plt.close('all')
-        else:
-            # Create histogram
-            dfs.hist_1D_s(coincidences, bins = np.arange(cut_low, cut_high, 0.4), normed = False, title = f'JPN {shot_number}')
-            plt.show()
+        if not disable_plots:
+            if not plot_1D:
+                # Plot 2D spectrum
+                tof_hist, erg_S1_hist, erg_S2_hist, hist2d_S1, hist2d_S2 = dfs.plot_2D(times_of_flight = coincidences, 
+                             bins_tof = bins, energy_S1 = energies_S1, energy_S2 = energies_S2, 
+                             S1_info = S1_info, S2_info = S2_info, interactive_plot = interactive_plot, 
+                             title = f'#{shot_number} {time_slice[0]:.1f}-{time_slice[1]:.1f} s', 
+                             disable_cuts = disable_cuts, energy_S1_cut = energies_S1_cut, 
+                             energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
+                             disable_bgs = disable_bgs, sum_shots = sum_shots, 
+                             proton_recoil = proton_recoil, pulse_height_spectrum = pulse_height_spectrum,
+                             integrated_charge_spectrum = integrated_charge_spectrum,
+                             timer = time_level)
+                tof_vals    += tof_hist
+                erg_S1_vals += erg_S1_hist
+                erg_S2_vals += erg_S2_hist
+                hist2d_S1_vals += hist2d_S1
+                hist2d_S2_vals += hist2d_S2
+                
+                # If final loop for summed shots, plot 2D spectrum unless data is to be saved
+                if len(shots) > 1 and counter == len(shots) - 1 and not save_NES:
+                    dfs.plot_2D(times_of_flight = tof_vals, bins_tof = bins, energy_S1 = erg_S1_vals, 
+                             energy_S2 = erg_S2_vals, S1_info = S1_info, S2_info = S2_info, interactive_plot = False, title = 'Summed shots', 
+                             disable_cuts = disable_cuts, energy_S1_cut = energies_S1_cut, 
+                             energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
+                             hist2D_S1 = hist2d_S1[0], hist2D_S2 = hist2d_S2[0],
+                             disable_bgs = disable_bgs, weights = True, 
+                             proton_recoil = proton_recoil, 
+                             pulse_height_spectrum = pulse_height_spectrum, 
+                             integrated_charge_spectrum = integrated_charge_spectrum,
+                             timer = time_level)
+                else: plt.close('all')
+            else:
+                # Create histogram
+                dfs.hist_1D_s(coincidences, bins = np.arange(cut_low, cut_high, 0.4), normed = False, title = f'JPN {shot_number}')
+                plt.show()
             
     
         # Save all times, energies and times of flight
         if save_data:
             print(f'Saving data to: {file_name}')
             with open(file_name, 'wb') as handle:
-                to_pickle = {'times_of_flight':coincidences_new, 
-                             'energies':energies,
-                             'times_S1':new_times_S1,
-                             'times_S2':new_times_S2}
+                # Save all information
+#                to_pickle = {'times_of_flight':coincidences_new, 
+#                             'energies':energies,
+#                             'times_S1':new_times_S1,
+#                             'times_S2':new_times_S2}
+                
+                # Save a subset of information
+                coinc_pickle = dfs.get_dictionaries('nested')
+                energ_pickle = dfs.get_dictionaries('nested')
+                for s1 in coincidences_new.keys():
+                    for s2 in coincidences_new[s1].keys():
+                        if s1 in disabled_detectors or s2 in disabled_detectors: continue
+                        if s1 not in enabled_detectors or s2 not in enabled_detectors: continue
+                        mask = ((np.array(coincidences_new[s1][s2]) > 10) & (np.array(coincidences_new[s1][s2]) < 80))
+                        coinc_pickle[s1][s2] = np.array(coincidences_new[s1][s2])[mask]
+                        energ_pickle[s1][s2] = [np.array(energies[s1][s2][0])[mask], np.array(energies[s1][s2][1])[mask]]
+                        
+                to_pickle = {'times_of_flight':coinc_pickle, 
+                             'energies':energ_pickle}
                 pickle.dump(to_pickle, handle, protocol = pickle.HIGHEST_PROTOCOL)
         # Only save histogram data
         if save_NES:
@@ -985,7 +1005,6 @@ if __name__=="__main__":
                 background = np.mean(tof_vals[start:stop])
                 erg_bin_centres_S1 = S1_info['energy bins'][1:] - np.diff(S1_info['energy bins'])[0]/2
                 erg_bin_centres_S2 = S2_info['energy bins'][1:] - np.diff(S2_info['energy bins'])[0]/2
-#                erg_bin_centres = bins_energy[:-1] + np.diff(bins_energy)[0] / 2 
                 processed_shots = np.append(processed_shots, shot_number)
                 to_pickle = {'bins':bin_centres,
                              'counts':tof_vals,
@@ -994,7 +1013,6 @@ if __name__=="__main__":
                              'erg_S2':erg_S2_vals,
                              'hist2d_S1':hist2d_S1_vals,
                              'hist2d_S2':hist2d_S2_vals,
-#                             'erg_bins':erg_bin_centres,
                              'erg_bins_S1':erg_bin_centres_S1,
                              'erg_bins_S2':erg_bin_centres_S2,
                              'shots':processed_shots,
