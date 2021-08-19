@@ -344,7 +344,7 @@ if __name__=="__main__":
             
             # Check argument validity
             if sys.argv[i][0:2] != '--': 
-                error_message = 'Invalid argument. Use --help for further information.'
+                error_message = 'Invalid argument: ' + sys.argv[i] +  '.\nUse --help for further information.'
                 sys_exit = True
             
             # Shot number
@@ -410,7 +410,6 @@ if __name__=="__main__":
             elif sys.argv[i] == '--save-data':
                 file_name = sys.argv[i + 1]
                 save_data = True
-#                interactive_plot = False
                 skip_flag = 1
             
             # Save histogram data to file
@@ -539,68 +538,75 @@ if __name__=="__main__":
             # Plot as codes instead of light yield
             elif sys.argv[i] == '--pulse-height-spectrum':
                 pulse_height_spectrum = True
-                while True:
-                    print('Pulse height spectrum cannot be shown for ADQ412 and ADQ14 simultaneously.')
-                    ans = input('Select board (ADQ412/ADQ14): ')
-                    if ans in ['ADQ14', 'adq14', '14']:     
-                        boards = [5, 10]
-                        S1_info = {'energy limits':[0, 64000],
-                                   'energy bins':np.arange(0, 64000, 500)}
-                        S2_info = {'energy limits':[0, 64000],
-                                   'energy bins':np.arange(0, 64000, 500)}
-                    elif ans in ['ADQ412', 'adq14', '412']: 
-                        boards = [0, 5]
-                        S1_info = {'energy limits':[0, 64000],
-                                   'energy bins':np.arange(0, 64000, 500)}
-                        S2_info = {'energy limits':[0, 4000],
-                                   'energy bins':np.arange(0, 4000, 100)}
-                    else: 
-                        print('Invalid answer, type "ADQ14" or "ADQ412"')
-                        continue
+                if sys.argv[i + 1][0:2] == '--': 
+                    error_message = '--pulse-heigh-spectrum requires an additional argument.'
+                    sys_exit = True
+                else: 
+                    board = sys.argv[i + 1]
+                    skip_flag = 1
+                
+                if board in ['ADQ14', 'adq14', '14']:     
+                    boards = [5, 10]
+                    S1_info = {'energy limits':[0, 64000],
+                               'energy bins':np.arange(0, 64000, 500)}
+                    S2_info = {'energy limits':[0, 64000],
+                               'energy bins':np.arange(0, 64000, 500)}
+                elif board in ['ADQ412', 'adq14', '412']: 
+                    boards = [0, 5]
+                    S1_info = {'energy limits':[0, 64000],
+                               'energy bins':np.arange(0, 64000, 500)}
+                    S2_info = {'energy limits':[0, 4000],
+                               'energy bins':np.arange(0, 4000, 100)}
+                else: 
+                    print('Invalid argument, provide "ADQ14" or "ADQ412" as an additional argument.')
+                    boards = [0, 0]
+                    sys_exit = True
                     
-                    # Add channels to disabled detectors
-                    for board in range(boards[0], boards[1]):
-                        for channel in ['A', 'B', 'C', 'D']:
-                            det_name = dfs.get_detector_name(board = board + 1, channel = channel)
-                            if det_name[0:2] == 'S1': continue
-                            disabled_detectors = np.append(disabled_detectors, det_name)
-                            
-                            # Remove detectors from dictionay
-                            s2_dicts.pop(det_name, None)
-                    break
+                # Add channels to disabled detectors
+                for board in range(boards[0], boards[1]):
+                    for channel in ['A', 'B', 'C', 'D']:
+                        det_name = dfs.get_detector_name(board = board + 1, channel = channel)
+                        if det_name[0:2] == 'S1': continue
+                        disabled_detectors = np.append(disabled_detectors, det_name)
+                        
+                        # Remove detectors from dictionay
+                        s2_dicts.pop(det_name, None)
                 
             # Plot as integrated area instead of light yield
             elif sys.argv[i] == '--integrated-charge-spectrum':
                 integrated_charge_spectrum = True
-                while True:
-                    print('Integrated charge spectrum cannot be shown for ADQ412 and ADQ14 simultaneously.')
-                    ans = input('Select board (ADQ412/ADQ14): ')
-                    if ans in ['ADQ14', 'adq14', '14']:     
-                        boards = [5, 10]
-                        S1_info = {'energy limits':[0, 1E6],
-                                   'energy bins':np.arange(0, 1E6, 1E4)}
-                        S2_info = {'energy limits':[0, 2E6],
-                                   'energy bins':np.arange(0, 2E6, 1E4)}
-                    elif ans in ['ADQ412', 'adq14', '412']: 
-                        boards = [0, 5]
-                        S1_info = {'energy limits':[0, 1E6],
-                                   'energy bins':np.arange(0, 1E6, 1E4)}
-                        S2_info = {'energy limits':[0, 1.5E5],
-                                   'energy bins':np.arange(0, 1.5E5, 1000)}
-                    else: 
-                        print('Invalid answer, type "ADQ14" or "ADQ412"')
-                        continue
-                    
-                    # Add channels to disabled detectors
-                    for board in range(boards[0], boards[1]):
-                        for channel in ['A', 'B', 'C', 'D']:
-                            det_name = dfs.get_detector_name(board = board + 1, channel = channel)
-                            if det_name[0:2] == 'S1': continue
-                            disabled_detectors = np.append(disabled_detectors, det_name)
-                            
-                            # Remove detectors from dictionay
-                            s2_dicts.pop(det_name, None)
-                    break
+                if sys.argv[i + 1][0:2] == '--': 
+                    error_message = '--pulse-heigh-spectrum requires an additional argument.'
+                    sys_exit = True
+                else: 
+                    board = sys.argv[i + 1]
+                    skip_flag = 1
+                if board in ['ADQ14', 'adq14', '14']:     
+                    boards = [5, 10]
+                    S1_info = {'energy limits':[0, 1E6],
+                               'energy bins':np.arange(0, 1E6, 1E4)}
+                    S2_info = {'energy limits':[0, 2E6],
+                               'energy bins':np.arange(0, 2E6, 1E4)}
+                elif board in ['ADQ412', 'adq14', '412']: 
+                    boards = [0, 5]
+                    S1_info = {'energy limits':[0, 1E6],
+                               'energy bins':np.arange(0, 1E6, 1E4)}
+                    S2_info = {'energy limits':[0, 1.5E5],
+                               'energy bins':np.arange(0, 1.5E5, 1000)}
+                else: 
+                    print('Invalid argument, provide "ADQ14" or "ADQ412" as an additional argument.')
+                    boards = [0, 0]
+                    sys_exit = True
+                
+                # Add channels to disabled detectors
+                for board in range(boards[0], boards[1]):
+                    for channel in ['A', 'B', 'C', 'D']:
+                        det_name = dfs.get_detector_name(board = board + 1, channel = channel)
+                        if det_name[0:2] == 'S1': continue
+                        disabled_detectors = np.append(disabled_detectors, det_name)
+                        
+                        # Remove detectors from dictionay
+                        s2_dicts.pop(det_name, None)
                 
             # Sum several shots
             elif sys.argv[i] == '--sum-shots':
@@ -972,6 +978,7 @@ if __name__=="__main__":
     
         # Save all times, energies and times of flight
         if save_data:
+            file_name = f'{shot_number}_adq14.pickle' ## REMOVE THIS WHEN DONE ##
             print(f'Saving data to: {file_name}')
             with open(file_name, 'wb') as handle:
                 # Save all information
