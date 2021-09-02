@@ -16,7 +16,6 @@ import scipy.optimize as optimize
 from matplotlib.lines import Line2D
 import os
 
-
 def get_pulses(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A', pulse_start = -1, pulse_end = -1, timer = False):
     '''
     Returns pulse data for a given board, channel and shot number.
@@ -2349,7 +2348,8 @@ def print_help():
     print('--remove-doubles mode:\n  \
 mode = 0: Remove all events which have produced a coincidence between two S1\'s.\n  \
 mode = 1: Only plot events which have produced a coincidence between two S1\'s')
-    print('--save-data my_file_name: Save the data as a python pickle with file name \"my_file_name\".')
+    print('--save-data: Save the data as a python pickle with file name \"(shot_number)_(t0)_(t1).pickle\".')
+    print('--save-NES: Save histogram data as apython pickle with file name \"(shot_number)_(t0)_(t1).pickle\".')
     print('--time-range start stop: Only plot the data between \"start\" and \"stop\" seconds into the shot. \"start\" and \"stop\" are given in number of seconds since PRE.')
     print('--disable-cuts: Plot the data without any kinematic cuts.')
     print('--disable-bgs: Plot the data without background subtracting the time-of-flight spectrum.')
@@ -2362,5 +2362,13 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--set-thresholds thr_l thr_u: Set lower and upper energy thresholds where \"thr_l\" and \"thr_u\" are given in MeVee. If \"thr_u\" is omitted it is set to +inf.')
     print('--proton-recoil-energy: Convert the energy axis from MeVee to MeV scale.')
     print('--pulse-height-spectrum: Use maxima of pulses for the energy axis.')
+    print('--integrated-charge-spectrum: Use integrated charge for the energy axis.')
     print('--help: Print this help text.')
     
+
+
+
+
+
+
+

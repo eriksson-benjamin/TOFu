@@ -408,23 +408,12 @@ if __name__=="__main__":
             
             # Save all data to file   
             elif sys.argv[i] == '--save-data':
-                file_name = sys.argv[i + 1]
                 save_data = True
-                skip_flag = 1
             
             # Save histogram data to file
             elif sys.argv[i] == '--save-NES': 
-                if i == len(sys.argv) - 1:
-                    error_message = '--save-NES requires an additional argument.'
-                    sys_exit = True
-                elif sys.argv[i + 1][0:2] == '--': 
-                    error_message = '--save-NES requires an additional argument.'
-                    sys_exit = True
-                else:
-                    save_NES = True
-                    filename_NES = sys.argv[i + 1]
-                    interactive_plot = False
-                    skip_flag = 1
+                save_NES = True
+                interactive_plot = False
             
             # Remove/keep double scattering events in S1
             elif sys.argv[i] == '--remove-doubles': 
@@ -977,34 +966,21 @@ if __name__=="__main__":
             
     
         # Save all times, energies and times of flight
+        file_name = f'{shot_number}_{time_slice[0]:.1f}_{time_slice[1]:.1f}.pickle'
         if save_data:
-            file_name = f'{shot_number}_adq14.pickle' ## REMOVE THIS WHEN DONE ##
             print(f'Saving data to: {file_name}')
             with open(file_name, 'wb') as handle:
                 # Save all information
-#                to_pickle = {'times_of_flight':coincidences_new, 
-#                             'energies':energies,
-#                             'times_S1':new_times_S1,
-#                             'times_S2':new_times_S2}
+                to_pickle = {'times_of_flight':coincidences_new, 
+                             'energies':energies,
+                             'times_S1':new_times_S1,
+                             'times_S2':new_times_S2}
                 
-                # Save a subset of information
-                coinc_pickle = dfs.get_dictionaries('nested')
-                energ_pickle = dfs.get_dictionaries('nested')
-                for s1 in coincidences_new.keys():
-                    for s2 in coincidences_new[s1].keys():
-                        if s1 in disabled_detectors or s2 in disabled_detectors: continue
-                        if s1 not in enabled_detectors or s2 not in enabled_detectors: continue
-                        mask = ((np.array(coincidences_new[s1][s2]) > 10) & (np.array(coincidences_new[s1][s2]) < 80))
-                        coinc_pickle[s1][s2] = np.array(coincidences_new[s1][s2])[mask]
-                        energ_pickle[s1][s2] = [np.array(energies[s1][s2][0])[mask], np.array(energies[s1][s2][1])[mask]]
-                        
-                to_pickle = {'times_of_flight':coinc_pickle, 
-                             'energies':energ_pickle}
                 pickle.dump(to_pickle, handle, protocol = pickle.HIGHEST_PROTOCOL)
         # Only save histogram data
         if save_NES:
-            print(f'Saving NES data to {filename_NES}')
-            with open(filename_NES, 'wb') as handle:
+            print(f'Saving NES data to {file_name}')
+            with open(file_name, 'wb') as handle:
                 counts, _ = np.histogram(coincidences, bins = bins)
                 bin_centres = bins[0:-1] + np.diff(bins)[0] / 2
                 start = np.searchsorted(bin_centres, -100)
