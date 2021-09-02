@@ -2349,8 +2349,9 @@ def print_help():
 mode = 0: Remove all events which have produced a coincidence between two S1\'s.\n  \
 mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--save-data: Save the data as a python pickle with file name \"(shot_number)_(t0)_(t1).pickle\".')
-    print('--save-NES: Save histogram data as apython pickle with file name \"(shot_number)_(t0)_(t1).pickle\".')
+    print('--save-NES: Save histogram data as a python pickle with file name \"(shot_number)_(t0)_(t1).pickle\".')
     print('--time-range start stop: Only plot the data between \"start\" and \"stop\" seconds into the shot. \"start\" and \"stop\" are given in number of seconds since PRE.')
+    print('--time-range-file: Selects shots and time ranges from separate input file (see input_files/time_ranges.txt for example. Set --disable-plots and --disable-scratch to run without user interaction.')
     print('--disable-cuts: Plot the data without any kinematic cuts.')
     print('--disable-bgs: Plot the data without background subtracting the time-of-flight spectrum.')
     print('--disable-plots: Disables plotting.')

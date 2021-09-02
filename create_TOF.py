@@ -413,7 +413,6 @@ if __name__=="__main__":
             # Save histogram data to file
             elif sys.argv[i] == '--save-NES': 
                 save_NES = True
-                interactive_plot = False
             
             # Remove/keep double scattering events in S1
             elif sys.argv[i] == '--remove-doubles': 
@@ -909,7 +908,7 @@ if __name__=="__main__":
     
         
         # Cut out times below -150 ns and above 250 ns for plotting
-        cut_low  = -150
+        cut_low  = -200
         cut_high = 250
         cut_inds = np.where((coincidences < cut_high) & (coincidences > cut_low))[0]
         coincidences = coincidences[cut_inds]
@@ -985,12 +984,12 @@ if __name__=="__main__":
                 bin_centres = bins[0:-1] + np.diff(bins)[0] / 2
                 start = np.searchsorted(bin_centres, -100)
                 stop = np.searchsorted(bin_centres, -50)
-                background = np.mean(tof_vals[start:stop])
+                background = np.mean(counts[start:stop])
                 erg_bin_centres_S1 = S1_info['energy bins'][1:] - np.diff(S1_info['energy bins'])[0]/2
                 erg_bin_centres_S2 = S2_info['energy bins'][1:] - np.diff(S2_info['energy bins'])[0]/2
                 processed_shots = np.append(processed_shots, shot_number)
                 to_pickle = {'bins':bin_centres,
-                             'counts':tof_vals,
+                             'counts':counts,
                              'bgr_level':background,
                              'erg_S1':erg_S1_vals,
                              'erg_S2':erg_S2_vals,
