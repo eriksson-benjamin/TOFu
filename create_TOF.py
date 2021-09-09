@@ -998,7 +998,8 @@ if __name__=="__main__":
                              'erg_bins_S1':erg_bin_centres_S1,
                              'erg_bins_S2':erg_bin_centres_S2,
                              'shots':processed_shots,
-                             'input_arguments':sys.argv}
+                             'input_arguments':sys.argv,
+                             'time_range':time_slice}
                 pickle.dump(to_pickle, handle, protocol = pickle.HIGHEST_PROTOCOL)
             
 
