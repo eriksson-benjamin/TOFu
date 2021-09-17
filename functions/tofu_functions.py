@@ -1233,10 +1233,16 @@ def get_kincut_function(tof, timer = False):
 #    E_S1_max = 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * (1 / np.cos(alpha_max)**2 - 1) * J_to_MeV
 #    E_S1_min = 0.5 * constant.neutron_mass * (l_min / (tof*1E-9))**2 * (1 / np.cos(alpha_min)**2 - 1) * J_to_MeV
 #    E_S2_max = 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * J_to_MeV
-
-    E_S1_max = 0.5 * constant.neutron_mass * (l_min / (tof*1E-9))**2 * (1 / np.cos(alpha_max)**2 - 1) * J_to_MeV
-    E_S1_min = 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * (1 / np.cos(alpha_min)**2 - 1) * J_to_MeV
-    E_S2_max = 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * J_to_MeV
+    
+    ######################################## 
+    #### Arbitrary scaling factor added ####
+    ########################################
+    arb_scale_1 = 0.74
+    arb_scale_2 = 0.74
+    arb_scale_3 = 0.77
+    E_S1_max = arb_scale_1 * 0.5 * constant.neutron_mass * (l_min / (tof*1E-9))**2 * (1 / np.cos(alpha_max)**2 - 1) * J_to_MeV
+    E_S1_min = arb_scale_2 * 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * (1 / np.cos(alpha_min)**2 - 1) * J_to_MeV
+    E_S2_max = arb_scale_3 * 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * J_to_MeV
 
     # Translate to light yield
     ly_S1_max = light_yield_function(E_S1_max)
