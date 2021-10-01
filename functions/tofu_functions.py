@@ -1704,7 +1704,7 @@ def background_subtraction_(disable_cuts, TOF_hist, timer = False):
     if timer: elapsed_time(t_start, 'background_subtraction()')
     return tof_bg
 
-def background_subtraction(disable_cuts, tof_info, timer = False):
+def background_subtraction(coincidences, tof_bins, energies_S1, S1_info, energies_S2, S2_info, disable_cuts, timer = False):
     '''
     Perform background subtraction of TOF spectrum. If disable_cuts is true an average
     is calculated between -100ns to -50 ns. If disable_cuts is false a model is fit to
@@ -1714,140 +1714,123 @@ def background_subtraction(disable_cuts, tof_info, timer = False):
     '''
     if timer: t_start = elapsed_time()
     
-    # Get events and bins
-    events = tof_info[0]
-    bins = tof_info[1]
-    
     # Without kinematic cuts use average background between -100 ns and -50 ns
-    if disable_cuts: 
-        tof_bg = np.zeros(len(events))
-        tof_bg += np.mean(events[np.where((bins < -50) & (bins > -100))[0]])
     
-    # Otherwise fit model to background
+    tof_hist, _ = np.histogram(coincidences[(coincidences < -50) & (coincidences > -100)], tof_bins[(tof_bins < -50) & (tof_bins > -100)])
+    mean_bg = np.mean(tof_hist)
+    
+    if disable_cuts: 
+        tof_bg = np.ones(len(tof_bins)-1)
+        tof_bg *= np.mean(tof_hist)    
+        
+    # Otherwise perform background averaging with kinematic cuts
     else: 
-        def fit_function_1(parameters, bins, data):
-            '''
-            Fit function for fitting a Gaussian
-            '''
-            a = parameters[0]
-            b = parameters[1]
-            c = parameters[2]
-                
-            # Make gaussian
-            A = a * np.exp(-((bins - b) / c)**2)
-            diff = A - data
-            return diff
+        # Select negative bins only
+        tof_bins_n = tof_bins[tof_bins<0]
         
-        def fit_function_2(parameters, bins, data):
-            '''
-            Fit function for fitting poly2 function. The variable constraint
-            ensures that there is a smooth transition from fit_function_1 to
-            fit_function_2.
-            '''
-            a = parameters[0]
-            b = parameters[1]
-            c = parameters[2]
-            
-            # Make poly2
-            fcn = a * bins**2 + b * bins + c
-            
-            diff = fcn - data
-            return diff
+        # Calculate bin centres
+        tof_bin_centres = tof_bins_n[1:]-np.diff(tof_bins_n)[0]/2
+        S1_energy_bins = S1_info['energy bins']
+        S1_energy_bin_width = np.diff(S1_energy_bins)[0]
+        S1_energy_bin_centres = S1_energy_bins[1:]-S1_energy_bin_width/2
         
-        bin_centres = bins[0:-1] + np.diff(bins)[0]/2
-        bin_centres[np.argmin(np.abs(bin_centres))] = 0 # Force central bin to be exactly zero
+        S2_energy_bins = S2_info['energy bins']
+        S2_energy_bin_width = np.diff(S2_energy_bins)[0]
+        S2_energy_bin_centres = S2_energy_bins[1:]-S2_energy_bin_width/2
         
-        # Region 0 - negative side of TOF spectrum
-        bins_0   = bin_centres[bin_centres < 0]
-        events_0 = events[bin_centres < 0]
+        # Histogram everything, only include tof < -20 ns (avoid muon peak)
+        S1_hist, _, _ = np.histogram2d(coincidences, 
+                                       energies_S1, 
+                                       bins = [tof_bins_n[tof_bins_n<-20], 
+                                               S1_info['energy bins']])
+        S2_hist, _, _ = np.histogram2d(coincidences, 
+                                       energies_S2, 
+                                       bins = [tof_bins_n[tof_bins_n<-20], 
+                                               S2_info['energy bins']])
         
-        # Region 1 - Gaussian region
-        bin_shift = 0
-        bins_1    = bins_0[0:np.argmax(events_0) - bin_shift]
-        events_1  = events[0:np.argmax(events_0) - bin_shift]
-        
-        # Region 2 - Poly2 region
-        arg_start_2 = len(bins_1)
-        arg_20 = np.where(np.round(bins_0, 1) == -22.4)[0][0]
-        arg_end_2 = np.where(events_0[arg_20:] < 5)[0][0] + arg_20
-        bins_2 = bins_0[arg_start_2:arg_end_2] 
-        events_2 = events[arg_start_2:arg_end_2]
-        
-        # Region 3 - Rolling average region
-        bins_3   = bins_0[arg_end_2:] 
-        events_3 = events_0[arg_end_2:]
-        
-        '''
-        Region 1 - Gaussian fit
-        '''
-        # Starting guesses
-        a_1 = 681.3
-        b_1 = 18.8
-        c_1 = 72.7
+        # Average along the x-axis
+        S1_average = np.mean(S1_hist, axis = 0)
+        S2_average = np.mean(S2_hist, axis = 0)
 
-        # Fit parameters
-        fit_params_1 = optimize.least_squares(fun = fit_function_1, x0 = [a_1, b_1, c_1], args = (bins_1, events_1))['x']
-        a_1 = fit_params_1[0]
-        b_1 = fit_params_1[1]
-        c_1 = fit_params_1[2]
-        fit_1 = a_1 * np.exp(-((bins_1 - b_1) / c_1)**2)
+        S1_smooth = np.transpose(np.tile(S1_average, (len(tof_bin_centres), 1)))
+        S2_smooth = np.transpose(np.tile(S2_average, (len(tof_bin_centres), 1)))
         
-        '''
-        Region 2 - Poly2 fit
-        '''
-        # Starting guesses
-        a_2 = -1.4
-        b_2 = -81.4
-        c_2 = -770.5
-        # Fit parameters
-        fit_params_2 = optimize.least_squares(fun = fit_function_2, x0 = [a_2, b_2, c_2], args = (bins_2, events_2))['x']
-        a_2 = fit_params_2[0]
-        b_2 = fit_params_2[1]
-        c_2 = fit_params_2[2]
-        fit_2 = a_2 * bins_2**2 + b_2 * bins_2 + c_2
         
-        # Check if rolling average region should be longer (negative values in region 2)
-        if not (fit_2 > 0).all():
-            # Remove negative values from fit 2
-            neg_val = np.where(fit_2 < 0)[0]
-            bins_to_transfer = bins_2[neg_val]
-            bins_2 = np.delete(bins_2, neg_val)
-            fit_2 = np.delete(fit_2, neg_val)
+        # Get kinematic cuts for given TOF bin edges
+        S1_min, S1_max, S2_max = get_kincut_function(tof_bin_centres)
+        
+        # S1
+        s1_projection = np.zeros(len(tof_bin_centres))
+        for i in range(0, len(tof_bin_centres)):
+            # Select energy cut
+            e_min = S1_min[i]
+            e_max = S1_max[i]
             
-            # Add region to rolling average region
-            bins_3 = np.insert(bins_3, 0, bins_to_transfer)
-            events_3 = np.insert(events_3, 0, events_2[neg_val])
+            # Select the energy column corresponding to TOF centre
+            col = S1_smooth[:, i]
+            
+            # Find upper/lower energy bin edge
+            low = np.searchsorted(S1_energy_bins, e_min)  # lower cut
+            high = np.searchsorted(S1_energy_bins, e_max) # upper cut
+            
+            # If we hit our maximum energy binning use max bin for projection
+            if e_max >= S1_energy_bins[-1]: high -= 1
+            if e_min >= S1_energy_bins[-1]: low -= 1
+            lower = (low-1, low)   # (lower bin edge, upper bin edge) for lower cut
+            upper = (high-1, high) # (lower bin edge, upper bin edge) for upper cut
             
             
-        '''
-        Region 3 - Rolling average
-        '''
-        n = 4 # Number of bins to average
-        fit_3 = np.array([])
-        for n_i in range(len(events_3)):
-            if n_i == 0: fit_3 = np.append(fit_3, events_3[0])
-            elif n_i == len(events_3) - 1: fit_3 = np.append(fit_3, events_3[-1])
-            else: fit_3 = np.append(fit_3, np.sum(events_3[n_i-1:n_i+2] / n))
+            # If cuts are within a single bin
+            if lower == upper:
+                # Caclulate fraction of the bin to be added to projection
+                fraction = (e_max-e_min)/S1_energy_bin_width
+                to_project = fraction*col[low-1]
+            # If cuts are at different bins
+            else:
+                # Calculate fraction of bins to be added
+                fraction_low  = (S1_energy_bins[lower[1]]-e_min)/S1_energy_bin_width
+                fraction_high = (e_max-S1_energy_bins[upper[0]])/S1_energy_bin_width
+                to_project = fraction_low*col[low-1] + fraction_high*col[high-1]
+            
+            # Also add the bins which do not require fractions calculated
+            to_project += col[lower[1]:upper[0]].sum()
+            s1_projection[i] = to_project
+        # S2
+        s2_projection = np.zeros(len(tof_bin_centres))
+        for i in range(0, len(tof_bin_centres)):
+            # Select energy cut
+            e_max = S2_max[i]
+            
+            # Select the energy column corresponding to TOF centre
+            col = S2_smooth[:, i]
+            
+            # Find upper/lower energy bin edge
+            high = np.searchsorted(S2_energy_bins, e_max) # upper cut
+            
+            # If we hit our maximum energy binning use max bin for projection
+            if e_max >= S1_energy_bins[-1]: high -= 1
+            upper = (high-1, high) # (lower bin edge, upper bin edge) for upper cut
+            
+            # Caclulate fraction of the bin to be added to projection
+            fraction = (e_max-S2_energy_bins[upper[0]])/S2_energy_bin_width
+            to_project = fraction*col[high-1]
+            
+#            # Also add the bins which do not require fractions calculated
+            to_project += col[:upper[0]].sum()
+            s2_projection[i] = to_project
         
-        '''
-        Sum of all regions
-        '''
-        bins_all = np.append(bins_1, bins_2)
-        bins_all = np.append(bins_all, bins_3)
-        fit_all = np.append(fit_1, fit_2)
-        fit_all = np.append(fit_all, fit_3)
+        sx_projection = s1_projection*s2_projection/mean_bg
         
-                
-        # Mirror to positive TOF side
-        flipped = np.flip(fit_all)
-        tof_bg = np.append(fit_all, 0) # Add the zero corresponding to the bin centered at zero
-        tof_bg = np.append(tof_bg, flipped)
-        
+        tof_bg = np.zeros(len(tof_bins)-1)
+        tof_bg[0:len(sx_projection)] = sx_projection
+        tof_bg[len(sx_projection)+1:] = np.flip(sx_projection)
     if timer: elapsed_time(t_start, 'background_subtraction()')
+    
+
     return tof_bg
 
 def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 200, 0.4), 
-            S1_info = None, S2_info = None, tof_lim = np.array([-150, 200]), title = '', 
+            S1_info = None, S2_info = None, tof_lim = np.array([-150, 200]), title = '', tof_bg_component = 0,
             log = True, interactive_plot = False, projection = 0, disable_cuts = False,
             times_of_flight_cut = 0, energy_S1_cut = 0, energy_S2_cut = 0, disable_bgs = False, 
             weights = False, hist2D_S1 = None, hist2D_S2 = None, sum_shots = False, 
@@ -1918,11 +1901,10 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     # Apply background subtraction
     if not disable_bgs:
         # Remove background from binned values
-        tof_bg_vals = background_subtraction(disable_cuts, (TOF_hist, bins_tof))
-        TOF_plot = TOF_hist - tof_bg_vals
+        TOF_plot = TOF_hist - tof_bg_component
         
         # Plot background component + fit
-        plt.plot(bins_tof_centres, tof_bg_vals, 'r--')     
+        plt.plot(bins_tof_centres, tof_bg_component, 'r--')     
         plt.plot(bins_tof_centres[bins_tof_centres < 0], 
                  TOF_hist[bins_tof_centres < 0], 
                  marker = marker,
@@ -1958,9 +1940,9 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     ax_TOF = plt.gca() 
     ax_TOF.set_xlabel('Time [ns]')
     ax_TOF.set_ylabel('Counts')
-    tof_x_low = tof_lim[0]
-    tof_x_high = tof_lim[1]
-    ax_TOF.set_xlim([tof_x_low, tof_x_high]) 
+    tof_x_low = 20
+    tof_x_high = 80
+    ax_TOF.set_xlim(tof_x_low, tof_x_high)
     ax_TOF.set_ylim(bottom = np.min(TOF_hist) / 2 + 1)
     
     # Add lines for interactive plot
@@ -2128,6 +2110,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         
     ax_S2_E = plt.gca()
     ax_S2_E.set_xlabel('Counts')
+    ax_S2_E.set_ylim(S2_info['energy limits'])
+    ax_S2_E.set_xscale('log')
 
     if add_lines:
         if projection['proj'] == 'S2':
@@ -2180,6 +2164,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     ax_S1_E = plt.gca()
     plt.setp(ax_S1_E.get_xticklabels(), visible = False)
     ax_S1_E.set_ylim(S1_info['energy limits'])
+    ax_S1_E.set_xscale('log')
     
     # Set the x-axis limits
     x_lower = 0.1
