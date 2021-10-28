@@ -1004,47 +1004,6 @@ def find_time_range(shot_number):
  
     return time_slice
 
-#def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([0, 0]), timer = False):
-#    '''
-#    Takes an array of baseline reduced pulses and removes junk pulses.
-#    pulses: array of baseline reduced pulses
-#    dx: distance between each point on the x-axis
-#    detector_name: string containing the name of the detector ('S1_01', ..., 'S2_32')
-#    bias_level: value in codes where the baseline is expected (typically 27000 for ADQ14, 1600 for ADQ412)
-#    Example: new_pulses, junk_indices = cleanup(pulses)
-#    '''
-#    if timer: t_start = elapsed_time()
-#    
-#    # Remove anything with a negative area
-#    area = np.trapz(pulses, axis = 1, dx = dx)
-#    indices = np.where(area < 0)[0]
-#
-#    # Remove anything with points on the baseline far from requested baseline 
-#    if bias_level not in [27000, 30000, 1600]: print('WARNING: The function cleanup() bases it\'s cuts on a bias level of 27k or 30k for ADQ14 and 1.6k codes for ADQ412. This shot has a bias level of ' + str(bias_level) + ' codes.')
-#    
-#    # Define ADQ14 and ADQ412 thresholds for the baseline
-#    if not np.array_equal(baseline_cut, np.array([0, 0])):
-#        low_threshold = baseline_cut[0]
-#        high_threshold = baseline_cut[1]
-#    elif int(detector_name[3:]) < 16:
-#        high_threshold = 200
-#        low_threshold = -200
-#    elif int(detector_name[3:]) >= 16:
-#        high_threshold = 70
-#        low_threshold = 20
-#    else: raise Exception('Unknown detector name.')
-#    
-#    # Find baselines which violate the thresholds
-#    baseline = pulses[:, 0:10]
-#    odd_bl = np.unique(np.where((baseline < low_threshold) | (baseline > high_threshold))[0])
-#    
-#    # Add to indices, remove duplicates and sort in ascending manner
-#    indices = np.sort(np.unique(np.append(indices, odd_bl)))
-#    
-#    
-#    if timer: elapsed_time(t_start, 'cleanup()')
-#    return pulses[indices], indices
-
 def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 0], [0, 0]]), timer = False):
     '''
     Takes an array of baseline reduced pulses and removes junk pulses.
@@ -1897,7 +1856,19 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     else: 
         TOF_hist, _ = np.histogram(tof, bins = bins_tof)
         TOF_plot = TOF_hist
+        
+        ### REMOVE THIS ###
+        events = TOF_hist
+        bins = _
+        args_tof = np.where((bins>20) & (bins<80))[0]
 
+        summed = np.sum(events[args_tof])
+
+        print(f'Summed: {summed}')
+        average_counts = np.mean(events[0:100])
+        print(f'{len(args_tof)*average_counts}')
+
+        
     # Apply background subtraction
     if not disable_bgs:
         # Remove background from binned values
@@ -2348,6 +2319,7 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--disable-plots: Disables plotting.')
     print('--disable-detectors: Analysis is not performed on detectors specified by user. Example: --disable-detectors S1_01 S1_02 S2_01')
     print('--disable-boards: Analysis is not performed on boards specified by user. Example: --disable-boards 7 8 9')
+    print('--disable-cleanup: Disables cleanup() function responsible for removing bad pulses.)
     print('--enable-detectors: Analysis is only performed on detectors speecified by user. Example: --enable-detectors S1_01,S2_01')
     print('--ohmic-spectrum: Analysis is only performed for the Ohmic phase of the shot.')
     print('--run-timer: Print the elapsed time for each function.')
