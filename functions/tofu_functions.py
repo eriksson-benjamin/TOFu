@@ -649,11 +649,36 @@ def time_pickoff_CFD(pulse_data, fraction = 0.3, timer = False):
  
 def linear_regression(x_data, y_data, timer = False):
     '''
-    Returns the slope (A) and intersection (B) for a simple linear regression on x and y data.
-    x_data: 2D array of values where each row corresponds to one event to perform linear regression on
-    y_data: 2D array of values where each row corresponds to one event to perform linear regression on
-    product_1, product_2 and product_3 correspond to the three products for calculating beta in 
-    https://en.wikipedia.org/wiki/Simple_linear_regression
+    Returns the slope (A) and intersection (B) for a simple linear regression 
+    on x and y data on the for y = Ax+B.
+    
+    Parameters
+    ----------
+    x_data : ndarray,
+            2D array of x-data        
+    y_data : ndarray,
+            2D array of y-data
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+          
+    Returns
+    -------
+    slope : ndarray,
+          1D array of slopes (A) of the linear regression on the form y = Ax+B
+          for each row of x_data and y_data
+    intercept : ndarray,
+          1D array of intercepts (B) of the linear regression on the form 
+          y = Ax+B for each row of x_data and y_data
+    
+    Examples
+    --------
+    >>> x_data = np.random.randint(0, 100, (10, 50))
+    >>> y_data = np.random.randint(0, 100, (10, 50))
+    >>> linear_regression(x_data, y_data)
+    (array([-0.12838402,  0.03837328,  0.23679145, -0.11515894, -0.08433706,
+            -0.01809531, -0.02958148, -0.01858007,  0.13560102,  0.30361892]),
+     array([53.50304412, 49.65230379, 37.04726166, 53.7653137 , 52.42589113,
+            49.156337  , 48.59527858, 48.24523488, 38.27435695, 37.49710363]))    
     '''
     if timer: t_start = elapsed_time()
     
@@ -661,6 +686,8 @@ def linear_regression(x_data, y_data, timer = False):
     x_mean = np.mean(x_data, axis = 1)
     y_mean = np.mean(y_data, axis = 1)
     
+    # product_1-3 correspond to the three products for calculating beta in 
+    # https://en.wikipedia.org/wiki/Simple_linear_regression
     product_1 = np.transpose(np.transpose(x_data) - x_mean)
     product_2 = np.transpose(np.transpose(y_data) - y_mean)
     product_3 = product_1 ** 2
@@ -677,11 +704,32 @@ def linear_regression(x_data, y_data, timer = False):
 
 def find_points(pulse_data, value, timer = False):
     '''
-    Returns the index of the point closest to "value" in pulse_data.
-    pulse_data: array of pulse height data where each row corresponds to one record. 
-                NOTE: pulse_data must be baseline reduced (see baseline_reduction() function).
-    value: one dimensional array of values for which you want to find the closest index in pulse_data 
+    Returns the indicies of the points closest to "value" in pulse_data.
+    
+    Parameters
+    ----------
+    pulse_data : ndarray,
+               2D array of pulse height data where each row corresponds to one 
+               record. NOTE: pulse_data must be baseline reduced (see 
+               baseline_reduction() function).
+    value : ndarray,
+            1D array of values
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+          
+    Returns
+    -------
+    index : ndarray,
+          1D array of indices from pulse_data corresponding to the position
+          in each row with value closest to "value".
+    
+    Examples
+    --------
+    >>> values = np.random.randint(0, 10, len(pulse_data))
+    >>> find_points(pulse_data, 16)
+    array([16, 16,  15, 16, ..., 16, 15, 17, 15, 16, 16])  
     '''
+    
     if timer: t_start = elapsed_time()
     
     # Subtract the constant fraction value from the data set
