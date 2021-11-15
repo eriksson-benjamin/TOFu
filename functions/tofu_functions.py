@@ -700,8 +700,6 @@ def linear_regression(x_data, y_data, timer = False):
     return slope, intercept
 
 
-    
-
 def find_points(pulse_data, value, timer = False):
     '''
     Returns the indicies of the points closest to "value" in pulse_data.
@@ -743,20 +741,7 @@ def find_points(pulse_data, value, timer = False):
     if timer: elapsed_time(t_start, 'find_points()')
     return index   
     
-#def find_coincidences(S1_times, S2_times, t_back = 100, t_forward = 100, return_indices = False, timer = False):
-#    '''
-#    
-#    '''
-#    if timer: t_start = elapsed_time()
-#    coincidences = CyTOF.CyTOF(S1_times, S2_times, t_back, t_forward, return_indices)
-#    if timer: elapsed_time(t_start, 'CyTOF()')
-#    if return_indices:
-#        return coincidences[0], coincidences[1]
-#    else:
-#        return coincidences
-
 def sTOF4(S1_times, S2_times, t_back, t_forward, return_indices = False, timer = False):
-
     '''
     Returns the time differences between S1_times and S2_times given a search
     window. We loop over the time stamps in S2, for each S2 time stamp we 
@@ -887,9 +872,29 @@ def sTOF4(S1_times, S2_times, t_back, t_forward, return_indices = False, timer =
 def get_detector_name(board, channel, timer = False):
     '''
     Returns the detector name corresponding to the given board and channel.
-    The order of the S2's on the ADQ412's are sadly back to front :(
-    Example: detector = get_detector_name('02', 'A')
+    The order of the S2's on the ADQ412's are back to front
+    
+    Parameters
+    ----------
+    board : string or int,
+          String or integer corresponding to the board number (1-10)
+    channel: string,
+           String containing the channel number ('A', 'B', 'C', or 'D')
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+                 
+    Returns
+    -------
+    detector_name : string,
+                  String containing the detector name corresponding to the
+                  input board and channel.
+            
+    Examples
+    --------
+    >>> get_detector_name(1, 'A')
+    'S1_01'
     '''
+    
     if timer: t_start = elapsed_time()
     detectors = ['S1_01', 'S2_01', 'S2_02', 'S2_03', 
                  'S1_02', 'S2_04', 'S2_05', 'S2_06',
@@ -902,15 +907,38 @@ def get_detector_name(board, channel, timer = False):
                  'S2_19', 'S2_20', 'S2_21', 'S2_22',
                  'DEAD', 'S2_16', 'S2_17', 'S2_18']
     cha = np.array(['A', 'B', 'C', 'D'])
-
+    detector_name = detectors[4 * (int(board)-1) + np.where(channel == cha)[0][0]]
     if timer: elapsed_time(t_start, 'get_detector_name()')    
-    return detectors[4 * (int(board)-1) + np.where(channel == cha)[0][0]]    
+    return detector_name
 
 def get_board_name(detector_name, timer = False):
     '''
-    Returns the board and channel for the given detector name.
-    Example: board, channel = get_board_name(detector_name = 'S1_04') returns board = '04', channel = 'A'
+    Returns the board and channel for a corresponding detector name. The order 
+    of the S2's on the ADQ412's are back to front.
+    
+    Parameters
+    ----------
+    detector_name : string,
+          String containing the detector name ('S1_01',...,'S1_05' or 
+          'S2_01', ..., 'S2_32')
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+                 
+    Returns
+    -------
+    board : string,
+          String containing the board number corresponding to the input 
+          detector name.
+    channel : string,
+            String containing the channel corresponding to the input detector
+            name.
+            
+    Examples
+    --------
+    >>> get_board_name('S1_01')
+    ('01', 'A')
     '''
+    
     if timer: t_start = elapsed_time()
 
     detectors = np.array(['S1_01', 'S2_01', 'S2_02', 'S2_03', 
@@ -934,14 +962,43 @@ def get_board_name(detector_name, timer = False):
     else: board = str(board)
     
     # Find channel
-    cha = channels[pos % 4][0]
+    channel = channels[pos % 4][0]
     if timer: elapsed_time(t_start, 'get_detector_name()')    
-    return board, cha
+    return board, channel
 
 def get_shifts(shift_file, timer = False):
     '''
-    Returns the shifts (written in shift.txt) required to line up all S1-S2 combinations.
+    Returns the shifts (written in shift_file) required to line up all S1-S2 
+    combinations and shift the gamma peak 3.7 ns. Method is outlined in
+    Eriksson, Benjamin, et al. 
+    "New method for time alignment and time calibration of the TOFOR 
+    time-of-flight neutron spectrometer at JET." 
+    Review of Scientific Instruments 92.3 (2021): 033538.
+dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05'])
+
+    Parameters
+    ----------
+    shift_file : string,
+               The path to the shift file.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+                 
+    Returns
+    -------
+    shifts : dict,
+           Dictionary with keys 
+           dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05'])
+           Each contains 32 shifts (ns) corresponding to the S1 vs. S2 shifts.
+            
+    Examples
+    --------
+    >>> shifts = get_shifts()
+    >>> shifts.keys()
+    dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05']
+    >>> shifts['S1_01']
+    array([ -18.95286,  -19.35286,..., -118.55286, -117.75286])
     '''
+
     if timer: t_start = elapsed_time()
     A = np.loadtxt(shift_file, dtype = 'str')
     
