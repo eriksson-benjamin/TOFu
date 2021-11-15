@@ -451,7 +451,9 @@ if __name__=="__main__":
             elif sys.argv[i] == '--disable-cuts': disable_cuts = True
             
             # Disable background subtraction
-            elif sys.argv[i] == '--disable-bgs': disable_bgs = True
+            elif sys.argv[i] == '--disable-bgs': 
+                disable_bgs = True
+                background_component = 0
             
             # Disable get data from scratch
             elif sys.argv[i] == '--disable-scratch': disable_scratch = True
@@ -995,13 +997,12 @@ if __name__=="__main__":
                 bin_centres = bins[0:-1] + np.diff(bins)[0] / 2
                 start = np.searchsorted(bin_centres, -100)
                 stop = np.searchsorted(bin_centres, -50)
-                background = np.mean(counts[start:stop])
                 erg_bin_centres_S1 = S1_info['energy bins'][1:] - np.diff(S1_info['energy bins'])[0]/2
                 erg_bin_centres_S2 = S2_info['energy bins'][1:] - np.diff(S2_info['energy bins'])[0]/2
                 processed_shots = np.append(processed_shots, shot_number)
                 to_pickle = {'bins':bin_centres,
                              'counts':counts,
-                             'bgr_level':background,
+                             'bgr_level':background_component,
                              'erg_S1':erg_S1_vals,
                              'erg_S2':erg_S2_vals,
                              'hist2d_S1':hist2d_S1_vals,
