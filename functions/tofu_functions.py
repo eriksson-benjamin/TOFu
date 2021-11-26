@@ -974,7 +974,6 @@ def get_shifts(shift_file, timer = False):
     "New method for time alignment and time calibration of the TOFOR 
     time-of-flight neutron spectrometer at JET." 
     Review of Scientific Instruments 92.3 (2021): 033538.
-dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05'])
 
     Parameters
     ----------
@@ -1025,6 +1024,37 @@ dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05'])
 
 def get_pulse_area(pulses, u_factor, timer = False):
     '''
+    Returns the shifts (written in shift_file) required to line up all S1-S2 
+    combinations and shift the gamma peak 3.7 ns. Method is outlined in
+    Eriksson, Benjamin, et al. 
+    "New method for time alignment and time calibration of the TOFOR 
+    time-of-flight neutron spectrometer at JET." 
+    Review of Scientific Instruments 92.3 (2021): 033538.
+
+    Parameters
+    ----------
+    shift_file : string,
+               The path to the shift file.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+                 
+    Returns
+    -------
+    shifts : dict,
+           Dictionary with keys 
+           dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05'])
+           Each contains 32 shifts (ns) corresponding to the S1 vs. S2 shifts.
+            
+    Examples
+    --------
+    >>> shifts = get_shifts()
+    >>> shifts.keys()
+    dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05']
+    >>> shifts['S1_01']
+    array([ -18.95286,  -19.35286,..., -118.55286, -117.75286])
+    '''
+    
+    '''
     Returns the areas under an array of pulses
     pulses: m*n array of pulses
     u_factor: frequency of samples in each pulse (u_factor = 10 -> 1/10 ns between each sample)
@@ -1032,7 +1062,7 @@ def get_pulse_area(pulses, u_factor, timer = False):
     
     if timer: t_start = elapsed_time()
     
-    # Chunk data if too many pulses
+    # Chunk data if too many pulses, otherwise we run into memory issues
     pulse_area = np.zeros(len(pulses))
     
     if len(pulses) > 1E+6:
@@ -1962,16 +1992,6 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         TOF_hist, _ = np.histogram(tof, bins = bins_tof)
         TOF_plot = TOF_hist
         
-        ### REMOVE THIS ###
-        events = TOF_hist
-        bins = _
-        args_tof = np.where((bins>20) & (bins<80))[0]
-
-        summed = np.sum(events[args_tof])
-
-        print(f'Summed: {summed}')
-        average_counts = np.mean(events[0:100])
-        print(f'{len(args_tof)*average_counts}')
 
         
     # Apply background subtraction

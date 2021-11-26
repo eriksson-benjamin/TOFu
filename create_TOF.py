@@ -310,6 +310,7 @@ if __name__=="__main__":
     proton_recoil               = False
     pulse_height_spectrum       = False
     integrated_charge_spectrum  = False
+    set_file_name               = False
     shots                       = np.array([])
     disabled_detectors          = []
     empty_detectors             = ['ABS_REF', '1kHz_CLK', 'DEAD']
@@ -408,10 +409,20 @@ if __name__=="__main__":
             
             # Save all data to file   
             elif sys.argv[i] == '--save-data':
+                if i == len(sys.argv) - 1: set_file_name = True
+                elif sys.argv[i + 1][0:2] == '--': set_file_name = True
+                else:
+                    file_name = sys.argv[i + 1]
+                    skip_flag = 1
                 save_data = True
             
             # Save histogram data to file
             elif sys.argv[i] == '--save-NES': 
+                if i == len(sys.argv) - 1: set_file_name = True
+                elif sys.argv[i + 1][0:2] == '--': set_file_name = True
+                else:
+                    file_name = sys.argv[i + 1]
+                    skip_flag = 1
                 save_NES = True
             
             # Remove/keep double scattering events in S1
@@ -978,7 +989,8 @@ if __name__=="__main__":
             
     
         # Save all times, energies and times of flight
-        file_name = f'{shot_number}_{time_slice[0]:.1f}_{time_slice[1]:.1f}.pickle'
+        if set_file_name: 
+            file_name = f'{shot_number}_{time_slice[0]:.1f}_{time_slice[1]:.1f}.pickle'
         if save_data:
             print(f'Saving data to: {file_name}')
             with open(file_name, 'wb') as handle:
@@ -995,14 +1007,23 @@ if __name__=="__main__":
             with open(file_name, 'wb') as handle:
                 counts, _ = np.histogram(coincidences, bins = bins)
                 bin_centres = bins[0:-1] + np.diff(bins)[0] / 2
-                start = np.searchsorted(bin_centres, -100)
-                stop = np.searchsorted(bin_centres, -50)
                 erg_bin_centres_S1 = S1_info['energy bins'][1:] - np.diff(S1_info['energy bins'])[0]/2
                 erg_bin_centres_S2 = S2_info['energy bins'][1:] - np.diff(S2_info['energy bins'])[0]/2
+                
+                ''' 
+                Currently not working with NES, background is not removed, 
+                ask Jacob how he wants the background component
+                
+                # Select only right side of background component for NES
+                bin_zero = np.argmin(np.abs(bin_centres))
+                background_nes = background_component[bin_zero:]
                 processed_shots = np.append(processed_shots, shot_number)
+                '''
+                background_nes = background_component # Remove this when background is fixed
+                
                 to_pickle = {'bins':bin_centres,
                              'counts':counts,
-                             'bgr_level':background_component,
+                             'bgr_level':background_nes,
                              'erg_S1':erg_S1_vals,
                              'erg_S2':erg_S2_vals,
                              'hist2d_S1':hist2d_S1_vals,
