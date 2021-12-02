@@ -1005,21 +1005,20 @@ if __name__=="__main__":
         if save_NES:
             print(f'Saving NES data to {file_name}')
             with open(file_name, 'wb') as handle:
-                counts, _ = np.histogram(coincidences, bins = bins)
+                # Histogram the data
+                if not disable_cuts: counts, _ = np.histogram(coincidences_cut, bins = bins)
+                else: counts, _ = np.histogram(coincidences, bins = bins)
+                
+                # Select bin centres
                 bin_centres = bins[0:-1] + np.diff(bins)[0] / 2
                 erg_bin_centres_S1 = S1_info['energy bins'][1:] - np.diff(S1_info['energy bins'])[0]/2
                 erg_bin_centres_S2 = S2_info['energy bins'][1:] - np.diff(S2_info['energy bins'])[0]/2
                 
-                ''' 
-                Currently not working with NES, background is not removed, 
-                ask Jacob how he wants the background component
-                
                 # Select only right side of background component for NES
                 bin_zero = np.argmin(np.abs(bin_centres))
                 background_nes = background_component[bin_zero:]
+
                 processed_shots = np.append(processed_shots, shot_number)
-                '''
-                background_nes = background_component # Remove this when background is fixed
                 
                 to_pickle = {'bins':bin_centres,
                              'counts':counts,
