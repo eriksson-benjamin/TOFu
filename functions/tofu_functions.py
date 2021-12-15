@@ -65,23 +65,23 @@ def get_pulses(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A
     
     file_name = f'M11D-B{board}<DT{channel}'
     
-    # Record length is 64 for ADQ14 and 56 for ADQ412
-    if   int(board) <= 5: record_length = 64
-    elif int(board) > 5: record_length = 56
-    else: 
-        raise Exception('Wrong function call. Example call: data = get_pulses(\'04\', \'A\', 94206)')
+    # Get record lenght
+    record_length = get_record_length(board, shot_number)
     
     # Get some of the data or all of it
     if (pulse_start != -1) & (pulse_end != -1):
-        pulse_data, nD, ier = gd.getbytex(file_name, shot_number, nbytes = (pulse_end - pulse_start) * record_length * 2, start = 6 + 2 * record_length * pulse_start, order = 12)
+        pulse_data, _, _ = gd.getbytex(file_name, 
+                                       shot_number, 
+                                       nbytes = (pulse_end-pulse_start)*record_length*2, 
+                                       start = 6+2*record_length*pulse_start, 
+                                       order = 12)
     else:
-        pulse_data, nD, ier = gd.getbyte(file_name, shot_number)
+        pulse_data, _, _ = gd.getbyte(file_name, shot_number)
     pulse_data.dtype = np.int16
 
-  
     # Reshape pulse data
     if len(pulse_data) % record_length != 0: 
-        raise Exception('Error: Number of records could not be calculated for record length of 64 samples.')
+        raise Exception(f'Error: Number of records could not be calculated for record length of {record_length} samples.')
 
     if timer: elapsed_time(t_start, 'get_pulses()')
     
@@ -233,17 +233,16 @@ def get_temperatures(board, shot_number, timer = False):
     
     if timer: elapsed_time(t_start, 'get_temperatures()')
     return T0, TE
-    
-def get_trigger_level(board, channel, shot_number, timer = False):
+  
+def get_time_limit(board, shot_number, timer = False):
     '''
-    Returns the trigger level in codes used for the given shot, board and channel
+    Returns the acquisition time limit in seconds for a given board and shot
+    number.
     
     Parameters
     ----------
     board : int or string
           Board number (between 1-10) for requested trigger level.
-    channel : string
-            Channel name for requested data (A, B, C or D).
     shot_number : int or string
                 JET pulse number.
     timer : bool, optional
@@ -251,27 +250,69 @@ def get_trigger_level(board, channel, shot_number, timer = False):
     
     Returns
     -------
-    trigger_level : int
-                  Trigger level in codes.
+    time_limit : int
+               Time limit in seconds.
                   
     Examples
     --------
-    >>> get_trigger_level(8, 'A', 97100)
-    1500
-    >>> get_trigger_level(1, 'B', 97200)
-    26000
+    >>> get_time_limit(1, 97100)
+    120
+    >>> get_time_limit(6, 97100)
+    120
     '''
     if timer: t_start = elapsed_time()
-    
+
     if int(board) < 10: board = f'0{int(board)}'
-    file_name = f'M11D-B{board}>TL{channel}'
+    file_name = f'M11D-B{board}>TLM'
     
     # Get trigger level
-    tlvl, nD, ier = gd.getbyte(file_name, shot_number)
-    tlvl.dtype = np.int16
-    trigger_level = tlvl.byteswap()[0]
-    if timer: elapsed_time(t_start, 'get_trigger_level()')
-    return trigger_level
+    tlim, _, _ = gd.getbyte(file_name, shot_number)
+    tlim.dtype = np.int16
+    time_limit = tlim.byteswap()[0]
+    if timer: elapsed_time(t_start, 'get_time_limit()')
+    return time_limit
+
+def get_record_length(board, shot_number, timer = False):
+    '''
+    Returns the record length in number of samples for a given board and shot
+    number.
+    
+    Parameters
+    ----------
+    board : int or string
+          Board number (between 1-10) for requested trigger level.
+    shot_number : int or string
+                JET pulse number.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+    
+    Returns
+    -------
+    record_length : int
+                  Record length in number of samples.
+                  
+    Examples
+    --------
+    >>> get_record_length(1, 'A', 97100)
+    64
+    >>> get_record_length(6, 'B', 97100)
+    56
+    '''
+    
+    if timer: t_start = elapsed_time()
+    if int(board) < 10: board = f'0{int(board)}'
+    file_name = f'M11D-B{board}>RLN'
+    
+    # Get record length
+    rln, _, _ = gd.getbyte(file_name, shot_number)
+    rln.dtype = np.int16
+    record_length = rln.byteswap()[0]
+    if timer: elapsed_time(t_start, 'get_record_length()')
+    
+    # Remove 8 samples of header info for ADQ412
+    if int(board)>5: return record_length-8
+    else: return record_length
+
 
 def get_pre_trigger(board, shot_number, timer = False):
     '''
@@ -305,11 +346,11 @@ def get_pre_trigger(board, shot_number, timer = False):
     file_name = f'M11D-B{board}>PRT'
     
     # Get number of pre trigger samples
-    prt_samples, _, _ = gd.getbyte(file_name, shot_number)
-    
-    
+    prt, _, _ = gd.getbyte(file_name, shot_number)
+    prt.dtype = np.int16
+    prt_samples = prt.byteswap()[0]
     if timer: elapsed_time(t_start, 'get_pre_trigger()')
-    return prt_samples[1]
+    return prt_samples
 
 def get_bias_level(board, shot_number, timer = False):
     '''
@@ -343,11 +384,51 @@ def get_bias_level(board, shot_number, timer = False):
     file_name = f'M11D-B{board}>BSL'
     
     # Get bias level
-    blvl, nD, ier = gd.getbyte(file_name, shot_number)
+    blvl, _, _ = gd.getbyte(file_name, shot_number)
     blvl.dtype = np.int16    
     
     if timer: elapsed_time(t_start, 'get_bias_level()')
     return blvl.byteswap()[0]
+
+def get_trigger_level(board, channel, shot_number, timer = False):
+    '''
+    Returns the trigger level in codes used for the given shot, board and 
+    channel.
+    
+    Parameters
+    ----------
+    board : int or string
+          Board number (between 1-10) for requested trigger level.
+    channel : string
+            Channel name for requested data (A, B, C or D).
+    shot_number : int or string
+                JET pulse number.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+    
+    Returns
+    -------
+    trigger_level : int
+                  Trigger level in codes.
+                  
+    Examples
+    --------
+    >>> get_trigger_level(8, 'A', 97100)
+    1500
+    >>> get_trigger_level(1, 'B', 97200)
+    26000
+    '''
+    if timer: t_start = elapsed_time()
+    
+    if int(board) < 10: board = f'0{int(board)}'
+    file_name = f'M11D-B{board}>TL{channel}'
+    
+    # Get trigger level
+    tlvl, _, _ = gd.getbyte(file_name, shot_number)
+    tlvl.dtype = np.int16
+    trigger_level = tlvl.byteswap()[0]
+    if timer: elapsed_time(t_start, 'get_trigger_level()')
+    return trigger_level
 
 def baseline_reduction(pulse_data, timer = False):
     '''
@@ -963,7 +1044,7 @@ def get_board_name(detector_name, timer = False):
     
     # Find channel
     channel = channels[pos % 4][0]
-    if timer: elapsed_time(t_start, 'get_detector_name()')    
+    if timer: elapsed_time(t_start, 'get_board_name()')    
     return board, channel
 
 def get_shifts(shift_file, timer = False):
