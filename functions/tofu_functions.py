@@ -1093,7 +1093,7 @@ def get_shifts(shift_file, timer = False):
     # Dictionary
     shifts = {'S1_01':[], 'S1_02':[], 'S1_03':[], 'S1_04': [], 'S1_05':[]}
 
-    # This gives how much one needs to shift each TOF spectrum in order to line up with the S1_5 vs S2's at 4 ns
+    # This gives how much one needs to shift each TOF spectrum in order to line up with the S1_5 vs S2's at 3.7 ns
     shifts['S1_05'] = g_peak - gamma_peak
     shifts['S1_04'] = shifts['S1_05'] - neutron_peak[3]
     shifts['S1_03'] = shifts['S1_05'] - neutron_peak[2]
@@ -1294,9 +1294,34 @@ def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 
 
 def inverted_light_yield(light_yield, function = 'gatu', timer = False):
     '''
-    Takes array of light yields in MeVee and translates to proton recoil using
-    look-up table of the inverted light yield function from M. Gatu Johnson.
+    Takes an array of light yields (MeVee) and converts to proton recoil energy
+    (MeV) using the look-up table of the inverted light yield function 
+    specified in "function".
+
+    Parameters
+    ----------
+    light_yield : ndarray,
+                1D array of light yields given in MeVee.
+    function : str, optional
+             Set to "gatu" to use the light yield function from M. Gatu Johnson,
+             set to "stevenato" to use light yield function from Stevanato, L., 
+             et al. "Light output of EJ228 scintillation neutron detectors." 
+             Applied Radiation and Isotopes 69.2 (2011): 369-372.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+                 
+    Returns
+    -------
+    proton_recoil : ndarray,
+                  Array of proton recoil energies (MeV).
+            
+    Examples
+    --------
+    >>> E_ly = [1, 2, 3] # (MeVee)
+    >>> inverted_light_yield(E_ly)
+    array([3.84391241 6.12264731 8.2078698])    
     '''
+    
     if timer: t_start = elapsed_time()
     # Import look-up table
     dirname = os.path.dirname(__file__)
@@ -1312,20 +1337,50 @@ def inverted_light_yield(light_yield, function = 'gatu', timer = False):
     if timer: elapsed_time(t_start, 'inverted_light_yield()')
     return proton_recoil
     
-def light_yield_function(energy, function = 'gatu', timer = False):
+def light_yield_function(proton_energy, function = 'gatu', s = 0.75, timer = False):
     '''
-    Takes array of proton recoil energies in MeV and translates to light yield
-    in MeVee using light yield function from M. Gatu Johnson thesis.
+    Takes an array of proton recoil energies (MeV) and converts to light yield
+    (MeVee) using the light yield function specified in "function".
+
+    Parameters
+    ----------
+    proton_energy : ndarray,
+                  1D array of proton recoil energies given in MeV.
+    function : str, optional
+             Set to "gatu" to use the light yield function from M. Gatu Johnson,
+             set to "stevenato" to use light yield function from Stevanato, L., 
+             et al. "Light output of EJ228 scintillation neutron detectors." 
+             Applied Radiation and Isotopes 69.2 (2011): 369-372.
+    s : float,
+      Arbitrary scaling factor, default set to s=0.75, to ensure that the light
+      yield function matches the measured spectrum.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+                 
+    Returns
+    -------
+    light_yield : ndarray,
+                  Array of light yields (MeVee).
+            
+    Examples
+    --------
+    >>> E_p = [3.84391241, 6.12264731, 8.2078698] # (MeV)
+    >>> light_yield_function(E_p)
+    array([1.00004149, 2.00002003, 3.00005272])    
     '''
+   
     if timer: t_start = elapsed_time()
+    # Cast into numpy array
+    proton_energy = np.array(proton_energy)
+    
     if function == 'gatu':
         '''
         Light yield function from M. Gatu Johnson's thesis
         '''
         # Different energy ranges
-        low_mask    = energy <= 1.9
-        medium_mask = (energy > 1.9) & (energy <= 9.3)
-        high_mask   = energy > 9.3
+        low_mask    = proton_energy <= 1.9
+        medium_mask = (proton_energy > 1.9) & (proton_energy <= 9.3)
+        high_mask   = proton_energy > 9.3
         
         a1 = 0.0469
         b1 = 0.1378
@@ -1339,24 +1394,24 @@ def light_yield_function(energy, function = 'gatu', timer = False):
         a3 = -1.8899
         b3 = 0.7067
     
-        light_yield = np.zeros(np.shape(energy))
+        light_yield = np.zeros(np.shape(proton_energy))
     
         light_yield[low_mask] = (
-                                 a1 * energy[low_mask]    + 
-                                 b1 * energy[low_mask]**2 + 
-                                 c1 * energy[low_mask]**3
+                                 a1 * proton_energy[low_mask]    + 
+                                 b1 * proton_energy[low_mask]**2 + 
+                                 c1 * proton_energy[low_mask]**3
                                  )
     
         light_yield[medium_mask] = (
                                     a2 + 
-                                    b2 * energy[medium_mask] +  
-                                    c2 * energy[medium_mask]**2 +
-                                    d2 * energy[medium_mask]**3
+                                    b2 * proton_energy[medium_mask] +  
+                                    c2 * proton_energy[medium_mask]**2 +
+                                    d2 * proton_energy[medium_mask]**3
                                     )
     
         light_yield[high_mask] = (
                                   a3 + 
-                                  b3 * energy[high_mask]
+                                  b3 * proton_energy[high_mask]
                                   )
     elif function == 'stevanato':
         '''
@@ -1368,9 +1423,10 @@ def light_yield_function(energy, function = 'gatu', timer = False):
         
         L_0 = 0.606
         L_1 = 2.97
-        light_yield = L_0*energy**2/(energy+L_1)
+        light_yield = L_0*proton_energy**2/(proton_energy+L_1)
     if timer: elapsed_time(t_start)
-    return light_yield
+    
+    return s*light_yield
 
 
 def get_kincut_function(tof, timer = False):
@@ -1405,19 +1461,11 @@ def get_kincut_function(tof, timer = False):
     alpha_min = alpha - np.arccos((l**2 + l_max**2 - l_S2**2/4) / (2 * l * l_max))
     
     J_to_MeV = 1E-6 / constant.electron_volt 
-#    E_S1_max = 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * (1 / np.cos(alpha_max)**2 - 1) * J_to_MeV
-#    E_S1_min = 0.5 * constant.neutron_mass * (l_min / (tof*1E-9))**2 * (1 / np.cos(alpha_min)**2 - 1) * J_to_MeV
-#    E_S2_max = 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * J_to_MeV
     
-    ######################################## 
-    #### Arbitrary scaling factor added ####
-    ########################################
-    arb_scale_1 = 0.74
-    arb_scale_2 = 0.74
-    arb_scale_3 = 0.77
-    E_S1_max = arb_scale_1 * 0.5 * constant.neutron_mass * (l_min / (tof*1E-9))**2 * (1 / np.cos(alpha_max)**2 - 1) * J_to_MeV
-    E_S1_min = arb_scale_2 * 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * (1 / np.cos(alpha_min)**2 - 1) * J_to_MeV
-    E_S2_max = arb_scale_3 * 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * J_to_MeV
+    # Calculate cuts in proton recoil energy (MeV)
+    E_S1_max = 0.5 * constant.neutron_mass * (l_min / (tof*1E-9))**2 * (1 / np.cos(alpha_max)**2 - 1) * J_to_MeV
+    E_S1_min = 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * (1 / np.cos(alpha_min)**2 - 1) * J_to_MeV
+    E_S2_max = 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * J_to_MeV
 
     # Translate to light yield
     ly_S1_max = light_yield_function(E_S1_max)
@@ -2536,9 +2584,5 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--help: Print this help text.')
     
 
-
-
-
-
-
-
+    
+    
