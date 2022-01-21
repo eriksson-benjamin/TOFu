@@ -1337,7 +1337,7 @@ def inverted_light_yield(light_yield, function = 'gatu', timer = False):
     if timer: elapsed_time(t_start, 'inverted_light_yield()')
     return proton_recoil
     
-def light_yield_function(proton_energy, function = 'gatu', s = 0.75, timer = False):
+def light_yield_function(proton_energy, function = 'gatu', s = 0.73, timer = False):
     '''
     Takes an array of proton recoil energies (MeV) and converts to light yield
     (MeVee) using the light yield function specified in "function".
@@ -1352,7 +1352,7 @@ def light_yield_function(proton_energy, function = 'gatu', s = 0.75, timer = Fal
              et al. "Light output of EJ228 scintillation neutron detectors." 
              Applied Radiation and Isotopes 69.2 (2011): 369-372.
     s : float,
-      Arbitrary scaling factor, default set to s=0.75, to ensure that the light
+      Arbitrary scaling factor, default set to s=0.73, to ensure that the light
       yield function matches the measured spectrum.
     timer : bool, optional
           If set to True, prints the time to execute the function.
