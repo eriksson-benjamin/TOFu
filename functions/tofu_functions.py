@@ -1292,7 +1292,7 @@ def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 
     if timer: elapsed_time(t_start, 'cleanup()')
     return new_pulses, bad_indices
 
-def inverted_light_yield(light_yield, function = 'gatu', timer = False):
+def inverted_light_yield(light_yield, function = 'gatu', check = True, timer = False):
     '''
     Takes an array of light yields (MeVee) and converts to proton recoil energy
     (MeV) using the look-up table of the inverted light yield function 
@@ -1327,6 +1327,22 @@ def inverted_light_yield(light_yield, function = 'gatu', timer = False):
     dirname = os.path.dirname(__file__)
     filename = os.path.join(dirname, f'../inverted_light_yield/look_up_{function}.txt')
     table = np.loadtxt(filename)
+    
+    ##########
+    #FIX THIS#
+    ##########
+    
+    # Check if the look-up table matches the light yield function
+    if check:
+        __proton_recoil = np.arange(0, 3, 0.1)
+        __light_yield = light_yield_function(__proton_recoil, function)
+        __proton_recoil_r = inverted_light_yield(__light_yield, function, False)
+        if not np.allclose(__proton_recoil, __proton_recoil_r, 0.0001):
+            msg = 'Inverted light yield look-up table does not ' \
+                  'match the light yield function. Please '\
+                  'regenerate the look-up table.'
+            raise Exception(msg)
+    
     
     # Find closest value in look-up table for the light yield
     proton_recoil = np.zeros(np.shape(light_yield))
@@ -2583,6 +2599,9 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--integrated-charge-spectrum: Use integrated charge for the energy axis.')
     print('--help: Print this help text.')
     
-
+if __name__=='__main__':
+    E_ly = np.arange(0,5, 0.1)
+    E_p = inverted_light_yield(E_ly)
+    E_ly_2 = light_yield_function(E_p)
     
     
