@@ -1328,10 +1328,6 @@ def inverted_light_yield(light_yield, function = 'gatu', check = True, timer = F
     filename = os.path.join(dirname, f'../inverted_light_yield/look_up_{function}.txt')
     table = np.loadtxt(filename)
     
-    ##########
-    #FIX THIS#
-    ##########
-    
     # Check if the look-up table matches the light yield function
     if check:
         __proton_recoil = np.arange(0, 3, 0.1)
@@ -1447,18 +1443,48 @@ def light_yield_function(proton_energy, function = 'gatu', s = 0.73, timer = Fal
 
 def get_kincut_function(tof, timer = False):
     '''
-    Takes an array of times of flight [ns] and returns the corresponding maximal/minimal
-    light yield for each time of flight in MeVee. 
-    Input: 
-        tof: 1D array of times of flight [ns]
-    Output:
-        E_S1_max: maximal energy in S1 for given time of flight [MeVee]
-        E_S1_min: minimal energy in S1 for given time of flight [Mevee]
-        E_S2_max: maximal energy in S2 for given time of flight [MeVee]
+    Takes an array of times of flight [ns] and returns the corresponding 
+    maximal/minimal light yield for each flight time (MeVee). The calculation
+    is done by considering the TOFOR geometry to find the maximal/minimal
+    scattering angles in the S1 detectors providing an upper and lower limit
+    in the proton recoil energy in the S1. For the S2 there is only an upper
+    upper limit, as there is no requirement in the scattering direction in the 
+    S2s.
+
+    Parameters
+    ----------
+    tof : ndarray,
+        1D array of times-of-flight (ns)
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+                 
+    Returns
+    -------
+    ly_S1_min : ndarray,
+              Array of light yields (MeVee) corresponding to the lower 
+              kinematic cut in S1.
+    ly_S1_max :
+              Array of light yields (MeVee) corresponding to the upper 
+              kinematic cut in S1.
+    ly_S2_max :
+              Array of light yields (MeVee) corresponding to the upper 
+              kinematic cut in S2.
+            
+    Examples
+    --------
+    >>> t_tof = [27, 28, 29] # (ns)
+    >>> get_kincut_function(t_tof)
+    (array([0.41889004, 0.37579523, 0.33857325]),
+     array([1.80448041, 1.62189197, 1.4616936 ]),
+     array([4.91064379, 4.46936204, 4.07293829]))   
     '''
     
     if timer: t_start = elapsed_time()
-
+    
+    # Cast to numpy array
+    tof = np.array(tof)
+    
+    # TOFOR geometry
     l_S2    = 0.35            # length of S2 [m]
     phi_max = np.deg2rad(115) # obtuse angle between S2 and line from S1 centre to S2 centre
     phi_min = np.deg2rad(65)  # acute  angle between S2 and line from S1 centre to S2 centre
@@ -2593,15 +2619,14 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--enable-detectors: Analysis is only performed on detectors speecified by user. Example: --enable-detectors S1_01,S2_01')
     print('--ohmic-spectrum: Analysis is only performed for the Ohmic phase of the shot.')
     print('--run-timer: Print the elapsed time for each function.')
-    print('--set-thresholds thr_l thr_u: Set lower and upper energy thresholds where \"thr_l\" and \"thr_u\" are given in MeVee. If \"thr_u\" is omitted it is set to +inf.')
+    print('--S1-thresholds thr_l thr_u: Set lower and upper energy thresholds for S1 detectors where \"thr_l\" and \"thr_u\" are given in MeVee. If \"thr_u\" is omitted it is set to +inf.')
+    print('--S2-thresholds thr_l thr_u: Set lower and upper energy thresholds for S2 detectors where \"thr_l\" and \"thr_u\" are given in MeVee. If \"thr_u\" is omitted it is set to +inf.')
     print('--proton-recoil-energy: Convert the energy axis from MeVee to MeV scale.')
     print('--pulse-height-spectrum: Use maxima of pulses for the energy axis.')
     print('--integrated-charge-spectrum: Use integrated charge for the energy axis.')
     print('--help: Print this help text.')
     
 if __name__=='__main__':
-    E_ly = np.arange(0,5, 0.1)
-    E_p = inverted_light_yield(E_ly)
-    E_ly_2 = light_yield_function(E_p)
+    print(get_kincut_function([27,28,29]))
     
     

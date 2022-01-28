@@ -261,6 +261,14 @@ def create_TOF(arguments):
         # Convert to deposited energy
         pulse_energy = dfs.get_energy_calibration(-pulse_area, detector_name, timer = timer_level)
         
+        # Check which energy thresholds (MeVee) to use
+        if detector_name[0:2]=='S1':
+            thr_l = S1_thr_l
+            thr_u = S1_thr_u
+        else:
+            thr_l = S2_thr_l
+            thr_u = S2_thr_u
+            
         # Remove pulses outside user defined energy thresholds
         pulse_energy_thr = np.where((pulse_energy > thr_l) & (pulse_energy < thr_u))[0]
         pulse_energy = pulse_energy[pulse_energy_thr]
@@ -323,8 +331,10 @@ if __name__=="__main__":
     S2_info                     = {'energy limits':[0, 6],
                                    'energy bins':np.arange(0, 20, 0.1)}
     processed_shots             = np.array([])
-    thr_l                       = 0
-    thr_u                       = np.inf
+    S1_thr_l                    = 0
+    S1_thr_u                    = np.inf
+    S2_thr_l                    = 0
+    S2_thr_u                    = np.inf
     E_low                       = -0.1
     E_high                      = 2
     shift_file                  = 'shift_files/shift_V4.txt'
@@ -528,7 +538,7 @@ if __name__=="__main__":
             # Only plot Ohmic phase
             elif sys.argv[i] == '--ohmic-spectrum': ohmic_spectrum = True
             
-            # Enable light yield function
+            # Plot as proton recoil instead of light yield
             elif sys.argv[i] == '--proton-recoil-energy': 
                 proton_recoil = True
                 S1_info = {'energy limits':[0, 14],
@@ -619,25 +629,46 @@ if __name__=="__main__":
                     shots = np.append(shots, sys.argv[i + j + 1])
                     j += 1
                 skip_flag = j
-            
-            elif sys.argv[i] == '--set-thresholds':
+                
+            # Energy (light yield) thresholds for S1
+            elif sys.argv[i] == '--S1-thresholds':
                 if sys.argv[i + 1][0:2] == '--':
-                    error_message = '--set-thresholds requires at least one additional argument.'
+                    error_message = '--S1-thresholds requires at least one additional argument.'
                     sys_exit = True
                 try: 
                     next_arg = sys.argv[i + 2][0:2] == '--'
                     if next_arg:
-                        thr_l = np.float(sys.argv[i + 1])
+                        S1_thr_l = np.float(sys.argv[i + 1])
                         skip_flag = 1
                     else:
-                        thr_l = np.float(sys.argv[i + 1])
-                        thr_u = np.float(sys.argv[i + 2])
+                        S1_thr_l = np.float(sys.argv[i + 1])
+                        S1_thr_u = np.float(sys.argv[i + 2])
                         skip_flag = 2
                 except: 
-                    thr_l = np.float(sys.argv[i + 1])
+                    S1_thr_l = np.float(sys.argv[i + 1])
                     skip_flag = 1
 
-                print(f'Thresholds set to {thr_l} < E [MeVee] < {thr_u}')
+                print(f'Thresholds for S1 set to {S1_thr_l} < E [MeVee] < {S1_thr_u}')
+                
+            # Energy (light yield) thresholds for S2
+            elif sys.argv[i] == '--S2-thresholds':
+                if sys.argv[i + 1][0:2] == '--':
+                    error_message = '--S2-thresholds requires at least one additional argument.'
+                    sys_exit = True
+                try: 
+                    next_arg = sys.argv[i + 2][0:2] == '--'
+                    if next_arg:
+                        S2_thr_l = np.float(sys.argv[i + 1])
+                        skip_flag = 1
+                    else:
+                        S2_thr_l = np.float(sys.argv[i + 1])
+                        S2_thr_u = np.float(sys.argv[i + 2])
+                        skip_flag = 2
+                except: 
+                    S2_thr_l = np.float(sys.argv[i + 1])
+                    skip_flag = 1
+    
+                print(f'Thresholds for S2 set to {S2_thr_l} < E [MeVee] < {S2_thr_u}')
             
             # Print help message
             elif sys.argv[i] == '--help': 
@@ -646,6 +677,7 @@ if __name__=="__main__":
             else: 
                 error_message = 'Invalid argument: ' + sys.argv[i] +  '.\nUse --help for further information.'
                 sys_exit = True
+                break
             i += 1
 
     # Give information to user
