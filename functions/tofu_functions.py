@@ -1580,16 +1580,20 @@ def get_dictionaries(S = 0, fill = []):
     ----------
     S : str, optional
       String indicating which type of dictionary to return. Available options:
-          S = 0: Returns two dictionaries, one for S1 and one for S2.
-          S = 'S1': Returns dictionary for S1.
-          S = 'S2': Returns dictionary for S2.
-          S = 'merged': Returns single dictionary with S1/S2 detector names as
-                        keys.
-          S = 'nested': Returns a nested dictionary where each S1 contains a 
-                        dictionary with S2 detector names as keys.
+          
     fill : ndarray, optional,
          Sets the values of the dictionary to whatever is passed in "fill".
-                 
+    Notes
+    -----
+    The input parameter S can be set to the following modes.\n
+    S = 0: Returns two dictionaries, one for S1 and one for S2.\n
+    S = 'S1': Returns a dictionary for S1.\n
+    S = 'S2': Returns a dictionary for S2.\n
+    S = 'merged': Returns single dictionary with S1/S2 detector names as keys.
+    \n
+    S = 'nested': Returns a nested dictionary where each S1 contains a 
+    dictionary with S2 detector names as keys.
+    
     Returns
     -------
     S1_dictionary : dict,       
@@ -1721,347 +1725,73 @@ def find_ohmic_phase(shot_number, timer = False):
 
 def elapsed_time(time_start = 0., timed_function = '', return_time = False):
     '''
-    Optional timer for functions
-    To start timer: 
-        t_start = elapsed_time()
-    To stop timer and print result:
-        elapsed_time(t_start, 'Function name')
+    Optional timer for functions.
+
+    Parameters
+    ----------
+    time_start : float, optional
+               Starting time, used to calculate the elapsed time
+    timed_function : str, optional
+                   String used in print statement, typically set to the 
+                   function being timed.
+    return_time : bool, optional
+                Returns the elapsed time
+                                 
+    Returns
+    -------
+    return_time : float,       
+                Elapsed time (s)
+            
+    Examples
+    --------
+    >>> t_start = elapsed_time() # Start timer
+    >>> time.sleep(1)
+    >>> elapsed_time(t_start, 'example function') # Print elapsed time
+    Elapsed time for example function: 1.00 sec.
     '''
+    
     if not time_start: return time.time()
     else: print('Elapsed time for ' + timed_function + ': ' + '%.2f' %(time.time() - time_start) + ' sec.' )    
     if return_time: return time.time() - time_start
 
-
-
-##################################
-### Unfinished below this line ###
-##################################
-
-#def light_yield_function():
-#    '''
-#    Plots the light yield function used by Maria Gatu Johnson    
-#    '''
-#    # Three ranges
-#    # Range 1
-#    Ep_1 = np.arange(0, 1.91, 0.01)
-#    a_1 = 0.0469
-#    b_1 = 0.1378
-#    c_1 = -0.0183
-#    Eee_1 = a_1*Ep_1 + b_1*Ep_1**2 + c_1*Ep_1**3 
-#    
-#    # Range 2
-#    Ep_2 = np.arange(1.9, 9.31, 0.01)
-#    a_2 = -0.0142
-#    b_2 = 0.1292
-#    c_2 = 0.0697
-#    d_2 = -0.00315
-#    Eee_2 = a_2 + b_2*Ep_2 + c_2*Ep_2**2 + d_2*Ep_2**3
-#    
-#    # Range 3
-#    Ep_3 = np.arange(9.3, 18.91, 0.01)
-#    a_3 = -1.8899
-#    b_3 = 0.7067
-#    Eee_3 = a_3 + b_3*Ep_3
-#    
-#    plt.figure('Light yield function')
-#    plt.plot(Ep_1, Eee_1, 'k')
-#    plt.plot(Ep_2, Eee_2, 'k')
-#    plt.plot(Ep_3, Eee_3, 'k')
-#    plt.xlabel('Proton recoil energy [MeV]')
-#    plt.ylabel('Light yield [MeVee]')
-#    
-    
-    
-    
-def cTOF(S1,S2,dtlow,dthigh,nbins):
-    # S1:       time stamps from S1
-    # S2:       time stamps from S2
-    # dtlow:    time to go back to look for coincidences
-    # dthihg:   time to go forward to look for coincidences
-    # nbins:    the number of bins within the defined gap
-    
-    upper = len(S1) - 1
-        
-    delta = (dthigh - dtlow) / nbins    # time width / bin
-    hist = np.zeros(nbins, 'i')
-    
-        # Define the gap to look between for each event where low is the lower edge and high is the upper edge 
-    low = S2 + dtlow
-    high = S2 + dthigh  
-    
-    for i, T in enumerate(S2):
-            # Look for the number closest to low[i] in S1 (always rounded up) and store it's index in j
-        j = np.searchsorted(S1, low[i])
-        
-        if j >= upper: 
-            break           # Oops, run out of events, kill it all
-            
-            # If the value in S1 closest to low[i] (the lower edge) is larger than high[i] (the upper edge) then there are no events in the gap
-        if S1[j] >= high[i]: 
-            continue        # No events in the gap
-        
-            # In which bin should the event be placed
-        L = np.int((S1[j] - low[i]) / delta)
-        hist[L] += 1
-        
-            # Do the same thing another 4 times
-        if S1[j + 1] >= high[i]: 
-            continue
-        
-        L = np.int((S1[j + 1] - low[i]) / delta)
-        hist[L] += 1         
-        
-        if S1[j + 2] >= high[i]: 
-            continue
-        
-        L = np.int((S1[j + 2] - low[i]) / delta)
-        hist[L] += 1     
-        if S1[j + 3] >= high[i]: 
-            continue
-        
-        L = np.int((S1[j + 3] - low[i]) / delta)
-        hist[L] += 1       
-        
-        if S1[j+4] >= high[i]: 
-            continue
-        
-        L = np.int((S1[j + 4] - low[i]) / delta)
-        hist[L] += 1    
-        
-    return hist, delta          
-
-
-# Plot 1D histogram, allows looping several plots into same window with legend
-def hist_1D_s(x_data, title = '', log = True, bins = 0, ax = -1, 
-              normed = 0, density = False, x_label = 't$_{tof}$ [ns]', y_label = 'Counts', hist_type = 'standard', 
-              alpha = 1, linewidth = 1, color = 'k', weights = None, linestyle = '-', timer = False):
+def background_subtraction(coincidences, tof_bins, energies_S1, S1_info, 
+                           energies_S2, S2_info, disable_cuts, timer = False):
     '''
-    Example of how to use legend:
-    fig = plt.figure('Time differences')
-    ax = fig.add_subplot(111)
-    bins = np.linspace(0, 1.15 * np.max(dt_ADQ14), 1000)
-    hist_1D_s(dt_ADQ412, label = 'ADQ412', log = True, bins = bins, x_label = 'Time difference [ms]', ax = ax)
-    hist_1D_s(dt_ADQ14,  label = 'ADQ14',  log = True, bins = bins, x_label = 'Time difference [ms]', ax = ax)
+    Performs background subtraction of TOF spectrum using negative flight 
+    times.
+    
+    Parameters
+    ----------
+    coincidences : ndarray,
+                 1D array of times-of-flight (ns).
+    tof_bins : ndarray,
+             Bins used for TOF spectrum.
+    energies_S1 : ndarray,
+                1D array of energies (MeVee) for S1.
+    S1_info : dict,
+            Contains S1 information on energy bins, limits, etc.
+    energies_S2 : ndarray,
+                1D array of energies (MeVee) for S2.
+    S2_info : dict,
+            Contains S2 information on energy bins, limits, etc.
+    disable_cuts : boolean,
+                 If set to True, calculates the background as the average value
+                 between TOF -100 to -50 ns. If set to False, takes kinematic
+                 cuts into consideration.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+                                 
+    Returns
+    -------
+    tof_bg : ndarray,
+           1D array, background TOF component. Component is flipped to positive
+           flight times. The entire component is returned (i.e. negative and 
+           positive part) for the given input bins.
     '''
-    if timer: t_start = elapsed_time()
     
-    # Create bins if not given
-    if bins is 0: bins = np.linspace(np.min(x_data), np.max(x_data), 100)
-    
-
-    
-    bin_centres = bins[1:] - np.diff(bins) / 2
-    hist = np.histogram(x_data, bins = bins, weights = weights)
-    if normed: bin_vals = hist[0] / np.max(hist[0])
-    else: bin_vals = hist[0]
-    
-    # Plot with uncertainties
-    if hist_type == 'standard':
-        cap_size = 1.5
-        line_width = 1
-        marker = '.'
-        marker_size = 1.5
-        plt.plot(bin_centres, 
-                 bin_vals, 
-                 marker = marker, 
-                 alpha = alpha,
-                 markersize = marker_size,
-                 color = color,
-                 linestyle = 'None')
-        plt.errorbar(bin_centres, 
-                     bin_vals, 
-                     np.sqrt(bin_vals), 
-                     color = color, 
-                     alpha = alpha,
-                     elinewidth = line_width,
-                     capsize = cap_size,
-                     linestyle = 'None')
-        plt.yscale('log')
-        ax = -1
-    else:
-        plt.hist(bin_centres, bins = bins, weights = bin_vals, log = log,
-                 histtype = hist_type, alpha = alpha, linewidth = linewidth,
-                 color = color, linestyle = linestyle, density = density)        
-
-    plt.title(title)
-    plt.xlim([bins[0], bins[-1]])
-    
-    plt.xlabel(x_label, fontsize = 14)
-    plt.ylabel(y_label, fontsize = 14)
-    plt.xticks(fontsize = 12)
-    plt.yticks(fontsize = 12)
-
-    
-    # Include legend
-    if ax != -1:
-        
-        handles, labels = ax.get_legend_handles_labels()
-#        new_handles = [Line2D([], [], c=h.get_edgecolor()) for h in handles]
-        new_handles = [Line2D([], [], c = color) for h in handles]
-
-        plt.legend(handles=new_handles, labels=labels, loc = 'upper right')
-    
-    if timer: elapsed_time(t_start, 'hist_1D_s()')
-    return hist
-#    if return_hist: return hist
-
-def background_subtraction_(disable_cuts, TOF_hist, timer = False):
-    '''
-    Perform background subtraction of TOF spectrum. If disable_cuts is true an average
-    is calculated between -100ns to -50 ns. If disable_cuts is false a model is fit to
-    the background and mirrored to the positive TOF side.
-    disable_cuts: boolean from user input for disabling/enabling kinematic cuts
-    TOF_hist: tuple of histogram information (events, bins)
-    '''
-    if timer: t_start = elapsed_time()
-    
-    # Get events and bins
-    events = TOF_hist[0]
-    bins = TOF_hist[1]
-    
-    # Without kinematic cuts use average background between -100 ns and -50 ns
-    if disable_cuts: 
-        tof_bg = np.zeros(len(events))
-        tof_bg += np.mean(events[np.where((bins < -50) & (bins > -100))[0]])
-    
-    # Otherwise fit model to background
-    else: 
-        def fit_function_1(parameters, bins, data):
-            '''
-            Fit function for fitting a Gaussian
-            '''
-            a = parameters[0]
-            b = parameters[1]
-            c = parameters[2]
-                
-            # Make gaussian
-            A = a * np.exp(-((bins - b) / c)**2)
-            diff = A - data
-            return diff
-        
-        def fit_function_2(parameters, bins, data):
-            '''
-            Fit function for fitting poly2 function. The variable constraint
-            ensures that there is a smooth transition from fit_function_1 to
-            fit_function_2.
-            '''
-            a = parameters[0]
-            b = parameters[1]
-            c = parameters[2]
-            end_fit = parameters[3]
-            print(end_fit)
-            # Find bin/data index corresponding to end_fit
-            end_fit = np.argmin(np.abs(bins - end_fit))
-            bins = bins[:end_fit]
-            data = data[:end_fit]
-            # Make poly2
-            fcn = a * bins**2 + b * bins + c
-            
-            diff = fcn - data
-            return diff
-        
-        bin_centres = bins[0:-1] + np.diff(bins)[0]/2
-        bin_centres[np.argmin(np.abs(bin_centres))] = 0 # Force central bin to be exactly zero
-        
-        # Region 0 - negative side of TOF spectrum
-        bins_0   = bin_centres[bin_centres < 0]
-        events_0 = events[bin_centres < 0]
-        
-        # Region 1 - Gaussian region
-        bin_shift = 8
-        bins_1    = bins_0[0:np.argmax(events_0) - bin_shift]
-        events_1  = events[0:np.argmax(events_0) - bin_shift]
-        
-        # Region 2 - Poly2 region
-        arg_start_2 = len(bins_1)
-        bins_2 = bins_0[arg_start_2:]
-        events_2 = events_0[arg_start_2:]
-        
-        # Region 3 - Zero region
-#        bins_3   = bins_0[np.argmin(np.abs(bins_0 + 12)):np.argmin(np.abs(bins_0)) + 1] # bins from -12 ns to 0 ns
-        
-
-        
-        '''
-        Region 1 - Gaussian fit
-        '''
-        # Starting guesses
-        a_1 = 681.3
-        b_1 = 18.8
-        c_1 = 72.7
-
-        # Fit parameters
-        fit_params_1 = optimize.least_squares(fun = fit_function_1, x0 = [a_1, b_1, c_1], args = (bins_1, events_1))['x']
-        a_1 = fit_params_1[0]
-        b_1 = fit_params_1[1]
-        c_1 = fit_params_1[2]
-        fit_1 = a_1 * np.exp(-((bins_1 - b_1) / c_1)**2)
-        
-        '''
-        Region 2 - Poly2 fit
-        '''
-        # Starting guesses
-        a_2 = -1.4
-        b_2 = -81.4
-        c_2 = -770.5
-        end_fit = -15.2
-        # Fit parameters
-        bounds = ((-np.inf, -np.inf, -np.inf, -25), (np.inf, np.inf, np.inf, -10))
-        fit_params_2 = optimize.least_squares(fun = fit_function_2, 
-                                              x0 = [a_2, b_2, c_2, end_fit], 
-                                              args = (bins_2, events_2), 
-                                              bounds = bounds)['x']
-        a_2 = fit_params_2[0]
-        b_2 = fit_params_2[1]
-        c_2 = fit_params_2[2]
-        end_fit = fit_params_2[3]
-        # Find bin corresponding to end_fit
-        end_fit = np.argmin(np.abs(bins_0 - end_fit))
-        bins_2 = bins_0[arg_start_2:end_fit]
-        fit_2 = a_2 * bins_2**2 + b_2 * bins_2 + c_2
-        
-        '''
-        Region 3 - Rolling average
-        '''
-        # Region 3 - Rolling average region
-        bins_3   = bins_0[end_fit:] 
-        events_3 = events_0[end_fit:]
-        n = 3 # Number of bins to average
-        fit_3 = np.array([])
-        for n_i in range(len(events_3)):
-            if n_i == 0: fit_3 = np.append(fit_3, events_3[0])
-            elif n_i == len(events_3) - 1: fit_3 = np.append(fit_3, events_3[-1])
-            else: fit_3 = np.append(fit_3, np.sum(events_3[n_i-1:n_i+2] / n))
-        
-        '''
-        Sum of all regions
-        '''
-        bins_all = np.append(bins_1, bins_2)
-        bins_all = np.append(bins_all, bins_3)
-        fit_all = np.append(fit_1, fit_2)
-        fit_all = np.append(fit_all, fit_3)
-        
-                
-        # Mirror to positive TOF side
-        flipped = np.flip(fit_all)
-        tof_bg = np.append(fit_all, 0) # Add the zero corresponding to the bin centered at zero
-        tof_bg = np.append(tof_bg, flipped)
-        
-    if timer: elapsed_time(t_start, 'background_subtraction()')
-    return tof_bg
-
-def background_subtraction(coincidences, tof_bins, energies_S1, S1_info, energies_S2, S2_info, disable_cuts, timer = False):
-    '''
-    Perform background subtraction of TOF spectrum. If disable_cuts is true an average
-    is calculated between -100ns to -50 ns. If disable_cuts is false a model is fit to
-    the background and mirrored to the positive TOF side.
-    disable_cuts: boolean from user input for disabling/enabling kinematic cuts
-    tof_info: tuple of histogram information (events, bin_edges)
-    '''
     if timer: t_start = elapsed_time()
     
     # Without kinematic cuts use average background between -100 ns and -50 ns
-    
     tof_hist, _ = np.histogram(coincidences[(coincidences < -50) & (coincidences > -100)], tof_bins[(tof_bins < -50) & (tof_bins > -100)])
     mean_bg = np.mean(tof_hist)
     
@@ -2161,7 +1891,7 @@ def background_subtraction(coincidences, tof_bins, energies_S1, S1_info, energie
             fraction = (e_max-S2_energy_bins[upper[0]])/S2_energy_bin_width
             to_project = fraction*col[high-1]
             
-#            # Also add the bins which do not require fractions calculated
+            # Also add the bins which do not require fractions calculated
             to_project += col[:upper[0]].sum()
             s2_projection[i] = to_project
         
@@ -2175,6 +1905,84 @@ def background_subtraction(coincidences, tof_bins, energies_S1, S1_info, energie
 
     return tof_bg
 
+##################################
+### Unfinished below this line ###
+##################################
+
+# Plot 1D histogram, allows looping several plots into same window with legend
+def hist_1D_s(x_data, title = '', log = True, bins = 0, ax = -1, 
+              normed = 0, density = False, x_label = 't$_{tof}$ [ns]', y_label = 'Counts', hist_type = 'standard', 
+              alpha = 1, linewidth = 1, color = 'k', weights = None, linestyle = '-', timer = False):
+    '''
+    Example of how to use legend:
+    fig = plt.figure('Time differences')
+    ax = fig.add_subplot(111)
+    bins = np.linspace(0, 1.15 * np.max(dt_ADQ14), 1000)
+    hist_1D_s(dt_ADQ412, label = 'ADQ412', log = True, bins = bins, x_label = 'Time difference [ms]', ax = ax)
+    hist_1D_s(dt_ADQ14,  label = 'ADQ14',  log = True, bins = bins, x_label = 'Time difference [ms]', ax = ax)
+    '''
+    if timer: t_start = elapsed_time()
+    
+    # Create bins if not given
+    if bins is 0: bins = np.linspace(np.min(x_data), np.max(x_data), 100)
+    
+
+    
+    bin_centres = bins[1:] - np.diff(bins) / 2
+    hist = np.histogram(x_data, bins = bins, weights = weights)
+    if normed: bin_vals = hist[0] / np.max(hist[0])
+    else: bin_vals = hist[0]
+    
+    # Plot with uncertainties
+    if hist_type == 'standard':
+        cap_size = 1.5
+        line_width = 1
+        marker = '.'
+        marker_size = 1.5
+        plt.plot(bin_centres, 
+                 bin_vals, 
+                 marker = marker, 
+                 alpha = alpha,
+                 markersize = marker_size,
+                 color = color,
+                 linestyle = 'None')
+        plt.errorbar(bin_centres, 
+                     bin_vals, 
+                     np.sqrt(bin_vals), 
+                     color = color, 
+                     alpha = alpha,
+                     elinewidth = line_width,
+                     capsize = cap_size,
+                     linestyle = 'None')
+        plt.yscale('log')
+        ax = -1
+    else:
+        plt.hist(bin_centres, bins = bins, weights = bin_vals, log = log,
+                 histtype = hist_type, alpha = alpha, linewidth = linewidth,
+                 color = color, linestyle = linestyle, density = density)        
+
+    plt.title(title)
+    plt.xlim([bins[0], bins[-1]])
+    
+    plt.xlabel(x_label, fontsize = 14)
+    plt.ylabel(y_label, fontsize = 14)
+    plt.xticks(fontsize = 12)
+    plt.yticks(fontsize = 12)
+
+    
+    # Include legend
+    if ax != -1:
+        
+        handles, labels = ax.get_legend_handles_labels()
+        new_handles = [Line2D([], [], c = color) for h in handles]
+
+        plt.legend(handles=new_handles, labels=labels, loc = 'upper right')
+    
+    if timer: elapsed_time(t_start, 'hist_1D_s()')
+    return hist
+    
+
+
 def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 200, 0.4), 
             S1_info = None, S2_info = None, tof_lim = np.array([-150, 200]), title = '', tof_bg_component = 0,
             log = True, interactive_plot = False, projection = 0, disable_cuts = False,
@@ -2182,7 +1990,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
             weights = False, hist2D_S1 = None, hist2D_S2 = None, sum_shots = False, 
             proton_recoil = False, pulse_height_spectrum = False, integrated_charge_spectrum = False,
             timer = False):
-    '''
+    ''' This is a mess, I'm sorry (it does work though).
     Plots 2D histogram of TOF vs energy with projections onto time and energy axis.
     times_of_flight: 1D array of times of flight.
     energy_S1: 1D array of energies for S1
@@ -2243,8 +2051,6 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     else: 
         TOF_hist, _ = np.histogram(tof, bins = bins_tof)
         TOF_plot = TOF_hist
-        
-
         
     # Apply background subtraction
     if not disable_bgs:
@@ -2590,10 +2396,6 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
                                integrated_charge_spectrum = integrated_charge_spectrum)
     elif sum_shots: plt.close(fig)
 
-                
-        
-
-
     if timer: elapsed_time(t_start, 'plot_2D()')
     return TOF_hist, S1_E_hist, S2_E_hist, hist2d_S1, hist2d_S2
     
@@ -2708,6 +2510,4 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--help: Print this help text.')
     
 if __name__=='__main__':
-    t = find_ohmic_phase(98044)
-    
-    
+    pass
