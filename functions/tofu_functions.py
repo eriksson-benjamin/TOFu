@@ -6,8 +6,8 @@ Created on Thu Jul 11 08:27:51 2019
 @author: beriksso
 """
 
-# import getdat as gd
-# import ppf
+import getdat as gd
+import ppf
 import numpy as np
 import time
 import matplotlib.pyplot as plt
@@ -1572,7 +1572,7 @@ def kinematic_cuts(tof, energy_S1, energy_S2, timer = False):
     return tof[accept_inds], energy_S1[accept_inds], energy_S2[accept_inds]                 
 
 
-def get_dictionaries(S = 0, fill = [], timer = False):
+def get_dictionaries(S = 0, fill = []):
     '''
     Returns dictionaries with S1/S2 detector names as keys.
 
@@ -1589,8 +1589,6 @@ def get_dictionaries(S = 0, fill = [], timer = False):
                         dictionary with S2 detector names as keys.
     fill : ndarray, optional,
          Sets the values of the dictionary to whatever is passed in "fill".
-    timer : bool, optional
-          If set to True, prints the time to execute the function.
                  
     Returns
     -------
@@ -1615,7 +1613,7 @@ def get_dictionaries(S = 0, fill = [], timer = False):
                'S2_26', 'S2_27', 'S2_28', 'S2_29', 'S2_30', 
                'S2_31', 'S2_32'])
     '''
-    
+
     S1_dictionary = {}
     for i in range(1, 6):
         dict_key = 'S1_0' + str(i)
@@ -1652,10 +1650,30 @@ def get_channels():
     '''
     return np.array(['A', 'B', 'C', 'D'])
 
-def find_ohmic_phase(shot_number):
+def find_ohmic_phase(shot_number, timer = False):
     '''
-    Returns the time at which the Ohmic phase is over for given shot number.
+    Returns the JET time (s) at which the Ohmic phase is over for given shot number.
+
+    Parameters
+    ----------
+    shot_number : int or string
+                JET pulse number.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+                 
+    Returns
+    -------
+    t_end : float,       
+          JET time at which the Ohmic phase stops, i.e. the time at which any
+          heating but Ohmic heatings is applied.
+            
+    Examples
+    --------
+    >>> find_ohmic_phase(98044)
+    47.008
     '''
+
+    if timer: t_start = elapsed_time()
     
     # Import NBI info
     nbi = ppf.ppfget(shot_number, dda = "NBI", dtyp = "PTOT")
@@ -1671,7 +1689,6 @@ def find_ohmic_phase(shot_number):
     lhcd = ppf.ppfget(shot_number, dda = "LHCD", dtyp = "PTOT")
     lhcd_pow = lhcd[2]
     lhcd_tim = lhcd[4]
-    
     
     # No NBI or ICRH or LHCD
     if (len(nbi_pow[nbi_pow > 0])   == 0 and 
@@ -1690,12 +1707,15 @@ def find_ohmic_phase(shot_number):
     if len(lhcd_pow[lhcd_pow > 0]) > 0: lhcd_start = lhcd_tim[np.where(lhcd_pow !=0)[0][0]]
     else: lhcd_start = np.inf
 
-
     first = np.argsort(np.array([nbi_start, icrh_start, lhcd_start]))[0]
-    if first == 0: return nbi_start
-    elif first == 1: return icrh_start
-    elif first == 2: return lhcd_start
+
+    # Find which heating system started first
+    if first == 0: t_end = nbi_start
+    elif first == 1: t_end = icrh_start
+    elif first == 2: t_end = lhcd_start
     
+    if timer: elapsed_time(t_start, 'find_ohmic_phase()')
+    return t_end
 
 
 
@@ -2688,8 +2708,6 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--help: Print this help text.')
     
 if __name__=='__main__':
-    s1, s2 = get_dictionaries(0, [1,2,3])
-    print(s1.keys())
-    print(s2.keys())
+    t = find_ohmic_phase(98044)
     
     
