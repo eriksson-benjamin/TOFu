@@ -6,8 +6,8 @@ Created on Thu Jul 11 08:27:51 2019
 @author: beriksso
 """
 
-import getdat as gd
-import ppf
+# import getdat as gd
+# import ppf
 import numpy as np
 import time
 import matplotlib.pyplot as plt
@@ -1519,17 +1519,48 @@ def get_kincut_function(tof, timer = False):
 
 def kinematic_cuts(tof, energy_S1, energy_S2, timer = False):
     '''
-    Performs kinematic cuts on the times of flight vs. energy for S1's and S2's.
-    Input:
-        tof:       array of times of flight [ns]
-        energy_S1: array of S1 energies [MeVee]
-        energy_S2: array of S2 energies [MeVee]
-    Output:
-        tof_cut:       1D array of times of flight with kinematic cuts applied
-        energy_S1_cut: 1D array of energies for S1 with kinematic cuts applied
-        energy_S2_cut: 1D array of energies for S2 with kinematic cuts applied
+    Performs kinematic cuts on the times of flight vs. energy for S1's and 
+    S2's.
+
+    Parameters
+    ----------
+    tof : ndarray,
+        1D array of times-of-flight (ns)
+    energy_S1 : ndarray, 
+              1D array of S1 energies (MeVee)
+    energy_S2 : ndarray, 
+              1D array of S2 energies (MeVee)
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+                 
+    Returns
+    -------
+    tof_cut : ndarray,       
+            1D array of times of flight (ns) with kinematic cuts applied,
+            len(tof_cut)<=len(tof).
+    energy_S1_cut : ndarray,
+                  1D array of energies (MeVee) for S1 with kinematic cuts 
+                  applied, len(energy_S1_cut)<=len(energy_S1).
+    energy_S2_cut : ndarray,
+                  1D array of energies (MeVee) for S2 with kinematic cuts 
+                  applied, len(energy_S2_cut)<=len(energy_S2).
+            
+    Examples
+    --------
+    >>> tof = [64, 65, 66, 67] # (ns)
+    >>> energy_S1 = [0.05, 0.1, 0.2, 0.3] # (MeVee)
+    >>> energy_S2 = [0.10, 0.2, 0.3, 0.4] # (MeVee)
+    >>> kinematic_cuts(tof, energy_S1, energy_S2)
+    array([64, 65]), 
+    array([0.05, 0.1 ]), 
+    array([0.1, 0.2])
     '''
+
     if timer: t_start = elapsed_time()
+    # Cast to numpy arrays
+    tof = np.array(tof) 
+    energy_S1 = np.array(energy_S1)
+    energy_S2 = np.array(energy_S2)
     
     # Run tof through get_kincut_function()
     S1_min, S1_max, S2_max = get_kincut_function(tof)
@@ -1541,18 +1572,48 @@ def kinematic_cuts(tof, energy_S1, energy_S2, timer = False):
     return tof[accept_inds], energy_S1[accept_inds], energy_S2[accept_inds]                 
 
 
-def get_dictionaries(S = 0, fill = []):
+def get_dictionaries(S = 0, fill = [], timer = False):
     '''
-    Returns empty dictionaries for S1's or S2's which can be used to store data in.\n
-    Set S = 'S1' for S1 dictionary
-    Set S = 'S2' for S2 dictionary
-    Set S = 'merged' for single dictionary with S1 and S2.
-    Set S = 'nested' for S2 dictionary nested in S1 dictionary
-    S = 0 returns both \n
-    
-    Example 1: S1_dict = get_dictionaries('S1') returns S1_dict = {'S1_01': [], 'S1_02': [], 'S1_03': [], 'S1_04': [], 'S1_05': []} \n
-    Example 2: S1_dict, S2_dict = get_dictionaries() returns both S1_dict = {'S1_01': [], ..., 'S1_05': []} and S2_dict = {'S2_01': [], ..., 'S2_32': []} \n
-    Example 3: nested = get_dictionaries('nested') returns nested = {'S1_01': {'S2_01': [], ..., 'S2_32': []}, ..., 'S1_05': {'S2_01': [], ..., 'S2_32': []}} \n
+    Returns dictionaries with S1/S2 detector names as keys.
+
+    Parameters
+    ----------
+    S : str, optional
+      String indicating which type of dictionary to return. Available options:
+          S = 0: Returns two dictionaries, one for S1 and one for S2.
+          S = 'S1': Returns dictionary for S1.
+          S = 'S2': Returns dictionary for S2.
+          S = 'merged': Returns single dictionary with S1/S2 detector names as
+                        keys.
+          S = 'nested': Returns a nested dictionary where each S1 contains a 
+                        dictionary with S2 detector names as keys.
+    fill : ndarray, optional,
+         Sets the values of the dictionary to whatever is passed in "fill".
+    timer : bool, optional
+          If set to True, prints the time to execute the function.
+                 
+    Returns
+    -------
+    S1_dictionary : dict,       
+                  Dictionary with S1 detector names as keys.
+    S2_dictionary : dict,
+                  Dictionary with S2 detector names as keys.
+            
+    Examples
+    --------
+    >>> s1, s2 = get_dictionaries(0, [1,2,3])
+    >>> print(s1.keys())
+    >>> print(s1.values())
+    dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05'])
+    dict_values([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])
+    >>> print(s2.keys())
+    dict_keys(['S2_01', 'S2_02', 'S2_03', 'S2_04', 'S2_05', 
+               'S2_06', 'S2_07', 'S2_08', 'S2_09', 'S2_10', 
+               'S2_11', 'S2_12', 'S2_13', 'S2_14', 'S2_15', 
+               'S2_16', 'S2_17', 'S2_18', 'S2_19', 'S2_20', 
+               'S2_21', 'S2_22', 'S2_23', 'S2_24', 'S2_25', 
+               'S2_26', 'S2_27', 'S2_28', 'S2_29', 'S2_30', 
+               'S2_31', 'S2_32'])
     '''
     
     S1_dictionary = {}
@@ -2627,6 +2688,8 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--help: Print this help text.')
     
 if __name__=='__main__':
-    print(get_kincut_function([27,28,29]))
+    s1, s2 = get_dictionaries(0, [1,2,3])
+    print(s1.keys())
+    print(s2.keys())
     
     
