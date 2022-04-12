@@ -235,6 +235,8 @@ def create_TOF(arguments):
 
     if not disable_cleanup:
         pulse_data_bl, bad_indices = dfs.cleanup(pulses = pulse_data_bl, dx = 1, bias_level = bias_level, detector_name = detector_name)
+        print(pulse_data_bl)
+        print(bad_indices)
         time_data = np.delete(time_data, bad_indices)
         pre_trig_adjustment = np.delete(pre_trig_adjustment, bad_indices)
     
@@ -255,10 +257,10 @@ def create_TOF(arguments):
         # Get area under pulse
         pulse_energy = -dfs.get_pulse_area(pulse_data_sinc, u_factor, timer = timer_level)
     elif not plot_1D: 
-        # Get deposited energy in MeVee
+        # Get area under pulses
         pulse_area = dfs.get_pulse_area(pulse_data_sinc, u_factor, timer = timer_level)
         
-        # Convert to deposited energy
+        # Convert to deposited energy (MeVee)
         pulse_energy = dfs.get_energy_calibration(-pulse_area, detector_name, timer = timer_level)
         
         # Check which energy thresholds (MeVee) to use
@@ -1062,6 +1064,7 @@ if __name__=="__main__":
                              'erg_bins_S1':erg_bin_centres_S1,
                              'erg_bins_S2':erg_bin_centres_S2,
                              'shots':processed_shots,
+                             'shot_number':shot_number,
                              'input_arguments':sys.argv,
                              'time_range':time_slice}
                 pickle.dump(to_pickle, handle, protocol = pickle.HIGHEST_PROTOCOL)

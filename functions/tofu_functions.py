@@ -1133,13 +1133,7 @@ def get_pulse_area(pulses, u_factor, timer = False):
     dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05']
     >>> shifts['S1_01']
     array([ -18.95286,  -19.35286,..., -118.55286, -117.75286])
-    '''
-    
-    '''
-    Returns the areas under an array of pulses
-    pulses: m*n array of pulses
-    u_factor: frequency of samples in each pulse (u_factor = 10 -> 1/10 ns between each sample)
-    '''
+    ''' 
     
     if timer: t_start = elapsed_time()
     
@@ -1165,11 +1159,29 @@ def get_pulse_area(pulses, u_factor, timer = False):
 
 def get_energy_calibration(areas, detector_name, timer = False):
     '''
-    Takes an array of baseline reduced pulse areas and the detector type (S1_01 to S1_05 or S2_01 to S2_32) 
-    and returns an array of corresponding deposited energy using the energy
-    calibration given in energy_calibration_S1.txt and energy_calibration_S2.txt.
-    Example: energy_array = get_energy_calibration(areas, detector_name = 'S1_04')
-    '''
+    Returns the deposited energy (MeVee) in the given detector using the energy
+    calibration given in the energy calibration folder.
+    
+    Parameters
+    ----------
+    areas : ndarray,
+          1D array of pulse areas. 
+    detector_name : string,
+                  Detector name corresponding to the pulse areas being parsed.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.                 
+                    
+    Returns
+    -------
+    energy_array : ndarray,
+                 1D array of deposited energies in MeVee.
+            
+    Examples
+    --------
+    >>> energies = get_energy_calibration(areas, 'S1_01')
+    array([0.00134, 0.23145, ..., 0.02134])
+    ''' 
+    
     if timer: t_start = elapsed_time()
     
     raise_exception = False
@@ -1196,13 +1208,37 @@ def get_energy_calibration(areas, detector_name, timer = False):
     if timer: elapsed_time(t_start, 'get_energy_calibration()')
     return energy_array
 
-def find_time_range(shot_number):
+def find_time_range(shot_number, tight_range = False, timer = False):
     '''
-    Returns the time range for the analysis by using fission chamber data and
-    calculating the time at which 99.5% of all neutron events have ocurred.
-    Assumes shot start at 40 seconds.
-    '''
+    Returns the time range for which the 99.5% of the neutron events have
+    ocurred using TIN/RNT PPF. Assumes a starting time of 40 s unless 
+    tight_range is set to True.
     
+    Parameters
+    ----------
+    shot_number : int,
+                Jet puse number.
+    tight_range : bool,
+                If set to True, the starting point is set to the time at which
+                0.05% of the neutron events have ocurred.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.                 
+                    
+    Returns
+    -------
+    energy_array : ndarray,
+                 1D array of deposited energies in MeVee.
+            
+    Examples
+    --------
+    >>> find_time_range(98044)
+    array([40., 56.1780014])
+    >>> find_time_range(98044, tight_range=True)
+    array([47.26800156, 56.1780014])
+    ''' 
+
+    if timer: t_start = elapsed_time()
+
     # Import fission chamber information
     f_chamber = ppf.ppfget(shot_number, dda = "TIN", dtyp = "RNT")
     f_data = f_chamber[2]
@@ -1216,19 +1252,54 @@ def find_time_range(shot_number):
         f_cdist = np.cumsum(f_data) / np.sum(f_data)
         
         # Find the time before which 99.5% of the neutron yield occurs
-        time_slice = np.array([40., f_times[np.searchsorted(f_cdist, 0.995)]])
+        t0 = 40.
+        t1 = f_times[np.searchsorted(f_cdist, 0.995)]
+        time_slice = np.array([t0, t1])
  
+        if tight_range: time_slice[0] = f_times[np.searchsorted(f_cdist, 0.005)]
+    
+    if timer: elapsed_time(t_start, 'find_time_range()')
     return time_slice
 
 def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 0], [0, 0]]), timer = False):
     '''
     Takes an array of baseline reduced pulses and removes junk pulses.
-    pulses: array of baseline reduced pulses
-    dx: distance between each point on the x-axis
-    detector_name: string containing the name of the detector ('S1_01', ..., 'S2_32')
-    bias_level: value in codes where the baseline is expected (typically 27000 for ADQ14, 1600 for ADQ412)
-    Example: new_pulses, junk_indices = cleanup(pulses)
-    '''
+    
+    Parameters
+    ----------
+    pulses : ndarray,
+           2D array of pulse waveforms where each row corresponds to one 
+           waveform. Must be baseline reduced [see baseline_reduction()].
+    dx : float,
+       Distance between each point on the x-axis. Typically 1 ns.
+    bias_level : int,
+               Digitizer bias level used for the shot.
+    baseline_cut : ndarray,
+                 Baselines which fluctuate more than the thresholds given in 
+                 baseline_cut (in codes) are removed.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.                 
+                    
+    Returns
+    -------
+    new_pulses : ndarray,
+                 2D array of pulse waveforms without junk waveforms.
+    bad_indices : ndarray,
+                Index numbers of the removed waveforms.
+            
+    Examples
+    --------
+    >>> cleanup(pulses, 1, 'S1_01', 27000)
+    [[ 2.00e-01 -2.80e+00  2.00e-01 ... -1.98e+01 -1.88e+01 -1.68e+01]
+     [ 1.00e+00  2.00e+00  1.00e+00 ... -1.70e+01 -1.40e+01 -1.20e+01]
+     [-1.00e+00  2.00e+00 -2.00e+00 ... -1.75e+02 -1.57e+02 -1.38e+02]
+     ...
+     [ 3.00e-01 -7.00e-01  3.30e+00 ... -1.70e+00  3.00e-01 -7.00e-01]
+     [ 3.90e+00 -1.00e-01 -1.10e+00 ... -7.10e+00 -5.10e+00 -8.10e+00]
+     [ 8.00e-01  1.80e+00 -1.20e+00 ... -1.02e+01 -1.22e+01 -9.20e+00]]
+    [11, 22, 25,..., 1572, 1574]
+    ''' 
+    
     if timer: t_start = elapsed_time()
     if detector_name not in get_dictionaries('merged').keys():
         raise Exception('Unknown detector name.')
@@ -1323,6 +1394,9 @@ def inverted_light_yield(light_yield, function = 'gatu', check = True, timer = F
     '''
     
     if timer: t_start = elapsed_time()
+    # Cast into numpy array
+#    light_yield = np.array([light_yield])
+    
     # Import look-up table
     dirname = os.path.dirname(__file__)
     filename = os.path.join(dirname, f'../inverted_light_yield/look_up_{function}.txt')
