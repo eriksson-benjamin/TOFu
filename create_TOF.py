@@ -235,8 +235,6 @@ def create_TOF(arguments):
 
     if not disable_cleanup:
         pulse_data_bl, bad_indices = dfs.cleanup(pulses = pulse_data_bl, dx = 1, bias_level = bias_level, detector_name = detector_name)
-        print(pulse_data_bl)
-        print(bad_indices)
         time_data = np.delete(time_data, bad_indices)
         pre_trig_adjustment = np.delete(pre_trig_adjustment, bad_indices)
     
