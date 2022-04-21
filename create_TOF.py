@@ -294,7 +294,8 @@ def create_TOF(arguments):
 
 if __name__=="__main__":
     t_start = dfs.elapsed_time()
-
+    dfs.set_plot_style()
+    
     # Constants, arguments, arrays
     time_level                  = 0
     time_slice                  = np.array([0., 0.])
@@ -474,7 +475,7 @@ if __name__=="__main__":
             # Disable background subtraction
             elif sys.argv[i] == '--disable-bgs': 
                 disable_bgs = True
-                background_component = 0
+                background_component = np.zeros(len(bins))
             
             # Disable get data from scratch
             elif sys.argv[i] == '--disable-scratch': disable_scratch = True
@@ -988,7 +989,7 @@ if __name__=="__main__":
                 tof_hist, erg_S1_hist, erg_S2_hist, hist2d_S1, hist2d_S2 = dfs.plot_2D(times_of_flight = coincidences, 
                              bins_tof = bins, energy_S1 = energies_S1, energy_S2 = energies_S2, tof_bg_component = background_component,
                              S1_info = S1_info, S2_info = S2_info, interactive_plot = interactive_plot, 
-                             title = f'#{shot_number} {time_slice[0]:.1f}-{time_slice[1]:.1f} s', 
+                             title = f'JPN{shot_number}, {time_slice[0]:.1f}-{time_slice[1]:.1f} s', 
                              disable_cuts = disable_cuts, energy_S1_cut = energies_S1_cut, 
                              energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
                              disable_bgs = disable_bgs, sum_shots = sum_shots, 

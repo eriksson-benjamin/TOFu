@@ -11,6 +11,7 @@ import ppf
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+import matplotlib
 import scipy.constants as constant
 import scipy.optimize as optimize
 from matplotlib.lines import Line2D
@@ -1979,6 +1980,14 @@ def background_subtraction(coincidences, tof_bins, energies_S1, S1_info,
 
     return tof_bg
 
+def set_plot_style():
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, 'nes_plots.mplstyle')
+    matplotlib.rcParams['interactive'] = True
+    plt.style.use(filename)
+
+
+
 ##################################
 ### Unfinished below this line ###
 ##################################
@@ -2090,7 +2099,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     if projection != 0: add_lines = True
     else: add_lines = False
     
-    fig = plt.figure(title)
+    fig = plt.figure(title, figsize=(7,5))
     
     '''
     TOF projection
@@ -2114,7 +2123,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         erg_unit = 'a.u.'
     elif integrated_charge_spectrum:
         erg_unit = 'a.u.'
-    else: erg_unit = 'MeVee'
+    else: erg_unit = '$MeV_{ee}$'
         
     TOF_fig = plt.subplot(326)
     bins_tof_centres = bins_tof[1:] - np.diff(bins_tof)[0] / 2
@@ -2166,7 +2175,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     
     # Get current axis
     ax_TOF = plt.gca() 
-    ax_TOF.set_xlabel('Time [ns]')
+    ax_TOF.set_xlabel('$t_{TOF}$ (ns)')
     ax_TOF.set_ylabel('Counts')
     tof_x_low = 20
     tof_x_high = 80
@@ -2224,8 +2233,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
                                vmin = 1, 
                                vmax = vmax)[0]
     else:
-        hist2d_S1 = plt.hist2d(tof, 
-                               erg_S1, 
+        hist2d_S1 = plt.hist2d(times_of_flight, 
+                               energy_S1, 
                                bins = bins_2D_S1, 
                                cmap = my_cmap, 
                                vmin = 1, 
@@ -2270,8 +2279,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
                                vmin = 1, 
                                vmax = vmax)[0]
     else:
-        hist2d_S2 = plt.hist2d(tof, 
-                               erg_S2, 
+        hist2d_S2 = plt.hist2d(times_of_flight, 
+                               energy_S2, 
                                bins = bins_2D_S2, 
                                cmap = my_cmap, 
                                vmin = 1, 
@@ -2297,7 +2306,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     '''
     Colour bar
     '''
-    ax_colorbar = fig.add_axes([0.12, 0.2, 0.28, 0.03])
+    ax_colorbar = fig.add_axes([0.18, 0.26, 0.28, 0.03])
+
     plt.colorbar(ax = ax_S1_2D, cax = ax_colorbar, orientation = 'horizontal')
     
 
@@ -2409,8 +2419,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     ax_S2_E.set_xlim([x_lower, x_upper])
     
     # Set x,y-label
-    fig.text(0.04, 0.65, f'Deposited energy [{erg_unit}]', va='center', rotation='vertical')
-    fig.text(0.5, 0.93, title, va = 'center', ha = 'center')
+    fig.text(0.12, 0.68, f'Deposited energy ({erg_unit})', va='center', rotation='vertical')
+    fig.text(0.3, 0.94, title, va = 'center', ha = 'center')
     plt.subplots_adjust(wspace = 0.1, hspace = 0.2)
     
     '''
