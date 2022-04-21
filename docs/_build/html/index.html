@@ -39,22 +39,54 @@
 <p>&#64;author: beriksso</p>
 <dl class="function">
 <dt id="tofu_functions.background_subtraction">
-<code class="descclassname">tofu_functions.</code><code class="descname">background_subtraction</code><span class="sig-paren">(</span><em>disable_cuts</em>, <em>TOF_hist</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.background_subtraction" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perform background subtraction of TOF spectrum. If disable_cuts is true an average
-is calculated between -100ns to -50 ns. If disable_cuts is false a model is fit to
-the background and mirrored to the positive TOF side.
-disable_cuts: boolean from user input for disabling/enabling kinematic cuts
-TOF_hist: tuple of histogram information (events, bins)</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="tofu_functions.background_subtraction_">
-<code class="descclassname">tofu_functions.</code><code class="descname">background_subtraction_</code><span class="sig-paren">(</span><em>disable_cuts</em>, <em>TOF_hist</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.background_subtraction_" title="Permalink to this definition">¶</a></dt>
-<dd><p>Perform background subtraction of TOF spectrum. If disable_cuts is true an average
-is calculated between -100ns to -50 ns. If disable_cuts is false a model is fit to
-the background and mirrored to the positive TOF side.
-disable_cuts: boolean from user input for disabling/enabling kinematic cuts
-TOF_hist: tuple of histogram information (events, bins)</p>
+<code class="descclassname">tofu_functions.</code><code class="descname">background_subtraction</code><span class="sig-paren">(</span><em>coincidences</em>, <em>tof_bins</em>, <em>energies_S1</em>, <em>S1_info</em>, <em>energies_S2</em>, <em>S2_info</em>, <em>disable_cuts</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.background_subtraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs background subtraction of TOF spectrum using negative flight 
+times.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>coincidences</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of times-of-flight (ns).</p>
+</dd>
+<dt><strong>tof_bins</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">Bins used for TOF spectrum.</p>
+</dd>
+<dt><strong>energies_S1</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of energies (MeVee) for S1.</p>
+</dd>
+<dt><strong>S1_info</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict,</span></dt>
+<dd><p class="first last">Contains S1 information on energy bins, limits, etc.</p>
+</dd>
+<dt><strong>energies_S2</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of energies (MeVee) for S2.</p>
+</dd>
+<dt><strong>S2_info</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict,</span></dt>
+<dd><p class="first last">Contains S2 information on energy bins, limits, etc.</p>
+</dd>
+<dt><strong>disable_cuts</strong> <span class="classifier-delimiter">:</span> <span class="classifier">boolean,</span></dt>
+<dd><p class="first last">If set to True, calculates the background as the average value
+between TOF -100 to -50 ns. If set to False, takes kinematic
+cuts into consideration.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>tof_bg</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array, background TOF component. Component is flipped to positive
+flight times. The entire component is returned (i.e. negative and 
+positive part) for the given input bins.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -102,64 +134,257 @@ and 56 samples for ADQ412 (board 6-10).</p>
 
 <dl class="function">
 <dt id="tofu_functions.cleanup">
-<code class="descclassname">tofu_functions.</code><code class="descname">cleanup</code><span class="sig-paren">(</span><em>pulses</em>, <em>dx</em>, <em>detector_name</em>, <em>bias_level</em>, <em>baseline_cut=array([0</em>, <em>0])</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.cleanup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes an array of baseline reduced pulses and removes junk pulses.
-pulses: array of baseline reduced pulses
-dx: distance between each point on the x-axis
-detector_name: string containing the name of the detector (‘S1_01’, …, ‘S2_32’)
-bias_level: value in codes where the baseline is expected (typically 27000 for ADQ14, 1600 for ADQ412)
-Example: new_pulses, junk_indices = cleanup(pulses)</p>
+<code class="descclassname">tofu_functions.</code><code class="descname">cleanup</code><span class="sig-paren">(</span><em>pulses, dx, detector_name, bias_level, baseline_cut=array([[0, 0],        [0, 0]]), timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes an array of baseline reduced pulses and removes junk pulses.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>pulses</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">2D array of pulse waveforms where each row corresponds to one 
+waveform. Must be baseline reduced [see baseline_reduction()].</p>
+</dd>
+<dt><strong>dx</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float,</span></dt>
+<dd><p class="first last">Distance between each point on the x-axis. Typically 1 ns.</p>
+</dd>
+<dt><strong>bias_level</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int,</span></dt>
+<dd><p class="first last">Digitizer bias level used for the shot.</p>
+</dd>
+<dt><strong>baseline_cut</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">Baselines which fluctuate more than the thresholds given in 
+baseline_cut (in codes) are removed.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>new_pulses</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">2D array of pulse waveforms without junk waveforms.</p>
+</dd>
+<dt><strong>bad_indices</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">Index numbers of the removed waveforms.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cleanup</span><span class="p">(</span><span class="n">pulses</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;S1_01&#39;</span><span class="p">,</span> <span class="mi">27000</span><span class="p">)</span>
+<span class="go">[[ 2.00e-01 -2.80e+00  2.00e-01 ... -1.98e+01 -1.88e+01 -1.68e+01]</span>
+<span class="go"> [ 1.00e+00  2.00e+00  1.00e+00 ... -1.70e+01 -1.40e+01 -1.20e+01]</span>
+<span class="go"> [-1.00e+00  2.00e+00 -2.00e+00 ... -1.75e+02 -1.57e+02 -1.38e+02]</span>
+<span class="go"> ...</span>
+<span class="go"> [ 3.00e-01 -7.00e-01  3.30e+00 ... -1.70e+00  3.00e-01 -7.00e-01]</span>
+<span class="go"> [ 3.90e+00 -1.00e-01 -1.10e+00 ... -7.10e+00 -5.10e+00 -8.10e+00]</span>
+<span class="go"> [ 8.00e-01  1.80e+00 -1.20e+00 ... -1.02e+01 -1.22e+01 -9.20e+00]]</span>
+<span class="go">[11, 22, 25,..., 1572, 1574]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.elapsed_time">
 <code class="descclassname">tofu_functions.</code><code class="descname">elapsed_time</code><span class="sig-paren">(</span><em>time_start=0.0</em>, <em>timed_function=''</em>, <em>return_time=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.elapsed_time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Optional timer for functions
-To start timer:</p>
-<blockquote>
-<div>t_start = elapsed_time()</div></blockquote>
-<dl class="docutils">
-<dt>To stop timer and print result:</dt>
-<dd>elapsed_time(t_start, ‘Function name’)</dd>
+<dd><p>Optional timer for functions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>time_start</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional</span></dt>
+<dd><p class="first last">Starting time, used to calculate the elapsed time</p>
+</dd>
+<dt><strong>timed_function</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">String used in print statement, typically set to the 
+function being timed.</p>
+</dd>
+<dt><strong>return_time</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">Returns the elapsed time</p>
+</dd>
 </dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>return_time</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float,</span></dt>
+<dd><p class="first last">Elapsed time (s)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t_start</span> <span class="o">=</span> <span class="n">elapsed_time</span><span class="p">()</span> <span class="c1"># Start timer</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">elapsed_time</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="s1">&#39;example function&#39;</span><span class="p">)</span> <span class="c1"># Print elapsed time</span>
+<span class="go">Elapsed time for example function: 1.00 sec.</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
-<dt id="tofu_functions.find_coincidences">
-<code class="descclassname">tofu_functions.</code><code class="descname">find_coincidences</code><span class="sig-paren">(</span><em>S1_times</em>, <em>S2_times</em>, <em>t_back=100</em>, <em>t_forward=100</em>, <em>return_indices=False</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.find_coincidences" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
 <dt id="tofu_functions.find_ohmic_phase">
-<code class="descclassname">tofu_functions.</code><code class="descname">find_ohmic_phase</code><span class="sig-paren">(</span><em>shot_number</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.find_ohmic_phase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the time at which the Ohmic phase is over for given shot number.</p>
+<code class="descclassname">tofu_functions.</code><code class="descname">find_ohmic_phase</code><span class="sig-paren">(</span><em>shot_number</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.find_ohmic_phase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the JET time (s) at which the Ohmic phase is over for given shot number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>shot_number</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or string</span></dt>
+<dd><p class="first last">JET pulse number.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>t_end</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float,</span></dt>
+<dd><p class="first last">JET time at which the Ohmic phase stops, i.e. the time at which any
+heating but Ohmic heatings is applied.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">find_ohmic_phase</span><span class="p">(</span><span class="mi">98044</span><span class="p">)</span>
+<span class="go">47.008</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.find_points">
 <code class="descclassname">tofu_functions.</code><code class="descname">find_points</code><span class="sig-paren">(</span><em>pulse_data</em>, <em>value</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.find_points" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the index of the point closest to “value” in pulse_data.
-pulse_data: array of pulse height data where each row corresponds to one record.</p>
-<blockquote>
-<div>NOTE: pulse_data must be baseline reduced (see baseline_reduction() function).</div></blockquote>
-<p>value: one dimensional array of values for which you want to find the closest index in pulse_data</p>
+<dd><p>Returns the indicies of the points closest to “value” in pulse_data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>pulse_data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">2D array of pulse height data where each row corresponds to one 
+record. NOTE: pulse_data must be baseline reduced (see 
+baseline_reduction() function).</p>
+</dd>
+<dt><strong>value</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of values</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>index</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of indices from pulse_data corresponding to the position
+in each row with value closest to “value”.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pulse_data</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">find_points</span><span class="p">(</span><span class="n">pulse_data</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<span class="go">array([16, 16,  15, 16, ..., 16, 15, 17, 15, 16, 16])  </span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.find_threshold">
-<code class="descclassname">tofu_functions.</code><code class="descname">find_threshold</code><span class="sig-paren">(</span><em>pulse_data</em>, <em>trig_level</em>, <em>timer=False</em>, <em>detector_name='None'</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.find_threshold" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds the point in the pulse which crosses the trigger level (generally 16, 17, 18 or 19 ns for ADQ14).
-Mainly relevant for ADQ14 cards since the number of pre trigger samples varies.
-pulse_data: array of pulse height data where each row corresponds to one record.
-trig_level: trigger level used during acquisition of the data set</p>
+<code class="descclassname">tofu_functions.</code><code class="descname">find_threshold</code><span class="sig-paren">(</span><em>pulse_data</em>, <em>trig_level</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.find_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds the point in the pulse which crosses the trigger level 
+(generally sample 16, 17, 18 or 19 ns for ADQ14). Mainly relevant for ADQ14
+cards since the number of pre trigger samples varies.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>pulse_data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">2D array of pulse waveforms where each row corresponds to one 
+pulse. Typically 64 samples in each row for ADQ14 (board 1-5) 
+and 56 samples for ADQ412 (board 6-10).</p>
+</dd>
+<dt><strong>trig_level</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">Trigger level used during acquisition in codes.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>thr_crossing</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">1D array of indices at which each pulse crosses the given
+threshold.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">find_threshold</span><span class="p">(</span><span class="n">pulse_data</span><span class="p">,</span> <span class="mi">26000</span><span class="p">)</span>
+<span class="go">array([16, 16, 16, ..., 16, 18, 16])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.find_time_range">
-<code class="descclassname">tofu_functions.</code><code class="descname">find_time_range</code><span class="sig-paren">(</span><em>shot_number</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.find_time_range" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the time range for the analysis by using fission chamber data and
-calculating the time at which 99.5% of all neutron events have ocurred.
-Assumes shot start at 40 seconds.</p>
+<code class="descclassname">tofu_functions.</code><code class="descname">find_time_range</code><span class="sig-paren">(</span><em>shot_number</em>, <em>tight_range=False</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.find_time_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the time range for which the 99.5% of the neutron events have
+ocurred using TIN/RNT PPF. Assumes a starting time of 40 s unless 
+tight_range is set to True.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>shot_number</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int,</span></dt>
+<dd><p class="first last">Jet puse number.</p>
+</dd>
+<dt><strong>tight_range</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool,</span></dt>
+<dd><p class="first last">If set to True, the starting point is set to the time at which
+0.05% of the neutron events have ocurred.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>energy_array</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of deposited energies in MeVee.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">find_time_range</span><span class="p">(</span><span class="mi">98044</span><span class="p">)</span>
+<span class="go">array([40., 56.1780014])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">find_time_range</span><span class="p">(</span><span class="mi">98044</span><span class="p">,</span> <span class="n">tight_range</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">array([47.26800156, 56.1780014])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -204,8 +429,42 @@ Assumes shot start at 40 seconds.</p>
 <dl class="function">
 <dt id="tofu_functions.get_board_name">
 <code class="descclassname">tofu_functions.</code><code class="descname">get_board_name</code><span class="sig-paren">(</span><em>detector_name</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_board_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the board and channel for the given detector name.
-Example: board, channel = get_board_name(detector_name = ‘S1_04’) returns board = ‘04’, channel = ‘A’</p>
+<dd><p>Returns the board and channel for a corresponding detector name. The order 
+of the S2’s on the ADQ412’s are back to front.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>detector_name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string,</span></dt>
+<dd><p class="first last">String containing the detector name (‘S1_01’,…,’S1_05’ or 
+‘S2_01’, …, ‘S2_32’)</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>board</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string,</span></dt>
+<dd><p class="first last">String containing the board number corresponding to the input 
+detector name.</p>
+</dd>
+<dt><strong>channel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string,</span></dt>
+<dd><p class="first last">String containing the channel corresponding to the input detector
+name.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_board_name</span><span class="p">(</span><span class="s1">&#39;S1_01&#39;</span><span class="p">)</span>
+<span class="go">(&#39;01&#39;, &#39;A&#39;)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -224,47 +483,195 @@ Example: board, channel = get_board_name(detector_name = ‘S1_04’) returns bo
 <dt id="tofu_functions.get_detector_name">
 <code class="descclassname">tofu_functions.</code><code class="descname">get_detector_name</code><span class="sig-paren">(</span><em>board</em>, <em>channel</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_detector_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the detector name corresponding to the given board and channel.
-The order of the S2’s on the ADQ412’s are sadly back to front :(
-Example: detector = get_detector_name(‘02’, ‘A’)</p>
+The order of the S2’s on the ADQ412’s are back to front</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>board</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string or int,</span></dt>
+<dd><p class="first last">String or integer corresponding to the board number (1-10)</p>
+</dd>
+<dt><strong>channel: string,</strong></dt>
+<dd><p class="first last">String containing the channel number (‘A’, ‘B’, ‘C’, or ‘D’)</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>detector_name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string,</span></dt>
+<dd><p class="first last">String containing the detector name corresponding to the
+input board and channel.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_detector_name</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">)</span>
+<span class="go">&#39;S1_01&#39;</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.get_dictionaries">
-<code class="descclassname">tofu_functions.</code><code class="descname">get_dictionaries</code><span class="sig-paren">(</span><em>S=0</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_dictionaries" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns empty dictionaries for S1’s or S2’s which can be used to store data in.</p>
-<p>Set S = ‘S1’ for S1 dictionary
-Set S = ‘S2’ for S2 dictionary
-Set S = ‘merged’ for single dictionary with S1 and S2.
-Set S = ‘nested’ for S2 dictionary nested in S1 dictionary
-S = 0 returns both</p>
-<p>Example 1: S1_dict = get_dictionaries(‘S1’) returns S1_dict = {‘S1_01’: [], ‘S1_02’: [], ‘S1_03’: [], ‘S1_04’: [], ‘S1_05’: []}</p>
-<p>Example 2: S1_dict, S2_dict = get_dictionaries() returns both S1_dict = {‘S1_01’: [], …, ‘S1_05’: []} and S2_dict = {‘S2_01’: [], …, ‘S2_32’: []}</p>
-<p>Example 3: nested = get_dictionaries(‘nested’) returns nested = {‘S1_01’: {‘S2_01’: [], …, ‘S2_32’: []}, …, ‘S1_05’: {‘S2_01’: [], …, ‘S2_32’: []}}</p>
+<code class="descclassname">tofu_functions.</code><code class="descname">get_dictionaries</code><span class="sig-paren">(</span><em>S=0</em>, <em>fill=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_dictionaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns dictionaries with S1/S2 detector names as keys.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>S</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">String indicating which type of dictionary to return. Available options:</p>
+</dd>
+<dt><strong>fill</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray, optional,</span></dt>
+<dd><p class="first last">Sets the values of the dictionary to whatever is passed in “fill”.</p>
+</dd>
+<dt><strong>Notes</strong></dt>
+<dd></dd>
+<dt><strong>—–</strong></dt>
+<dd></dd>
+<dt><strong>The input parameter S can be set to the following modes.</strong></dt>
+<dd></dd>
+<dt><strong>S = 0: Returns two dictionaries, one for S1 and one for S2.</strong></dt>
+<dd></dd>
+<dt><strong>S = ‘S1’: Returns a dictionary for S1.</strong></dt>
+<dd></dd>
+<dt><strong>S = ‘S2’: Returns a dictionary for S2.</strong></dt>
+<dd></dd>
+<dt><strong>S = ‘merged’: Returns single dictionary with S1/S2 detector names as keys.</strong></dt>
+<dd></dd>
+<dt><strong>S = ‘nested’: Returns a nested dictionary where each S1 contains a</strong></dt>
+<dd></dd>
+<dt><strong>dictionary with S2 detector names as keys.</strong></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>S1_dictionary</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict,</span></dt>
+<dd><p class="first last">Dictionary with S1 detector names as keys.</p>
+</dd>
+<dt><strong>S2_dictionary</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict,</span></dt>
+<dd><p class="first last">Dictionary with S2 detector names as keys.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">get_dictionaries</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+<span class="go">dict_keys([&#39;S1_01&#39;, &#39;S1_02&#39;, &#39;S1_03&#39;, &#39;S1_04&#39;, &#39;S1_05&#39;])</span>
+<span class="go">dict_values([[1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3], [1, 2, 3]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">s2</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="go">dict_keys([&#39;S2_01&#39;, &#39;S2_02&#39;, &#39;S2_03&#39;, &#39;S2_04&#39;, &#39;S2_05&#39;, </span>
+<span class="go">           &#39;S2_06&#39;, &#39;S2_07&#39;, &#39;S2_08&#39;, &#39;S2_09&#39;, &#39;S2_10&#39;, </span>
+<span class="go">           &#39;S2_11&#39;, &#39;S2_12&#39;, &#39;S2_13&#39;, &#39;S2_14&#39;, &#39;S2_15&#39;, </span>
+<span class="go">           &#39;S2_16&#39;, &#39;S2_17&#39;, &#39;S2_18&#39;, &#39;S2_19&#39;, &#39;S2_20&#39;, </span>
+<span class="go">           &#39;S2_21&#39;, &#39;S2_22&#39;, &#39;S2_23&#39;, &#39;S2_24&#39;, &#39;S2_25&#39;, </span>
+<span class="go">           &#39;S2_26&#39;, &#39;S2_27&#39;, &#39;S2_28&#39;, &#39;S2_29&#39;, &#39;S2_30&#39;, </span>
+<span class="go">           &#39;S2_31&#39;, &#39;S2_32&#39;])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.get_energy_calibration">
 <code class="descclassname">tofu_functions.</code><code class="descname">get_energy_calibration</code><span class="sig-paren">(</span><em>areas</em>, <em>detector_name</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_energy_calibration" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes an array of baseline reduced pulse areas and the detector type (S1_01 to S1_05 or S2_01 to S2_32) 
-and returns an array of corresponding deposited energy using the energy
-calibration given in energy_calibration_S1.txt and energy_calibration_S2.txt.
-Example: energy_array = get_energy_calibration(areas, detector_name = ‘S1_04’)</p>
+<dd><p>Returns the deposited energy (MeVee) in the given detector using the energy
+calibration given in the energy calibration folder.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>areas</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of pulse areas.</p>
+</dd>
+<dt><strong>detector_name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string,</span></dt>
+<dd><p class="first last">Detector name corresponding to the pulse areas being parsed.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>energy_array</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of deposited energies in MeVee.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">energies</span> <span class="o">=</span> <span class="n">get_energy_calibration</span><span class="p">(</span><span class="n">areas</span><span class="p">,</span> <span class="s1">&#39;S1_01&#39;</span><span class="p">)</span>
+<span class="go">array([0.00134, 0.23145, ..., 0.02134])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.get_kincut_function">
 <code class="descclassname">tofu_functions.</code><code class="descname">get_kincut_function</code><span class="sig-paren">(</span><em>tof</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_kincut_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes an array of times of flight [ns] and returns the corresponding maximal/minimal
-light yield for each time of flight in MeVee. 
-Input:</p>
-<blockquote>
-<div>tof: 1D array of times of flight [ns]</div></blockquote>
-<dl class="docutils">
-<dt>Output:</dt>
-<dd>E_S1_max: maximal energy in S1 for given time of flight [MeVee]
-E_S1_min: minimal energy in S1 for given time of flight [Mevee]
-E_S2_max: maximal energy in S2 for given time of flight [MeVee]</dd>
+<dd><p>Takes an array of times of flight [ns] and returns the corresponding 
+maximal/minimal light yield for each flight time (MeVee). The calculation
+is done by considering the TOFOR geometry to find the maximal/minimal
+scattering angles in the S1 detectors providing an upper and lower limit
+in the proton recoil energy in the S1. For the S2 there is only an upper
+upper limit, as there is no requirement in the scattering direction in the 
+S2s.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tof</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of times-of-flight (ns)</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
 </dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>ly_S1_min</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">Array of light yields (MeVee) corresponding to the lower 
+kinematic cut in S1.</p>
+</dd>
+<dt><strong>ly_S1_max :</strong></dt>
+<dd><p class="first last">Array of light yields (MeVee) corresponding to the upper 
+kinematic cut in S1.</p>
+</dd>
+<dt><strong>ly_S2_max :</strong></dt>
+<dd><p class="first last">Array of light yields (MeVee) corresponding to the upper 
+kinematic cut in S2.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">t_tof</span> <span class="o">=</span> <span class="p">[</span><span class="mi">27</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">29</span><span class="p">]</span> <span class="c1"># (ns)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_kincut_function</span><span class="p">(</span><span class="n">t_tof</span><span class="p">)</span>
+<span class="go">(array([0.41889004, 0.37579523, 0.33857325]),</span>
+<span class="go"> array([1.80448041, 1.62189197, 1.4616936 ]),</span>
+<span class="go"> array([4.91064379, 4.46936204, 4.07293829]))   </span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -351,28 +758,70 @@ board.</p>
 <dl class="function">
 <dt id="tofu_functions.get_pulse_area">
 <code class="descclassname">tofu_functions.</code><code class="descname">get_pulse_area</code><span class="sig-paren">(</span><em>pulses</em>, <em>u_factor</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_pulse_area" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the areas under an array of pulses
-pulses: m*n array of pulses
-u_factor: frequency of samples in each pulse (u_factor = 10 -&gt; 1/10 ns between each sample)</p>
+<dd><p>Returns the shifts (written in shift_file) required to line up all S1-S2 
+combinations and shift the gamma peak 3.7 ns. Method is outlined in
+Eriksson, Benjamin, et al. 
+“New method for time alignment and time calibration of the TOFOR 
+time-of-flight neutron spectrometer at JET.” 
+Review of Scientific Instruments 92.3 (2021): 033538.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>shift_file</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string,</span></dt>
+<dd><p class="first last">The path to the shift file.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>shifts</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict,</span></dt>
+<dd><p class="first last">Dictionary with keys 
+dict_keys([‘S1_01’, ‘S1_02’, ‘S1_03’, ‘S1_04’, ‘S1_05’])
+Each contains 32 shifts (ns) corresponding to the S1 vs. S2 shifts.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">shifts</span> <span class="o">=</span> <span class="n">get_shifts</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shifts</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="go">dict_keys([&#39;S1_01&#39;, &#39;S1_02&#39;, &#39;S1_03&#39;, &#39;S1_04&#39;, &#39;S1_05&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shifts</span><span class="p">[</span><span class="s1">&#39;S1_01&#39;</span><span class="p">]</span>
+<span class="go">array([ -18.95286,  -19.35286,..., -118.55286, -117.75286])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.get_pulses">
-<code class="descclassname">tofu_functions.</code><code class="descname">get_pulses</code><span class="sig-paren">(</span><em>board</em>, <em>channel</em>, <em>shot_number</em>, <em>pulse_start=-1</em>, <em>pulse_end=-1</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_pulses" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tofu_functions.</code><code class="descname">get_pulses</code><span class="sig-paren">(</span><em>shot_number</em>, <em>board='N/A'</em>, <em>channel='N/A'</em>, <em>detector_name='N/A'</em>, <em>pulse_start=-1</em>, <em>pulse_end=-1</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_pulses" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns pulse data for a given board, channel and shot number.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>board</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or string</span></dt>
-<dd><p class="first last">Board number (between 1-10) for requested data.</p>
-</dd>
-<dt><strong>channel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
-<dd><p class="first last">Channel name for requested data (A, B, C or D).</p>
-</dd>
 <dt><strong>shot_number</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or string</span></dt>
 <dd><p class="first last">JET pulse number.</p>
+</dd>
+<dt><strong>board</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or string, optional</span></dt>
+<dd><p class="first last">Board number (between 1-10) for requested data. Must be given if
+detector_name is not.</p>
+</dd>
+<dt><strong>channel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string, optional</span></dt>
+<dd><p class="first last">Channel name for requested data (A, B, C or D). Must be given if 
+detector_name is not.</p>
+</dd>
+<dt><strong>detector_name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string, optional</span></dt>
+<dd><p class="first last">Detector name for requested data. Must be given if board and
+channel are not. E.g. “S1_01”, “S1_02”, “S2_01”, “S2_02” etc.</p>
 </dd>
 <dt><strong>pulse_start</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional</span></dt>
 <dd><p class="first last">Index before which pulses are not returned.</p>
@@ -398,10 +847,54 @@ samples for ADQ412 (board 6-10).</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_pulses</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="mi">94206</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_pulses</span><span class="p">(</span><span class="mi">94206</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">)</span>
 <span class="go">array([[29996, 29978, 30005, ..., 29911, 29938, 29929],</span>
 <span class="go">       ...,</span>
-<span class="go">       [29978, 29969, 29955, ..., 29884, 29920, 29920]], dtype=int16)    </span>
+<span class="go">       [29978, 29969, 29955, ..., 29884, 29920, 29920]], dtype=int16)   </span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_pulses</span><span class="p">(</span><span class="mi">94206</span><span class="p">,</span> <span class="n">detector_name</span> <span class="o">=</span> <span class="s1">&#39;S1_04&#39;</span><span class="p">)</span>
+<span class="go">array([[29996, 29978, 30005, ..., 29911, 29938, 29929],</span>
+<span class="go">       ...,</span>
+<span class="go">       [29978, 29969, 29955, ..., 29884, 29920, 29920]], dtype=int16)   </span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="tofu_functions.get_record_length">
+<code class="descclassname">tofu_functions.</code><code class="descname">get_record_length</code><span class="sig-paren">(</span><em>board</em>, <em>shot_number</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_record_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the record length in number of samples for a given board and shot
+number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>board</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or string</span></dt>
+<dd><p class="first last">Board number (between 1-10) for requested trigger level.</p>
+</dd>
+<dt><strong>shot_number</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or string</span></dt>
+<dd><p class="first last">JET pulse number.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>record_length</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">Record length in number of samples.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_record_length</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="mi">97100</span><span class="p">)</span>
+<span class="go">64</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_record_length</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="mi">97100</span><span class="p">)</span>
+<span class="go">56</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -409,7 +902,45 @@ samples for ADQ412 (board 6-10).</p>
 <dl class="function">
 <dt id="tofu_functions.get_shifts">
 <code class="descclassname">tofu_functions.</code><code class="descname">get_shifts</code><span class="sig-paren">(</span><em>shift_file</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_shifts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the shifts (written in shift.txt) required to line up all S1-S2 combinations.</p>
+<dd><p>Returns the shifts (written in shift_file) required to line up all S1-S2 
+combinations and shift the gamma peak 3.7 ns. Method is outlined in
+Eriksson, Benjamin, et al. 
+“New method for time alignment and time calibration of the TOFOR 
+time-of-flight neutron spectrometer at JET.” 
+Review of Scientific Instruments 92.3 (2021): 033538.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>shift_file</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string,</span></dt>
+<dd><p class="first last">The path to the shift file.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>shifts</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict,</span></dt>
+<dd><p class="first last">Dictionary with keys 
+dict_keys([‘S1_01’, ‘S1_02’, ‘S1_03’, ‘S1_04’, ‘S1_05’])
+Each contains 32 shifts (ns) corresponding to the S1 vs. S2 shifts.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">shifts</span> <span class="o">=</span> <span class="n">get_shifts</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shifts</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="go">dict_keys([&#39;S1_01&#39;, &#39;S1_02&#39;, &#39;S1_03&#39;, &#39;S1_04&#39;, &#39;S1_05&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shifts</span><span class="p">[</span><span class="s1">&#39;S1_01&#39;</span><span class="p">]</span>
+<span class="go">array([ -18.95286,  -19.35286,..., -118.55286, -117.75286])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -449,6 +980,46 @@ For information on where the temperatures are measured see the function GetTempe
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_temperatures</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">94207</span><span class="p">)</span>
 <span class="go">(array([ 36.125, 256.   , 256.   ,  68.625,  41.5  ], dtype=float32),</span>
 <span class="go"> array([ 36.25 , 256.   , 256.   ,  69.5  ,  41.875], dtype=float32)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="tofu_functions.get_time_limit">
+<code class="descclassname">tofu_functions.</code><code class="descname">get_time_limit</code><span class="sig-paren">(</span><em>board</em>, <em>shot_number</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_time_limit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the acquisition time limit in seconds for a given board and shot
+number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>board</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or string</span></dt>
+<dd><p class="first last">Board number (between 1-10) for requested trigger level.</p>
+</dd>
+<dt><strong>shot_number</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or string</span></dt>
+<dd><p class="first last">JET pulse number.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>time_limit</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">Time limit in seconds.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_time_limit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">97100</span><span class="p">)</span>
+<span class="go">120</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_time_limit</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">97100</span><span class="p">)</span>
+<span class="go">120</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -495,11 +1066,11 @@ channel are not. E.g. “S1_01”, “S1_02”, “S2_01”, “S2_02” etc.</p
 </table>
 <p class="rubric">Examples</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_times</span><span class="p">(</span><span class="mi">97100</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">)</span>
-<span class="go">array([9.48831445e+17, 9.48514788e+17, 9.42146327e+17, ...,</span>
-<span class="go">       9.46685159e+17, 9.48022189e+17, 9.47670333e+17])</span>
+<span class="go">array([3.68841388e+06, 9.55251888e+06, 1.62414959e+07, ...,</span>
+<span class="go">       1.22809128e+11, 1.22824604e+11, 1.22827203e+11])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_times</span><span class="p">(</span><span class="mi">97100</span><span class="p">,</span> <span class="n">detector_name</span> <span class="o">=</span> <span class="s1">&#39;S2_04&#39;</span><span class="p">)</span>
-<span class="go">array([9.48831445e+17, 9.48514788e+17, 9.42146327e+17, ...,</span>
-<span class="go">       9.46685159e+17, 9.48022189e+17, 9.47670333e+17])</span>
+<span class="go">array([3.68841388e+06, 9.55251888e+06, 1.62414959e+07, ...,</span>
+<span class="go">       1.22809128e+11, 1.22824604e+11, 1.22827203e+11])</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -507,13 +1078,14 @@ channel are not. E.g. “S1_01”, “S1_02”, “S2_01”, “S2_02” etc.</p
 <dl class="function">
 <dt id="tofu_functions.get_trigger_level">
 <code class="descclassname">tofu_functions.</code><code class="descname">get_trigger_level</code><span class="sig-paren">(</span><em>board</em>, <em>channel</em>, <em>shot_number</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.get_trigger_level" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the trigger level in codes used for the given shot, board and channel</p>
+<dd><p>Returns the trigger level in codes used for the given shot, board and 
+channel.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>board</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or string, optional</span></dt>
+<dt><strong>board</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or string</span></dt>
 <dd><p class="first last">Board number (between 1-10) for requested trigger level.</p>
 </dd>
 <dt><strong>channel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
@@ -548,7 +1120,7 @@ channel are not. E.g. “S1_01”, “S1_02”, “S2_01”, “S2_02” etc.</p
 
 <dl class="function">
 <dt id="tofu_functions.hist_1D_s">
-<code class="descclassname">tofu_functions.</code><code class="descname">hist_1D_s</code><span class="sig-paren">(</span><em>x_data</em>, <em>title=''</em>, <em>label='data set'</em>, <em>log=True</em>, <em>bins=0</em>, <em>ax=-1</em>, <em>normed=0</em>, <em>density=False</em>, <em>x_label='Time [ns]'</em>, <em>y_label=''</em>, <em>hist_type='step'</em>, <em>alpha=1</em>, <em>linewidth=1</em>, <em>color='k'</em>, <em>weights=None</em>, <em>linestyle='-'</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.hist_1D_s" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tofu_functions.</code><code class="descname">hist_1D_s</code><span class="sig-paren">(</span><em>x_data</em>, <em>title=''</em>, <em>log=True</em>, <em>bins=0</em>, <em>ax=-1</em>, <em>normed=0</em>, <em>density=False</em>, <em>x_label='t$_{tof}$ [ns]'</em>, <em>y_label='Counts'</em>, <em>hist_type='standard'</em>, <em>alpha=1</em>, <em>linewidth=1</em>, <em>color='k'</em>, <em>weights=None</em>, <em>linestyle='-'</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.hist_1D_s" title="Permalink to this definition">¶</a></dt>
 <dd><p>Example of how to use legend:
 fig = plt.figure(‘Time differences’)
 ax = fig.add_subplot(111)
@@ -559,50 +1131,201 @@ hist_1D_s(dt_ADQ14,  label = ‘ADQ14’,  log = True, bins = bins, x_label = �
 
 <dl class="function">
 <dt id="tofu_functions.inverted_light_yield">
-<code class="descclassname">tofu_functions.</code><code class="descname">inverted_light_yield</code><span class="sig-paren">(</span><em>light_yield</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.inverted_light_yield" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes array of light yields in MeVee and translates to proton recoil using
-look-up table of the inverted light yield function from M. Gatu Johnson.</p>
+<code class="descclassname">tofu_functions.</code><code class="descname">inverted_light_yield</code><span class="sig-paren">(</span><em>light_yield</em>, <em>function='gatu'</em>, <em>check=True</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.inverted_light_yield" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes an array of light yields (MeVee) and converts to proton recoil energy
+(MeV) using the look-up table of the inverted light yield function 
+specified in “function”.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>light_yield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of light yields given in MeVee.</p>
+</dd>
+<dt><strong>function</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Set to “gatu” to use the light yield function from M. Gatu Johnson,
+set to “stevenato” to use light yield function from Stevanato, L., 
+et al. “Light output of EJ228 scintillation neutron detectors.” 
+Applied Radiation and Isotopes 69.2 (2011): 369-372.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>proton_recoil</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">Array of proton recoil energies (MeV).</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">E_ly</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="c1"># (MeVee)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inverted_light_yield</span><span class="p">(</span><span class="n">E_ly</span><span class="p">)</span>
+<span class="go">array([3.84391241 6.12264731 8.2078698])    </span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.kinematic_cuts">
 <code class="descclassname">tofu_functions.</code><code class="descname">kinematic_cuts</code><span class="sig-paren">(</span><em>tof</em>, <em>energy_S1</em>, <em>energy_S2</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.kinematic_cuts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Performs kinematic cuts on the times of flight vs. energy for S1’s and S2’s.
-Input:</p>
-<blockquote>
-<div>tof:       array of times of flight [ns]
-energy_S1: array of S1 energies [MeVee]
-energy_S2: array of S2 energies [MeVee]</div></blockquote>
-<dl class="docutils">
-<dt>Output:</dt>
-<dd>tof_cut:       1D array of times of flight with kinematic cuts applied
-energy_S1_cut: 1D array of energies for S1 with kinematic cuts applied
-energy_S2_cut: 1D array of energies for S2 with kinematic cuts applied</dd>
+<dd><p>Performs kinematic cuts on the times of flight vs. energy for S1’s and 
+S2’s.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tof</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of times-of-flight (ns)</p>
+</dd>
+<dt><strong>energy_S1</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of S1 energies (MeVee)</p>
+</dd>
+<dt><strong>energy_S2</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of S2 energies (MeVee)</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
 </dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>tof_cut</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of times of flight (ns) with kinematic cuts applied,
+len(tof_cut)&lt;=len(tof).</p>
+</dd>
+<dt><strong>energy_S1_cut</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of energies (MeVee) for S1 with kinematic cuts 
+applied, len(energy_S1_cut)&lt;=len(energy_S1).</p>
+</dd>
+<dt><strong>energy_S2_cut</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of energies (MeVee) for S2 with kinematic cuts 
+applied, len(energy_S2_cut)&lt;=len(energy_S2).</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">tof</span> <span class="o">=</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">66</span><span class="p">,</span> <span class="mi">67</span><span class="p">]</span> <span class="c1"># (ns)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">energy_S1</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">]</span> <span class="c1"># (MeVee)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">energy_S2</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.10</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">]</span> <span class="c1"># (MeVee)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">kinematic_cuts</span><span class="p">(</span><span class="n">tof</span><span class="p">,</span> <span class="n">energy_S1</span><span class="p">,</span> <span class="n">energy_S2</span><span class="p">)</span>
+<span class="go">array([64, 65]), </span>
+<span class="go">array([0.05, 0.1 ]), </span>
+<span class="go">array([0.1, 0.2])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.light_yield_function">
-<code class="descclassname">tofu_functions.</code><code class="descname">light_yield_function</code><span class="sig-paren">(</span><em>energy</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.light_yield_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes array of proton recoil energies in MeV and translates to light yield
-in MeVee using light yield function from M. Gatu Johnson thesis.</p>
+<code class="descclassname">tofu_functions.</code><code class="descname">light_yield_function</code><span class="sig-paren">(</span><em>proton_energy</em>, <em>function='gatu'</em>, <em>s=0.73</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.light_yield_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes an array of proton recoil energies (MeV) and converts to light yield
+(MeVee) using the light yield function specified in “function”.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>proton_energy</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of proton recoil energies given in MeV.</p>
+</dd>
+<dt><strong>function</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str, optional</span></dt>
+<dd><p class="first last">Set to “gatu” to use the light yield function from M. Gatu Johnson,
+set to “stevenato” to use light yield function from Stevanato, L., 
+et al. “Light output of EJ228 scintillation neutron detectors.” 
+Applied Radiation and Isotopes 69.2 (2011): 369-372.</p>
+</dd>
+<dt><strong>s</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float,</span></dt>
+<dd><p class="first last">Arbitrary scaling factor, default set to s=0.73, to ensure that the light
+yield function matches the measured spectrum.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>light_yield</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">Array of light yields (MeVee).</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">E_p</span> <span class="o">=</span> <span class="p">[</span><span class="mf">3.84391241</span><span class="p">,</span> <span class="mf">6.12264731</span><span class="p">,</span> <span class="mf">8.2078698</span><span class="p">]</span> <span class="c1"># (MeV)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">light_yield_function</span><span class="p">(</span><span class="n">E_p</span><span class="p">)</span>
+<span class="go">array([1.00004149, 2.00002003, 3.00005272])    </span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.linear_regression">
 <code class="descclassname">tofu_functions.</code><code class="descname">linear_regression</code><span class="sig-paren">(</span><em>x_data</em>, <em>y_data</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.linear_regression" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the slope (A) and intersection (B) for a simple linear regression on x and y data.
-x_data: 2D array of values where each row corresponds to one event to perform linear regression on
-y_data: 2D array of values where each row corresponds to one event to perform linear regression on
-product_1, product_2 and product_3 correspond to the three products for calculating beta in 
-<a class="reference external" href="https://en.wikipedia.org/wiki/Simple_linear_regression">https://en.wikipedia.org/wiki/Simple_linear_regression</a></p>
+<dd><p>Returns the slope (A) and intersection (B) for a simple linear regression 
+on x and y data on the for y = Ax+B.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>x_data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">2D array of x-data</p>
+</dd>
+<dt><strong>y_data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">2D array of y-data</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>slope</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of slopes (A) of the linear regression on the form y = Ax+B
+for each row of x_data and y_data</p>
+</dd>
+<dt><strong>intercept</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">1D array of intercepts (B) of the linear regression on the form 
+y = Ax+B for each row of x_data and y_data</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">linear_regression</span><span class="p">(</span><span class="n">x_data</span><span class="p">,</span> <span class="n">y_data</span><span class="p">)</span>
+<span class="go">(array([-0.12838402,  0.03837328,  0.23679145, -0.11515894, -0.08433706,</span>
+<span class="go">        -0.01809531, -0.02958148, -0.01858007,  0.13560102,  0.30361892]),</span>
+<span class="go"> array([53.50304412, 49.65230379, 37.04726166, 53.7653137 , 52.42589113,</span>
+<span class="go">        49.156337  , 48.59527858, 48.24523488, 38.27435695, 37.49710363]))    </span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.plot_2D">
-<code class="descclassname">tofu_functions.</code><code class="descname">plot_2D</code><span class="sig-paren">(</span><em>times_of_flight, energy_S1, energy_S2, bins_tof=array([-199.8, -199.4, -199. , -198.6, -198.2, -197.8, -197.4, -197. ,        -196.6, -196.2, -195.8, -195.4, -195. , -194.6, -194.2, -193.8,        -193.4, -193. , -192.6, -192.2, -191.8, -191.4, -191. , -190.6,        -190.2, -189.8, -189.4, -189. , -188.6, -188.2, -187.8, -187.4,        -187. , -186.6, -186.2, -185.8, -185.4, -185. , -184.6, -184.2,        -183.8, -183.4, -183. , -182.6, -182.2, -181.8, -181.4, -181. ,        -180.6, -180.2, -179.8, -179.4, -179. , -178.6, -178.2, -177.8,        -177.4, -177. , -176.6, -176.2, -175.8, -175.4, -175. , -174.6,        -174.2, -173.8, -173.4, -173. , -172.6, -172.2, -171.8, -171.4,        -171. , -170.6, -170.2, -169.8, -169.4, -169. , -168.6, -168.2,        -167.8, -167.4, -167. , -166.6, -166.2, -165.8, -165.4, -165. ,        -164.6, -164.2, -163.8, -163.4, -163. , -162.6, -162.2, -161.8,        -161.4, -161. , -160.6, -160.2, -159.8, -159.4, -159. , -158.6,        -158.2, -157.8, -157.4, -157. , -156.6, -156.2, -155.8, -155.4,        -155. , -154.6, -154.2, -153.8, -153.4, -153. , -152.6, -152.2,        -151.8, -151.4, -151. , -150.6, -150.2, -149.8, -149.4, -149. ,        -148.6, -148.2, -147.8, -147.4, -147. , -146.6, -146.2, -145.8,        -145.4, -145. , -144.6, -144.2, -143.8, -143.4, -143. , -142.6,        -142.2, -141.8, -141.4, -141. , -140.6, -140.2, -139.8, -139.4,        -139. , -138.6, -138.2, -137.8, -137.4, -137. , -136.6, -136.2,        -135.8, -135.4, -135. , -134.6, -134.2, -133.8, -133.4, -133. ,        -132.6, -132.2, -131.8, -131.4, -131. , -130.6, -130.2, -129.8,        -129.4, -129. , -128.6, -128.2, -127.8, -127.4, -127. , -126.6,        -126.2, -125.8, -125.4, -125. , -124.6, -124.2, -123.8, -123.4,        -123. , -122.6, -122.2, -121.8, -121.4, -121. , -120.6, -120.2,        -119.8, -119.4, -119. , -118.6, -118.2, -117.8, -117.4, -117. ,        -116.6, -116.2, -115.8, -115.4, -115. , -114.6, -114.2, -113.8,        -113.4, -113. , -112.6, -112.2, -111.8, -111.4, -111. , -110.6,        -110.2, -109.8, -109.4, -109. , -108.6, -108.2, -107.8, -107.4,        -107. , -106.6, -106.2, -105.8, -105.4, -105. , -104.6, -104.2,        -103.8, -103.4, -103. , -102.6, -102.2, -101.8, -101.4, -101. ,        -100.6, -100.2,  -99.8,  -99.4,  -99. ,  -98.6,  -98.2,  -97.8,         -97.4,  -97. ,  -96.6,  -96.2,  -95.8,  -95.4,  -95. ,  -94.6,         -94.2,  -93.8,  -93.4,  -93. ,  -92.6,  -92.2,  -91.8,  -91.4,         -91. ,  -90.6,  -90.2,  -89.8,  -89.4,  -89. ,  -88.6,  -88.2,         -87.8,  -87.4,  -87. ,  -86.6,  -86.2,  -85.8,  -85.4,  -85. ,         -84.6,  -84.2,  -83.8,  -83.4,  -83. ,  -82.6,  -82.2,  -81.8,         -81.4,  -81. ,  -80.6,  -80.2,  -79.8,  -79.4,  -79. ,  -78.6,         -78.2,  -77.8,  -77.4,  -77. ,  -76.6,  -76.2,  -75.8,  -75.4,         -75. ,  -74.6,  -74.2,  -73.8,  -73.4,  -73. ,  -72.6,  -72.2,         -71.8,  -71.4,  -71. ,  -70.6,  -70.2,  -69.8,  -69.4,  -69. ,         -68.6,  -68.2,  -67.8,  -67.4,  -67. ,  -66.6,  -66.2,  -65.8,         -65.4,  -65. ,  -64.6,  -64.2,  -63.8,  -63.4,  -63. ,  -62.6,         -62.2,  -61.8,  -61.4,  -61. ,  -60.6,  -60.2,  -59.8,  -59.4,         -59. ,  -58.6,  -58.2,  -57.8,  -57.4,  -57. ,  -56.6,  -56.2,         -55.8,  -55.4,  -55. ,  -54.6,  -54.2,  -53.8,  -53.4,  -53. ,         -52.6,  -52.2,  -51.8,  -51.4,  -51. ,  -50.6,  -50.2,  -49.8,         -49.4,  -49. ,  -48.6,  -48.2,  -47.8,  -47.4,  -47. ,  -46.6,         -46.2,  -45.8,  -45.4,  -45. ,  -44.6,  -44.2,  -43.8,  -43.4,         -43. ,  -42.6,  -42.2,  -41.8,  -41.4,  -41. ,  -40.6,  -40.2,         -39.8,  -39.4,  -39. ,  -38.6,  -38.2,  -37.8,  -37.4,  -37. ,         -36.6,  -36.2,  -35.8,  -35.4,  -35. ,  -34.6,  -34.2,  -33.8,         -33.4,  -33. ,  -32.6,  -32.2,  -31.8,  -31.4,  -31. ,  -30.6,         -30.2,  -29.8,  -29.4,  -29. ,  -28.6,  -28.2,  -27.8,  -27.4,         -27. ,  -26.6,  -26.2,  -25.8,  -25.4,  -25. ,  -24.6,  -24.2,         -23.8,  -23.4,  -23. ,  -22.6,  -22.2,  -21.8,  -21.4,  -21. ,         -20.6,  -20.2,  -19.8,  -19.4,  -19. ,  -18.6,  -18.2,  -17.8,         -17.4,  -17. ,  -16.6,  -16.2,  -15.8,  -15.4,  -15. ,  -14.6,         -14.2,  -13.8,  -13.4,  -13. ,  -12.6,  -12.2,  -11.8,  -11.4,         -11. ,  -10.6,  -10.2,   -9.8,   -9.4,   -9. ,   -8.6,   -8.2,          -7.8,   -7.4,   -7. ,   -6.6,   -6.2,   -5.8,   -5.4,   -5. ,          -4.6,   -4.2,   -3.8,   -3.4,   -3. ,   -2.6,   -2.2,   -1.8,          -1.4,   -1. ,   -0.6,   -0.2,    0.2,    0.6,    1. ,    1.4,           1.8,    2.2,    2.6,    3. ,    3.4,    3.8,    4.2,    4.6,           5. ,    5.4,    5.8,    6.2,    6.6,    7. ,    7.4,    7.8,           8.2,    8.6,    9. ,    9.4,    9.8,   10.2,   10.6,   11. ,          11.4,   11.8,   12.2,   12.6,   13. ,   13.4,   13.8,   14.2,          14.6,   15. ,   15.4,   15.8,   16.2,   16.6,   17. ,   17.4,          17.8,   18.2,   18.6,   19. ,   19.4,   19.8,   20.2,   20.6,          21. ,   21.4,   21.8,   22.2,   22.6,   23. ,   23.4,   23.8,          24.2,   24.6,   25. ,   25.4,   25.8,   26.2,   26.6,   27. ,          27.4,   27.8,   28.2,   28.6,   29. ,   29.4,   29.8,   30.2,          30.6,   31. ,   31.4,   31.8,   32.2,   32.6,   33. ,   33.4,          33.8,   34.2,   34.6,   35. ,   35.4,   35.8,   36.2,   36.6,          37. ,   37.4,   37.8,   38.2,   38.6,   39. ,   39.4,   39.8,          40.2,   40.6,   41. ,   41.4,   41.8,   42.2,   42.6,   43. ,          43.4,   43.8,   44.2,   44.6,   45. ,   45.4,   45.8,   46.2,          46.6,   47. ,   47.4,   47.8,   48.2,   48.6,   49. ,   49.4,          49.8,   50.2,   50.6,   51. ,   51.4,   51.8,   52.2,   52.6,          53. ,   53.4,   53.8,   54.2,   54.6,   55. ,   55.4,   55.8,          56.2,   56.6,   57. ,   57.4,   57.8,   58.2,   58.6,   59. ,          59.4,   59.8,   60.2,   60.6,   61. ,   61.4,   61.8,   62.2,          62.6,   63. ,   63.4,   63.8,   64.2,   64.6,   65. ,   65.4,          65.8,   66.2,   66.6,   67. ,   67.4,   67.8,   68.2,   68.6,          69. ,   69.4,   69.8,   70.2,   70.6,   71. ,   71.4,   71.8,          72.2,   72.6,   73. ,   73.4,   73.8,   74.2,   74.6,   75. ,          75.4,   75.8,   76.2,   76.6,   77. ,   77.4,   77.8,   78.2,          78.6,   79. ,   79.4,   79.8,   80.2,   80.6,   81. ,   81.4,          81.8,   82.2,   82.6,   83. ,   83.4,   83.8,   84.2,   84.6,          85. ,   85.4,   85.8,   86.2,   86.6,   87. ,   87.4,   87.8,          88.2,   88.6,   89. ,   89.4,   89.8,   90.2,   90.6,   91. ,          91.4,   91.8,   92.2,   92.6,   93. ,   93.4,   93.8,   94.2,          94.6,   95. ,   95.4,   95.8,   96.2,   96.6,   97. ,   97.4,          97.8,   98.2,   98.6,   99. ,   99.4,   99.8,  100.2,  100.6,         101. ,  101.4,  101.8,  102.2,  102.6,  103. ,  103.4,  103.8,         104.2,  104.6,  105. ,  105.4,  105.8,  106.2,  106.6,  107. ,         107.4,  107.8,  108.2,  108.6,  109. ,  109.4,  109.8,  110.2,         110.6,  111. ,  111.4,  111.8,  112.2,  112.6,  113. ,  113.4,         113.8,  114.2,  114.6,  115. ,  115.4,  115.8,  116.2,  116.6,         117. ,  117.4,  117.8,  118.2,  118.6,  119. ,  119.4,  119.8,         120.2,  120.6,  121. ,  121.4,  121.8,  122.2,  122.6,  123. ,         123.4,  123.8,  124.2,  124.6,  125. ,  125.4,  125.8,  126.2,         126.6,  127. ,  127.4,  127.8,  128.2,  128.6,  129. ,  129.4,         129.8,  130.2,  130.6,  131. ,  131.4,  131.8,  132.2,  132.6,         133. ,  133.4,  133.8,  134.2,  134.6,  135. ,  135.4,  135.8,         136.2,  136.6,  137. ,  137.4,  137.8,  138.2,  138.6,  139. ,         139.4,  139.8,  140.2,  140.6,  141. ,  141.4,  141.8,  142.2,         142.6,  143. ,  143.4,  143.8,  144.2,  144.6,  145. ,  145.4,         145.8,  146.2,  146.6,  147. ,  147.4,  147.8,  148.2,  148.6,         149. ,  149.4,  149.8,  150.2,  150.6,  151. ,  151.4,  151.8,         152.2,  152.6,  153. ,  153.4,  153.8,  154.2,  154.6,  155. ,         155.4,  155.8,  156.2,  156.6,  157. ,  157.4,  157.8,  158.2,         158.6,  159. ,  159.4,  159.8,  160.2,  160.6,  161. ,  161.4,         161.8,  162.2,  162.6,  163. ,  163.4,  163.8,  164.2,  164.6,         165. ,  165.4,  165.8,  166.2,  166.6,  167. ,  167.4,  167.8,         168.2,  168.6,  169. ,  169.4,  169.8,  170.2,  170.6,  171. ,         171.4,  171.8,  172.2,  172.6,  173. ,  173.4,  173.8,  174.2,         174.6,  175. ,  175.4,  175.8,  176.2,  176.6,  177. ,  177.4,         177.8,  178.2,  178.6,  179. ,  179.4,  179.8,  180.2,  180.6,         181. ,  181.4,  181.8,  182.2,  182.6,  183. ,  183.4,  183.8,         184.2,  184.6,  185. ,  185.4,  185.8,  186.2,  186.6,  187. ,         187.4,  187.8,  188.2,  188.6,  189. ,  189.4,  189.8,  190.2,         190.6,  191. ,  191.4,  191.8,  192.2,  192.6,  193. ,  193.4,         193.8,  194.2,  194.6,  195. ,  195.4,  195.8,  196.2,  196.6,         197. ,  197.4,  197.8,  198.2,  198.6,  199. ,  199.4,  199.8]), bins_energy=array([-1.0000000e+00, -9.8000000e-01, -9.6000000e-01, -9.4000000e-01,        -9.2000000e-01, -9.0000000e-01, -8.8000000e-01, -8.6000000e-01,        -8.4000000e-01, -8.2000000e-01, -8.0000000e-01, -7.8000000e-01,        -7.6000000e-01, -7.4000000e-01, -7.2000000e-01, -7.0000000e-01,        -6.8000000e-01, -6.6000000e-01, -6.4000000e-01, -6.2000000e-01,        -6.0000000e-01, -5.8000000e-01, -5.6000000e-01, -5.4000000e-01,        -5.2000000e-01, -5.0000000e-01, -4.8000000e-01, -4.6000000e-01,        -4.4000000e-01, -4.2000000e-01, -4.0000000e-01, -3.8000000e-01,        -3.6000000e-01, -3.4000000e-01, -3.2000000e-01, -3.0000000e-01,        -2.8000000e-01, -2.6000000e-01, -2.4000000e-01, -2.2000000e-01,        -2.0000000e-01, -1.8000000e-01, -1.6000000e-01, -1.4000000e-01,        -1.2000000e-01, -1.0000000e-01, -8.0000000e-02, -6.0000000e-02,        -4.0000000e-02, -2.0000000e-02,  8.8817842e-16,  2.0000000e-02,         4.0000000e-02,  6.0000000e-02,  8.0000000e-02,  1.0000000e-01,         1.2000000e-01,  1.4000000e-01,  1.6000000e-01,  1.8000000e-01,         2.0000000e-01,  2.2000000e-01,  2.4000000e-01,  2.6000000e-01,         2.8000000e-01,  3.0000000e-01,  3.2000000e-01,  3.4000000e-01,         3.6000000e-01,  3.8000000e-01,  4.0000000e-01,  4.2000000e-01,         4.4000000e-01,  4.6000000e-01,  4.8000000e-01,  5.0000000e-01,         5.2000000e-01,  5.4000000e-01,  5.6000000e-01,  5.8000000e-01,         6.0000000e-01,  6.2000000e-01,  6.4000000e-01,  6.6000000e-01,         6.8000000e-01,  7.0000000e-01,  7.2000000e-01,  7.4000000e-01,         7.6000000e-01,  7.8000000e-01,  8.0000000e-01,  8.2000000e-01,         8.4000000e-01,  8.6000000e-01,  8.8000000e-01,  9.0000000e-01,         9.2000000e-01,  9.4000000e-01,  9.6000000e-01,  9.8000000e-01,         1.0000000e+00,  1.0200000e+00,  1.0400000e+00,  1.0600000e+00,         1.0800000e+00,  1.1000000e+00,  1.1200000e+00,  1.1400000e+00,         1.1600000e+00,  1.1800000e+00,  1.2000000e+00,  1.2200000e+00,         1.2400000e+00,  1.2600000e+00,  1.2800000e+00,  1.3000000e+00,         1.3200000e+00,  1.3400000e+00,  1.3600000e+00,  1.3800000e+00,         1.4000000e+00,  1.4200000e+00,  1.4400000e+00,  1.4600000e+00,         1.4800000e+00,  1.5000000e+00,  1.5200000e+00,  1.5400000e+00,         1.5600000e+00,  1.5800000e+00,  1.6000000e+00,  1.6200000e+00,         1.6400000e+00,  1.6600000e+00,  1.6800000e+00,  1.7000000e+00,         1.7200000e+00,  1.7400000e+00,  1.7600000e+00,  1.7800000e+00,         1.8000000e+00,  1.8200000e+00,  1.8400000e+00,  1.8600000e+00,         1.8800000e+00,  1.9000000e+00,  1.9200000e+00,  1.9400000e+00,         1.9600000e+00,  1.9800000e+00,  2.0000000e+00,  2.0200000e+00,         2.0400000e+00,  2.0600000e+00,  2.0800000e+00,  2.1000000e+00,         2.1200000e+00,  2.1400000e+00,  2.1600000e+00,  2.1800000e+00,         2.2000000e+00,  2.2200000e+00,  2.2400000e+00,  2.2600000e+00,         2.2800000e+00,  2.3000000e+00,  2.3200000e+00,  2.3400000e+00,         2.3600000e+00,  2.3800000e+00,  2.4000000e+00,  2.4200000e+00,         2.4400000e+00,  2.4600000e+00,  2.4800000e+00,  2.5000000e+00,         2.5200000e+00,  2.5400000e+00,  2.5600000e+00,  2.5800000e+00,         2.6000000e+00,  2.6200000e+00,  2.6400000e+00,  2.6600000e+00,         2.6800000e+00,  2.7000000e+00,  2.7200000e+00,  2.7400000e+00,         2.7600000e+00,  2.7800000e+00,  2.8000000e+00,  2.8200000e+00,         2.8400000e+00,  2.8600000e+00,  2.8800000e+00,  2.9000000e+00,         2.9200000e+00,  2.9400000e+00,  2.9600000e+00,  2.9800000e+00,         3.0000000e+00,  3.0200000e+00,  3.0400000e+00,  3.0600000e+00,         3.0800000e+00,  3.1000000e+00,  3.1200000e+00,  3.1400000e+00,         3.1600000e+00,  3.1800000e+00,  3.2000000e+00,  3.2200000e+00,         3.2400000e+00,  3.2600000e+00,  3.2800000e+00,  3.3000000e+00,         3.3200000e+00,  3.3400000e+00,  3.3600000e+00,  3.3800000e+00,         3.4000000e+00,  3.4200000e+00,  3.4400000e+00,  3.4600000e+00,         3.4800000e+00,  3.5000000e+00,  3.5200000e+00,  3.5400000e+00,         3.5600000e+00,  3.5800000e+00,  3.6000000e+00,  3.6200000e+00,         3.6400000e+00,  3.6600000e+00,  3.6800000e+00,  3.7000000e+00,         3.7200000e+00,  3.7400000e+00,  3.7600000e+00,  3.7800000e+00,         3.8000000e+00,  3.8200000e+00,  3.8400000e+00,  3.8600000e+00,         3.8800000e+00,  3.9000000e+00,  3.9200000e+00,  3.9400000e+00,         3.9600000e+00,  3.9800000e+00]), bins_2D=[array([-199.8, -199.4, -199. , -198.6, -198.2, -197.8, -197.4, -197. ,        -196.6, -196.2, -195.8, -195.4, -195. , -194.6, -194.2, -193.8,        -193.4, -193. , -192.6, -192.2, -191.8, -191.4, -191. , -190.6,        -190.2, -189.8, -189.4, -189. , -188.6, -188.2, -187.8, -187.4,        -187. , -186.6, -186.2, -185.8, -185.4, -185. , -184.6, -184.2,        -183.8, -183.4, -183. , -182.6, -182.2, -181.8, -181.4, -181. ,        -180.6, -180.2, -179.8, -179.4, -179. , -178.6, -178.2, -177.8,        -177.4, -177. , -176.6, -176.2, -175.8, -175.4, -175. , -174.6,        -174.2, -173.8, -173.4, -173. , -172.6, -172.2, -171.8, -171.4,        -171. , -170.6, -170.2, -169.8, -169.4, -169. , -168.6, -168.2,        -167.8, -167.4, -167. , -166.6, -166.2, -165.8, -165.4, -165. ,        -164.6, -164.2, -163.8, -163.4, -163. , -162.6, -162.2, -161.8,        -161.4, -161. , -160.6, -160.2, -159.8, -159.4, -159. , -158.6,        -158.2, -157.8, -157.4, -157. , -156.6, -156.2, -155.8, -155.4,        -155. , -154.6, -154.2, -153.8, -153.4, -153. , -152.6, -152.2,        -151.8, -151.4, -151. , -150.6, -150.2, -149.8, -149.4, -149. ,        -148.6, -148.2, -147.8, -147.4, -147. , -146.6, -146.2, -145.8,        -145.4, -145. , -144.6, -144.2, -143.8, -143.4, -143. , -142.6,        -142.2, -141.8, -141.4, -141. , -140.6, -140.2, -139.8, -139.4,        -139. , -138.6, -138.2, -137.8, -137.4, -137. , -136.6, -136.2,        -135.8, -135.4, -135. , -134.6, -134.2, -133.8, -133.4, -133. ,        -132.6, -132.2, -131.8, -131.4, -131. , -130.6, -130.2, -129.8,        -129.4, -129. , -128.6, -128.2, -127.8, -127.4, -127. , -126.6,        -126.2, -125.8, -125.4, -125. , -124.6, -124.2, -123.8, -123.4,        -123. , -122.6, -122.2, -121.8, -121.4, -121. , -120.6, -120.2,        -119.8, -119.4, -119. , -118.6, -118.2, -117.8, -117.4, -117. ,        -116.6, -116.2, -115.8, -115.4, -115. , -114.6, -114.2, -113.8,        -113.4, -113. , -112.6, -112.2, -111.8, -111.4, -111. , -110.6,        -110.2, -109.8, -109.4, -109. , -108.6, -108.2, -107.8, -107.4,        -107. , -106.6, -106.2, -105.8, -105.4, -105. , -104.6, -104.2,        -103.8, -103.4, -103. , -102.6, -102.2, -101.8, -101.4, -101. ,        -100.6, -100.2,  -99.8,  -99.4,  -99. ,  -98.6,  -98.2,  -97.8,         -97.4,  -97. ,  -96.6,  -96.2,  -95.8,  -95.4,  -95. ,  -94.6,         -94.2,  -93.8,  -93.4,  -93. ,  -92.6,  -92.2,  -91.8,  -91.4,         -91. ,  -90.6,  -90.2,  -89.8,  -89.4,  -89. ,  -88.6,  -88.2,         -87.8,  -87.4,  -87. ,  -86.6,  -86.2,  -85.8,  -85.4,  -85. ,         -84.6,  -84.2,  -83.8,  -83.4,  -83. ,  -82.6,  -82.2,  -81.8,         -81.4,  -81. ,  -80.6,  -80.2,  -79.8,  -79.4,  -79. ,  -78.6,         -78.2,  -77.8,  -77.4,  -77. ,  -76.6,  -76.2,  -75.8,  -75.4,         -75. ,  -74.6,  -74.2,  -73.8,  -73.4,  -73. ,  -72.6,  -72.2,         -71.8,  -71.4,  -71. ,  -70.6,  -70.2,  -69.8,  -69.4,  -69. ,         -68.6,  -68.2,  -67.8,  -67.4,  -67. ,  -66.6,  -66.2,  -65.8,         -65.4,  -65. ,  -64.6,  -64.2,  -63.8,  -63.4,  -63. ,  -62.6,         -62.2,  -61.8,  -61.4,  -61. ,  -60.6,  -60.2,  -59.8,  -59.4,         -59. ,  -58.6,  -58.2,  -57.8,  -57.4,  -57. ,  -56.6,  -56.2,         -55.8,  -55.4,  -55. ,  -54.6,  -54.2,  -53.8,  -53.4,  -53. ,         -52.6,  -52.2,  -51.8,  -51.4,  -51. ,  -50.6,  -50.2,  -49.8,         -49.4,  -49. ,  -48.6,  -48.2,  -47.8,  -47.4,  -47. ,  -46.6,         -46.2,  -45.8,  -45.4,  -45. ,  -44.6,  -44.2,  -43.8,  -43.4,         -43. ,  -42.6,  -42.2,  -41.8,  -41.4,  -41. ,  -40.6,  -40.2,         -39.8,  -39.4,  -39. ,  -38.6,  -38.2,  -37.8,  -37.4,  -37. ,         -36.6,  -36.2,  -35.8,  -35.4,  -35. ,  -34.6,  -34.2,  -33.8,         -33.4,  -33. ,  -32.6,  -32.2,  -31.8,  -31.4,  -31. ,  -30.6,         -30.2,  -29.8,  -29.4,  -29. ,  -28.6,  -28.2,  -27.8,  -27.4,         -27. ,  -26.6,  -26.2,  -25.8,  -25.4,  -25. ,  -24.6,  -24.2,         -23.8,  -23.4,  -23. ,  -22.6,  -22.2,  -21.8,  -21.4,  -21. ,         -20.6,  -20.2,  -19.8,  -19.4,  -19. ,  -18.6,  -18.2,  -17.8,         -17.4,  -17. ,  -16.6,  -16.2,  -15.8,  -15.4,  -15. ,  -14.6,         -14.2,  -13.8,  -13.4,  -13. ,  -12.6,  -12.2,  -11.8,  -11.4,         -11. ,  -10.6,  -10.2,   -9.8,   -9.4,   -9. ,   -8.6,   -8.2,          -7.8,   -7.4,   -7. ,   -6.6,   -6.2,   -5.8,   -5.4,   -5. ,          -4.6,   -4.2,   -3.8,   -3.4,   -3. ,   -2.6,   -2.2,   -1.8,          -1.4,   -1. ,   -0.6,   -0.2,    0.2,    0.6,    1. ,    1.4,           1.8,    2.2,    2.6,    3. ,    3.4,    3.8,    4.2,    4.6,           5. ,    5.4,    5.8,    6.2,    6.6,    7. ,    7.4,    7.8,           8.2,    8.6,    9. ,    9.4,    9.8,   10.2,   10.6,   11. ,          11.4,   11.8,   12.2,   12.6,   13. ,   13.4,   13.8,   14.2,          14.6,   15. ,   15.4,   15.8,   16.2,   16.6,   17. ,   17.4,          17.8,   18.2,   18.6,   19. ,   19.4,   19.8,   20.2,   20.6,          21. ,   21.4,   21.8,   22.2,   22.6,   23. ,   23.4,   23.8,          24.2,   24.6,   25. ,   25.4,   25.8,   26.2,   26.6,   27. ,          27.4,   27.8,   28.2,   28.6,   29. ,   29.4,   29.8,   30.2,          30.6,   31. ,   31.4,   31.8,   32.2,   32.6,   33. ,   33.4,          33.8,   34.2,   34.6,   35. ,   35.4,   35.8,   36.2,   36.6,          37. ,   37.4,   37.8,   38.2,   38.6,   39. ,   39.4,   39.8,          40.2,   40.6,   41. ,   41.4,   41.8,   42.2,   42.6,   43. ,          43.4,   43.8,   44.2,   44.6,   45. ,   45.4,   45.8,   46.2,          46.6,   47. ,   47.4,   47.8,   48.2,   48.6,   49. ,   49.4,          49.8,   50.2,   50.6,   51. ,   51.4,   51.8,   52.2,   52.6,          53. ,   53.4,   53.8,   54.2,   54.6,   55. ,   55.4,   55.8,          56.2,   56.6,   57. ,   57.4,   57.8,   58.2,   58.6,   59. ,          59.4,   59.8,   60.2,   60.6,   61. ,   61.4,   61.8,   62.2,          62.6,   63. ,   63.4,   63.8,   64.2,   64.6,   65. ,   65.4,          65.8,   66.2,   66.6,   67. ,   67.4,   67.8,   68.2,   68.6,          69. ,   69.4,   69.8,   70.2,   70.6,   71. ,   71.4,   71.8,          72.2,   72.6,   73. ,   73.4,   73.8,   74.2,   74.6,   75. ,          75.4,   75.8,   76.2,   76.6,   77. ,   77.4,   77.8,   78.2,          78.6,   79. ,   79.4,   79.8,   80.2,   80.6,   81. ,   81.4,          81.8,   82.2,   82.6,   83. ,   83.4,   83.8,   84.2,   84.6,          85. ,   85.4,   85.8,   86.2,   86.6,   87. ,   87.4,   87.8,          88.2,   88.6,   89. ,   89.4,   89.8,   90.2,   90.6,   91. ,          91.4,   91.8,   92.2,   92.6,   93. ,   93.4,   93.8,   94.2,          94.6,   95. ,   95.4,   95.8,   96.2,   96.6,   97. ,   97.4,          97.8,   98.2,   98.6,   99. ,   99.4,   99.8,  100.2,  100.6,         101. ,  101.4,  101.8,  102.2,  102.6,  103. ,  103.4,  103.8,         104.2,  104.6,  105. ,  105.4,  105.8,  106.2,  106.6,  107. ,         107.4,  107.8,  108.2,  108.6,  109. ,  109.4,  109.8,  110.2,         110.6,  111. ,  111.4,  111.8,  112.2,  112.6,  113. ,  113.4,         113.8,  114.2,  114.6,  115. ,  115.4,  115.8,  116.2,  116.6,         117. ,  117.4,  117.8,  118.2,  118.6,  119. ,  119.4,  119.8,         120.2,  120.6,  121. ,  121.4,  121.8,  122.2,  122.6,  123. ,         123.4,  123.8,  124.2,  124.6,  125. ,  125.4,  125.8,  126.2,         126.6,  127. ,  127.4,  127.8,  128.2,  128.6,  129. ,  129.4,         129.8,  130.2,  130.6,  131. ,  131.4,  131.8,  132.2,  132.6,         133. ,  133.4,  133.8,  134.2,  134.6,  135. ,  135.4,  135.8,         136.2,  136.6,  137. ,  137.4,  137.8,  138.2,  138.6,  139. ,         139.4,  139.8,  140.2,  140.6,  141. ,  141.4,  141.8,  142.2,         142.6,  143. ,  143.4,  143.8,  144.2,  144.6,  145. ,  145.4,         145.8,  146.2,  146.6,  147. ,  147.4,  147.8,  148.2,  148.6,         149. ,  149.4,  149.8,  150.2,  150.6,  151. ,  151.4,  151.8,         152.2,  152.6,  153. ,  153.4,  153.8,  154.2,  154.6,  155. ,         155.4,  155.8,  156.2,  156.6,  157. ,  157.4,  157.8,  158.2,         158.6,  159. ,  159.4,  159.8,  160.2,  160.6,  161. ,  161.4,         161.8,  162.2,  162.6,  163. ,  163.4,  163.8,  164.2,  164.6,         165. ,  165.4,  165.8,  166.2,  166.6,  167. ,  167.4,  167.8,         168.2,  168.6,  169. ,  169.4,  169.8,  170.2,  170.6,  171. ,         171.4,  171.8,  172.2,  172.6,  173. ,  173.4,  173.8,  174.2,         174.6,  175. ,  175.4,  175.8,  176.2,  176.6,  177. ,  177.4,         177.8,  178.2,  178.6,  179. ,  179.4,  179.8,  180.2,  180.6,         181. ,  181.4,  181.8,  182.2,  182.6,  183. ,  183.4,  183.8,         184.2,  184.6,  185. ,  185.4,  185.8,  186.2,  186.6,  187. ,         187.4,  187.8,  188.2,  188.6,  189. ,  189.4,  189.8,  190.2,         190.6,  191. ,  191.4,  191.8,  192.2,  192.6,  193. ,  193.4,         193.8,  194.2,  194.6,  195. ,  195.4,  195.8,  196.2,  196.6,         197. ,  197.4,  197.8,  198.2,  198.6,  199. ,  199.4,  199.8]), array([-1.0000000e+00, -9.8000000e-01, -9.6000000e-01, -9.4000000e-01,        -9.2000000e-01, -9.0000000e-01, -8.8000000e-01, -8.6000000e-01,        -8.4000000e-01, -8.2000000e-01, -8.0000000e-01, -7.8000000e-01,        -7.6000000e-01, -7.4000000e-01, -7.2000000e-01, -7.0000000e-01,        -6.8000000e-01, -6.6000000e-01, -6.4000000e-01, -6.2000000e-01,        -6.0000000e-01, -5.8000000e-01, -5.6000000e-01, -5.4000000e-01,        -5.2000000e-01, -5.0000000e-01, -4.8000000e-01, -4.6000000e-01,        -4.4000000e-01, -4.2000000e-01, -4.0000000e-01, -3.8000000e-01,        -3.6000000e-01, -3.4000000e-01, -3.2000000e-01, -3.0000000e-01,        -2.8000000e-01, -2.6000000e-01, -2.4000000e-01, -2.2000000e-01,        -2.0000000e-01, -1.8000000e-01, -1.6000000e-01, -1.4000000e-01,        -1.2000000e-01, -1.0000000e-01, -8.0000000e-02, -6.0000000e-02,        -4.0000000e-02, -2.0000000e-02,  8.8817842e-16,  2.0000000e-02,         4.0000000e-02,  6.0000000e-02,  8.0000000e-02,  1.0000000e-01,         1.2000000e-01,  1.4000000e-01,  1.6000000e-01,  1.8000000e-01,         2.0000000e-01,  2.2000000e-01,  2.4000000e-01,  2.6000000e-01,         2.8000000e-01,  3.0000000e-01,  3.2000000e-01,  3.4000000e-01,         3.6000000e-01,  3.8000000e-01,  4.0000000e-01,  4.2000000e-01,         4.4000000e-01,  4.6000000e-01,  4.8000000e-01,  5.0000000e-01,         5.2000000e-01,  5.4000000e-01,  5.6000000e-01,  5.8000000e-01,         6.0000000e-01,  6.2000000e-01,  6.4000000e-01,  6.6000000e-01,         6.8000000e-01,  7.0000000e-01,  7.2000000e-01,  7.4000000e-01,         7.6000000e-01,  7.8000000e-01,  8.0000000e-01,  8.2000000e-01,         8.4000000e-01,  8.6000000e-01,  8.8000000e-01,  9.0000000e-01,         9.2000000e-01,  9.4000000e-01,  9.6000000e-01,  9.8000000e-01,         1.0000000e+00,  1.0200000e+00,  1.0400000e+00,  1.0600000e+00,         1.0800000e+00,  1.1000000e+00,  1.1200000e+00,  1.1400000e+00,         1.1600000e+00,  1.1800000e+00,  1.2000000e+00,  1.2200000e+00,         1.2400000e+00,  1.2600000e+00,  1.2800000e+00,  1.3000000e+00,         1.3200000e+00,  1.3400000e+00,  1.3600000e+00,  1.3800000e+00,         1.4000000e+00,  1.4200000e+00,  1.4400000e+00,  1.4600000e+00,         1.4800000e+00,  1.5000000e+00,  1.5200000e+00,  1.5400000e+00,         1.5600000e+00,  1.5800000e+00,  1.6000000e+00,  1.6200000e+00,         1.6400000e+00,  1.6600000e+00,  1.6800000e+00,  1.7000000e+00,         1.7200000e+00,  1.7400000e+00,  1.7600000e+00,  1.7800000e+00,         1.8000000e+00,  1.8200000e+00,  1.8400000e+00,  1.8600000e+00,         1.8800000e+00,  1.9000000e+00,  1.9200000e+00,  1.9400000e+00,         1.9600000e+00,  1.9800000e+00,  2.0000000e+00,  2.0200000e+00,         2.0400000e+00,  2.0600000e+00,  2.0800000e+00,  2.1000000e+00,         2.1200000e+00,  2.1400000e+00,  2.1600000e+00,  2.1800000e+00,         2.2000000e+00,  2.2200000e+00,  2.2400000e+00,  2.2600000e+00,         2.2800000e+00,  2.3000000e+00,  2.3200000e+00,  2.3400000e+00,         2.3600000e+00,  2.3800000e+00,  2.4000000e+00,  2.4200000e+00,         2.4400000e+00,  2.4600000e+00,  2.4800000e+00,  2.5000000e+00,         2.5200000e+00,  2.5400000e+00,  2.5600000e+00,  2.5800000e+00,         2.6000000e+00,  2.6200000e+00,  2.6400000e+00,  2.6600000e+00,         2.6800000e+00,  2.7000000e+00,  2.7200000e+00,  2.7400000e+00,         2.7600000e+00,  2.7800000e+00,  2.8000000e+00,  2.8200000e+00,         2.8400000e+00,  2.8600000e+00,  2.8800000e+00,  2.9000000e+00,         2.9200000e+00,  2.9400000e+00,  2.9600000e+00,  2.9800000e+00,         3.0000000e+00,  3.0200000e+00,  3.0400000e+00,  3.0600000e+00,         3.0800000e+00,  3.1000000e+00,  3.1200000e+00,  3.1400000e+00,         3.1600000e+00,  3.1800000e+00,  3.2000000e+00,  3.2200000e+00,         3.2400000e+00,  3.2600000e+00,  3.2800000e+00,  3.3000000e+00,         3.3200000e+00,  3.3400000e+00,  3.3600000e+00,  3.3800000e+00,         3.4000000e+00,  3.4200000e+00,  3.4400000e+00,  3.4600000e+00,         3.4800000e+00,  3.5000000e+00,  3.5200000e+00,  3.5400000e+00,         3.5600000e+00,  3.5800000e+00,  3.6000000e+00,  3.6200000e+00,         3.6400000e+00,  3.6600000e+00,  3.6800000e+00,  3.7000000e+00,         3.7200000e+00,  3.7400000e+00,  3.7600000e+00,  3.7800000e+00,         3.8000000e+00,  3.8200000e+00,  3.8400000e+00,  3.8600000e+00,         3.8800000e+00,  3.9000000e+00,  3.9200000e+00,  3.9400000e+00,         3.9600000e+00,  3.9800000e+00])], energy_lim=array([-0.1,  2. ]), tof_lim=array([-150,  200]), title='', log=True, interactive_plot=False, projection=0, disable_cuts=False, times_of_flight_cut=0, energy_S1_cut=0, energy_S2_cut=0, disable_bgs=False, weights=False, hist2D_S1=None, hist2D_S2=None, sum_shots=False, proton_recoil=False, timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.plot_2D" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plots 2D histogram of TOF vs energy with projections onto time and energy axis.
-Returns nothing.
+<code class="descclassname">tofu_functions.</code><code class="descname">plot_2D</code><span class="sig-paren">(</span><em>times_of_flight</em>, <em>energy_S1</em>, <em>energy_S2</em>, <em>bins_tof=array([-199.8</em>, <em>-199.4</em>, <em>-199.</em>, <em>-198.6</em>, <em>-198.2</em>, <em>-197.8</em>, <em>-197.4</em>, <em>-197.</em>, <em>-196.6</em>, <em>-196.2</em>, <em>-195.8</em>, <em>-195.4</em>, <em>-195.</em>, <em>-194.6</em>, <em>-194.2</em>, <em>-193.8</em>, <em>-193.4</em>, <em>-193.</em>, <em>-192.6</em>, <em>-192.2</em>, <em>-191.8</em>, <em>-191.4</em>, <em>-191.</em>, <em>-190.6</em>, <em>-190.2</em>, <em>-189.8</em>, <em>-189.4</em>, <em>-189.</em>, <em>-188.6</em>, <em>-188.2</em>, <em>-187.8</em>, <em>-187.4</em>, <em>-187.</em>, <em>-186.6</em>, <em>-186.2</em>, <em>-185.8</em>, <em>-185.4</em>, <em>-185.</em>, <em>-184.6</em>, <em>-184.2</em>, <em>-183.8</em>, <em>-183.4</em>, <em>-183.</em>, <em>-182.6</em>, <em>-182.2</em>, <em>-181.8</em>, <em>-181.4</em>, <em>-181.</em>, <em>-180.6</em>, <em>-180.2</em>, <em>-179.8</em>, <em>-179.4</em>, <em>-179.</em>, <em>-178.6</em>, <em>-178.2</em>, <em>-177.8</em>, <em>-177.4</em>, <em>-177.</em>, <em>-176.6</em>, <em>-176.2</em>, <em>-175.8</em>, <em>-175.4</em>, <em>-175.</em>, <em>-174.6</em>, <em>-174.2</em>, <em>-173.8</em>, <em>-173.4</em>, <em>-173.</em>, <em>-172.6</em>, <em>-172.2</em>, <em>-171.8</em>, <em>-171.4</em>, <em>-171.</em>, <em>-170.6</em>, <em>-170.2</em>, <em>-169.8</em>, <em>-169.4</em>, <em>-169.</em>, <em>-168.6</em>, <em>-168.2</em>, <em>-167.8</em>, <em>-167.4</em>, <em>-167.</em>, <em>-166.6</em>, <em>-166.2</em>, <em>-165.8</em>, <em>-165.4</em>, <em>-165.</em>, <em>-164.6</em>, <em>-164.2</em>, <em>-163.8</em>, <em>-163.4</em>, <em>-163.</em>, <em>-162.6</em>, <em>-162.2</em>, <em>-161.8</em>, <em>-161.4</em>, <em>-161.</em>, <em>-160.6</em>, <em>-160.2</em>, <em>-159.8</em>, <em>-159.4</em>, <em>-159.</em>, <em>-158.6</em>, <em>-158.2</em>, <em>-157.8</em>, <em>-157.4</em>, <em>-157.</em>, <em>-156.6</em>, <em>-156.2</em>, <em>-155.8</em>, <em>-155.4</em>, <em>-155.</em>, <em>-154.6</em>, <em>-154.2</em>, <em>-153.8</em>, <em>-153.4</em>, <em>-153.</em>, <em>-152.6</em>, <em>-152.2</em>, <em>-151.8</em>, <em>-151.4</em>, <em>-151.</em>, <em>-150.6</em>, <em>-150.2</em>, <em>-149.8</em>, <em>-149.4</em>, <em>-149.</em>, <em>-148.6</em>, <em>-148.2</em>, <em>-147.8</em>, <em>-147.4</em>, <em>-147.</em>, <em>-146.6</em>, <em>-146.2</em>, <em>-145.8</em>, <em>-145.4</em>, <em>-145.</em>, <em>-144.6</em>, <em>-144.2</em>, <em>-143.8</em>, <em>-143.4</em>, <em>-143.</em>, <em>-142.6</em>, <em>-142.2</em>, <em>-141.8</em>, <em>-141.4</em>, <em>-141.</em>, <em>-140.6</em>, <em>-140.2</em>, <em>-139.8</em>, <em>-139.4</em>, <em>-139.</em>, <em>-138.6</em>, <em>-138.2</em>, <em>-137.8</em>, <em>-137.4</em>, <em>-137.</em>, <em>-136.6</em>, <em>-136.2</em>, <em>-135.8</em>, <em>-135.4</em>, <em>-135.</em>, <em>-134.6</em>, <em>-134.2</em>, <em>-133.8</em>, <em>-133.4</em>, <em>-133.</em>, <em>-132.6</em>, <em>-132.2</em>, <em>-131.8</em>, <em>-131.4</em>, <em>-131.</em>, <em>-130.6</em>, <em>-130.2</em>, <em>-129.8</em>, <em>-129.4</em>, <em>-129.</em>, <em>-128.6</em>, <em>-128.2</em>, <em>-127.8</em>, <em>-127.4</em>, <em>-127.</em>, <em>-126.6</em>, <em>-126.2</em>, <em>-125.8</em>, <em>-125.4</em>, <em>-125.</em>, <em>-124.6</em>, <em>-124.2</em>, <em>-123.8</em>, <em>-123.4</em>, <em>-123.</em>, <em>-122.6</em>, <em>-122.2</em>, <em>-121.8</em>, <em>-121.4</em>, <em>-121.</em>, <em>-120.6</em>, <em>-120.2</em>, <em>-119.8</em>, <em>-119.4</em>, <em>-119.</em>, <em>-118.6</em>, <em>-118.2</em>, <em>-117.8</em>, <em>-117.4</em>, <em>-117.</em>, <em>-116.6</em>, <em>-116.2</em>, <em>-115.8</em>, <em>-115.4</em>, <em>-115.</em>, <em>-114.6</em>, <em>-114.2</em>, <em>-113.8</em>, <em>-113.4</em>, <em>-113.</em>, <em>-112.6</em>, <em>-112.2</em>, <em>-111.8</em>, <em>-111.4</em>, <em>-111.</em>, <em>-110.6</em>, <em>-110.2</em>, <em>-109.8</em>, <em>-109.4</em>, <em>-109.</em>, <em>-108.6</em>, <em>-108.2</em>, <em>-107.8</em>, <em>-107.4</em>, <em>-107.</em>, <em>-106.6</em>, <em>-106.2</em>, <em>-105.8</em>, <em>-105.4</em>, <em>-105.</em>, <em>-104.6</em>, <em>-104.2</em>, <em>-103.8</em>, <em>-103.4</em>, <em>-103.</em>, <em>-102.6</em>, <em>-102.2</em>, <em>-101.8</em>, <em>-101.4</em>, <em>-101.</em>, <em>-100.6</em>, <em>-100.2</em>, <em>-99.8</em>, <em>-99.4</em>, <em>-99.</em>, <em>-98.6</em>, <em>-98.2</em>, <em>-97.8</em>, <em>-97.4</em>, <em>-97.</em>, <em>-96.6</em>, <em>-96.2</em>, <em>-95.8</em>, <em>-95.4</em>, <em>-95.</em>, <em>-94.6</em>, <em>-94.2</em>, <em>-93.8</em>, <em>-93.4</em>, <em>-93.</em>, <em>-92.6</em>, <em>-92.2</em>, <em>-91.8</em>, <em>-91.4</em>, <em>-91.</em>, <em>-90.6</em>, <em>-90.2</em>, <em>-89.8</em>, <em>-89.4</em>, <em>-89.</em>, <em>-88.6</em>, <em>-88.2</em>, <em>-87.8</em>, <em>-87.4</em>, <em>-87.</em>, <em>-86.6</em>, <em>-86.2</em>, <em>-85.8</em>, <em>-85.4</em>, <em>-85.</em>, <em>-84.6</em>, <em>-84.2</em>, <em>-83.8</em>, <em>-83.4</em>, <em>-83.</em>, <em>-82.6</em>, <em>-82.2</em>, <em>-81.8</em>, <em>-81.4</em>, <em>-81.</em>, <em>-80.6</em>, <em>-80.2</em>, <em>-79.8</em>, <em>-79.4</em>, <em>-79.</em>, <em>-78.6</em>, <em>-78.2</em>, <em>-77.8</em>, <em>-77.4</em>, <em>-77.</em>, <em>-76.6</em>, <em>-76.2</em>, <em>-75.8</em>, <em>-75.4</em>, <em>-75.</em>, <em>-74.6</em>, <em>-74.2</em>, <em>-73.8</em>, <em>-73.4</em>, <em>-73.</em>, <em>-72.6</em>, <em>-72.2</em>, <em>-71.8</em>, <em>-71.4</em>, <em>-71.</em>, <em>-70.6</em>, <em>-70.2</em>, <em>-69.8</em>, <em>-69.4</em>, <em>-69.</em>, <em>-68.6</em>, <em>-68.2</em>, <em>-67.8</em>, <em>-67.4</em>, <em>-67.</em>, <em>-66.6</em>, <em>-66.2</em>, <em>-65.8</em>, <em>-65.4</em>, <em>-65.</em>, <em>-64.6</em>, <em>-64.2</em>, <em>-63.8</em>, <em>-63.4</em>, <em>-63.</em>, <em>-62.6</em>, <em>-62.2</em>, <em>-61.8</em>, <em>-61.4</em>, <em>-61.</em>, <em>-60.6</em>, <em>-60.2</em>, <em>-59.8</em>, <em>-59.4</em>, <em>-59.</em>, <em>-58.6</em>, <em>-58.2</em>, <em>-57.8</em>, <em>-57.4</em>, <em>-57.</em>, <em>-56.6</em>, <em>-56.2</em>, <em>-55.8</em>, <em>-55.4</em>, <em>-55.</em>, <em>-54.6</em>, <em>-54.2</em>, <em>-53.8</em>, <em>-53.4</em>, <em>-53.</em>, <em>-52.6</em>, <em>-52.2</em>, <em>-51.8</em>, <em>-51.4</em>, <em>-51.</em>, <em>-50.6</em>, <em>-50.2</em>, <em>-49.8</em>, <em>-49.4</em>, <em>-49.</em>, <em>-48.6</em>, <em>-48.2</em>, <em>-47.8</em>, <em>-47.4</em>, <em>-47.</em>, <em>-46.6</em>, <em>-46.2</em>, <em>-45.8</em>, <em>-45.4</em>, <em>-45.</em>, <em>-44.6</em>, <em>-44.2</em>, <em>-43.8</em>, <em>-43.4</em>, <em>-43.</em>, <em>-42.6</em>, <em>-42.2</em>, <em>-41.8</em>, <em>-41.4</em>, <em>-41.</em>, <em>-40.6</em>, <em>-40.2</em>, <em>-39.8</em>, <em>-39.4</em>, <em>-39.</em>, <em>-38.6</em>, <em>-38.2</em>, <em>-37.8</em>, <em>-37.4</em>, <em>-37.</em>, <em>-36.6</em>, <em>-36.2</em>, <em>-35.8</em>, <em>-35.4</em>, <em>-35.</em>, <em>-34.6</em>, <em>-34.2</em>, <em>-33.8</em>, <em>-33.4</em>, <em>-33.</em>, <em>-32.6</em>, <em>-32.2</em>, <em>-31.8</em>, <em>-31.4</em>, <em>-31.</em>, <em>-30.6</em>, <em>-30.2</em>, <em>-29.8</em>, <em>-29.4</em>, <em>-29.</em>, <em>-28.6</em>, <em>-28.2</em>, <em>-27.8</em>, <em>-27.4</em>, <em>-27.</em>, <em>-26.6</em>, <em>-26.2</em>, <em>-25.8</em>, <em>-25.4</em>, <em>-25.</em>, <em>-24.6</em>, <em>-24.2</em>, <em>-23.8</em>, <em>-23.4</em>, <em>-23.</em>, <em>-22.6</em>, <em>-22.2</em>, <em>-21.8</em>, <em>-21.4</em>, <em>-21.</em>, <em>-20.6</em>, <em>-20.2</em>, <em>-19.8</em>, <em>-19.4</em>, <em>-19.</em>, <em>-18.6</em>, <em>-18.2</em>, <em>-17.8</em>, <em>-17.4</em>, <em>-17.</em>, <em>-16.6</em>, <em>-16.2</em>, <em>-15.8</em>, <em>-15.4</em>, <em>-15.</em>, <em>-14.6</em>, <em>-14.2</em>, <em>-13.8</em>, <em>-13.4</em>, <em>-13.</em>, <em>-12.6</em>, <em>-12.2</em>, <em>-11.8</em>, <em>-11.4</em>, <em>-11.</em>, <em>-10.6</em>, <em>-10.2</em>, <em>-9.8</em>, <em>-9.4</em>, <em>-9.</em>, <em>-8.6</em>, <em>-8.2</em>, <em>-7.8</em>, <em>-7.4</em>, <em>-7.</em>, <em>-6.6</em>, <em>-6.2</em>, <em>-5.8</em>, <em>-5.4</em>, <em>-5.</em>, <em>-4.6</em>, <em>-4.2</em>, <em>-3.8</em>, <em>-3.4</em>, <em>-3.</em>, <em>-2.6</em>, <em>-2.2</em>, <em>-1.8</em>, <em>-1.4</em>, <em>-1.</em>, <em>-0.6</em>, <em>-0.2</em>, <em>0.2</em>, <em>0.6</em>, <em>1.</em>, <em>1.4</em>, <em>1.8</em>, <em>2.2</em>, <em>2.6</em>, <em>3.</em>, <em>3.4</em>, <em>3.8</em>, <em>4.2</em>, <em>4.6</em>, <em>5.</em>, <em>5.4</em>, <em>5.8</em>, <em>6.2</em>, <em>6.6</em>, <em>7.</em>, <em>7.4</em>, <em>7.8</em>, <em>8.2</em>, <em>8.6</em>, <em>9.</em>, <em>9.4</em>, <em>9.8</em>, <em>10.2</em>, <em>10.6</em>, <em>11.</em>, <em>11.4</em>, <em>11.8</em>, <em>12.2</em>, <em>12.6</em>, <em>13.</em>, <em>13.4</em>, <em>13.8</em>, <em>14.2</em>, <em>14.6</em>, <em>15.</em>, <em>15.4</em>, <em>15.8</em>, <em>16.2</em>, <em>16.6</em>, <em>17.</em>, <em>17.4</em>, <em>17.8</em>, <em>18.2</em>, <em>18.6</em>, <em>19.</em>, <em>19.4</em>, <em>19.8</em>, <em>20.2</em>, <em>20.6</em>, <em>21.</em>, <em>21.4</em>, <em>21.8</em>, <em>22.2</em>, <em>22.6</em>, <em>23.</em>, <em>23.4</em>, <em>23.8</em>, <em>24.2</em>, <em>24.6</em>, <em>25.</em>, <em>25.4</em>, <em>25.8</em>, <em>26.2</em>, <em>26.6</em>, <em>27.</em>, <em>27.4</em>, <em>27.8</em>, <em>28.2</em>, <em>28.6</em>, <em>29.</em>, <em>29.4</em>, <em>29.8</em>, <em>30.2</em>, <em>30.6</em>, <em>31.</em>, <em>31.4</em>, <em>31.8</em>, <em>32.2</em>, <em>32.6</em>, <em>33.</em>, <em>33.4</em>, <em>33.8</em>, <em>34.2</em>, <em>34.6</em>, <em>35.</em>, <em>35.4</em>, <em>35.8</em>, <em>36.2</em>, <em>36.6</em>, <em>37.</em>, <em>37.4</em>, <em>37.8</em>, <em>38.2</em>, <em>38.6</em>, <em>39.</em>, <em>39.4</em>, <em>39.8</em>, <em>40.2</em>, <em>40.6</em>, <em>41.</em>, <em>41.4</em>, <em>41.8</em>, <em>42.2</em>, <em>42.6</em>, <em>43.</em>, <em>43.4</em>, <em>43.8</em>, <em>44.2</em>, <em>44.6</em>, <em>45.</em>, <em>45.4</em>, <em>45.8</em>, <em>46.2</em>, <em>46.6</em>, <em>47.</em>, <em>47.4</em>, <em>47.8</em>, <em>48.2</em>, <em>48.6</em>, <em>49.</em>, <em>49.4</em>, <em>49.8</em>, <em>50.2</em>, <em>50.6</em>, <em>51.</em>, <em>51.4</em>, <em>51.8</em>, <em>52.2</em>, <em>52.6</em>, <em>53.</em>, <em>53.4</em>, <em>53.8</em>, <em>54.2</em>, <em>54.6</em>, <em>55.</em>, <em>55.4</em>, <em>55.8</em>, <em>56.2</em>, <em>56.6</em>, <em>57.</em>, <em>57.4</em>, <em>57.8</em>, <em>58.2</em>, <em>58.6</em>, <em>59.</em>, <em>59.4</em>, <em>59.8</em>, <em>60.2</em>, <em>60.6</em>, <em>61.</em>, <em>61.4</em>, <em>61.8</em>, <em>62.2</em>, <em>62.6</em>, <em>63.</em>, <em>63.4</em>, <em>63.8</em>, <em>64.2</em>, <em>64.6</em>, <em>65.</em>, <em>65.4</em>, <em>65.8</em>, <em>66.2</em>, <em>66.6</em>, <em>67.</em>, <em>67.4</em>, <em>67.8</em>, <em>68.2</em>, <em>68.6</em>, <em>69.</em>, <em>69.4</em>, <em>69.8</em>, <em>70.2</em>, <em>70.6</em>, <em>71.</em>, <em>71.4</em>, <em>71.8</em>, <em>72.2</em>, <em>72.6</em>, <em>73.</em>, <em>73.4</em>, <em>73.8</em>, <em>74.2</em>, <em>74.6</em>, <em>75.</em>, <em>75.4</em>, <em>75.8</em>, <em>76.2</em>, <em>76.6</em>, <em>77.</em>, <em>77.4</em>, <em>77.8</em>, <em>78.2</em>, <em>78.6</em>, <em>79.</em>, <em>79.4</em>, <em>79.8</em>, <em>80.2</em>, <em>80.6</em>, <em>81.</em>, <em>81.4</em>, <em>81.8</em>, <em>82.2</em>, <em>82.6</em>, <em>83.</em>, <em>83.4</em>, <em>83.8</em>, <em>84.2</em>, <em>84.6</em>, <em>85.</em>, <em>85.4</em>, <em>85.8</em>, <em>86.2</em>, <em>86.6</em>, <em>87.</em>, <em>87.4</em>, <em>87.8</em>, <em>88.2</em>, <em>88.6</em>, <em>89.</em>, <em>89.4</em>, <em>89.8</em>, <em>90.2</em>, <em>90.6</em>, <em>91.</em>, <em>91.4</em>, <em>91.8</em>, <em>92.2</em>, <em>92.6</em>, <em>93.</em>, <em>93.4</em>, <em>93.8</em>, <em>94.2</em>, <em>94.6</em>, <em>95.</em>, <em>95.4</em>, <em>95.8</em>, <em>96.2</em>, <em>96.6</em>, <em>97.</em>, <em>97.4</em>, <em>97.8</em>, <em>98.2</em>, <em>98.6</em>, <em>99.</em>, <em>99.4</em>, <em>99.8</em>, <em>100.2</em>, <em>100.6</em>, <em>101.</em>, <em>101.4</em>, <em>101.8</em>, <em>102.2</em>, <em>102.6</em>, <em>103.</em>, <em>103.4</em>, <em>103.8</em>, <em>104.2</em>, <em>104.6</em>, <em>105.</em>, <em>105.4</em>, <em>105.8</em>, <em>106.2</em>, <em>106.6</em>, <em>107.</em>, <em>107.4</em>, <em>107.8</em>, <em>108.2</em>, <em>108.6</em>, <em>109.</em>, <em>109.4</em>, <em>109.8</em>, <em>110.2</em>, <em>110.6</em>, <em>111.</em>, <em>111.4</em>, <em>111.8</em>, <em>112.2</em>, <em>112.6</em>, <em>113.</em>, <em>113.4</em>, <em>113.8</em>, <em>114.2</em>, <em>114.6</em>, <em>115.</em>, <em>115.4</em>, <em>115.8</em>, <em>116.2</em>, <em>116.6</em>, <em>117.</em>, <em>117.4</em>, <em>117.8</em>, <em>118.2</em>, <em>118.6</em>, <em>119.</em>, <em>119.4</em>, <em>119.8</em>, <em>120.2</em>, <em>120.6</em>, <em>121.</em>, <em>121.4</em>, <em>121.8</em>, <em>122.2</em>, <em>122.6</em>, <em>123.</em>, <em>123.4</em>, <em>123.8</em>, <em>124.2</em>, <em>124.6</em>, <em>125.</em>, <em>125.4</em>, <em>125.8</em>, <em>126.2</em>, <em>126.6</em>, <em>127.</em>, <em>127.4</em>, <em>127.8</em>, <em>128.2</em>, <em>128.6</em>, <em>129.</em>, <em>129.4</em>, <em>129.8</em>, <em>130.2</em>, <em>130.6</em>, <em>131.</em>, <em>131.4</em>, <em>131.8</em>, <em>132.2</em>, <em>132.6</em>, <em>133.</em>, <em>133.4</em>, <em>133.8</em>, <em>134.2</em>, <em>134.6</em>, <em>135.</em>, <em>135.4</em>, <em>135.8</em>, <em>136.2</em>, <em>136.6</em>, <em>137.</em>, <em>137.4</em>, <em>137.8</em>, <em>138.2</em>, <em>138.6</em>, <em>139.</em>, <em>139.4</em>, <em>139.8</em>, <em>140.2</em>, <em>140.6</em>, <em>141.</em>, <em>141.4</em>, <em>141.8</em>, <em>142.2</em>, <em>142.6</em>, <em>143.</em>, <em>143.4</em>, <em>143.8</em>, <em>144.2</em>, <em>144.6</em>, <em>145.</em>, <em>145.4</em>, <em>145.8</em>, <em>146.2</em>, <em>146.6</em>, <em>147.</em>, <em>147.4</em>, <em>147.8</em>, <em>148.2</em>, <em>148.6</em>, <em>149.</em>, <em>149.4</em>, <em>149.8</em>, <em>150.2</em>, <em>150.6</em>, <em>151.</em>, <em>151.4</em>, <em>151.8</em>, <em>152.2</em>, <em>152.6</em>, <em>153.</em>, <em>153.4</em>, <em>153.8</em>, <em>154.2</em>, <em>154.6</em>, <em>155.</em>, <em>155.4</em>, <em>155.8</em>, <em>156.2</em>, <em>156.6</em>, <em>157.</em>, <em>157.4</em>, <em>157.8</em>, <em>158.2</em>, <em>158.6</em>, <em>159.</em>, <em>159.4</em>, <em>159.8</em>, <em>160.2</em>, <em>160.6</em>, <em>161.</em>, <em>161.4</em>, <em>161.8</em>, <em>162.2</em>, <em>162.6</em>, <em>163.</em>, <em>163.4</em>, <em>163.8</em>, <em>164.2</em>, <em>164.6</em>, <em>165.</em>, <em>165.4</em>, <em>165.8</em>, <em>166.2</em>, <em>166.6</em>, <em>167.</em>, <em>167.4</em>, <em>167.8</em>, <em>168.2</em>, <em>168.6</em>, <em>169.</em>, <em>169.4</em>, <em>169.8</em>, <em>170.2</em>, <em>170.6</em>, <em>171.</em>, <em>171.4</em>, <em>171.8</em>, <em>172.2</em>, <em>172.6</em>, <em>173.</em>, <em>173.4</em>, <em>173.8</em>, <em>174.2</em>, <em>174.6</em>, <em>175.</em>, <em>175.4</em>, <em>175.8</em>, <em>176.2</em>, <em>176.6</em>, <em>177.</em>, <em>177.4</em>, <em>177.8</em>, <em>178.2</em>, <em>178.6</em>, <em>179.</em>, <em>179.4</em>, <em>179.8</em>, <em>180.2</em>, <em>180.6</em>, <em>181.</em>, <em>181.4</em>, <em>181.8</em>, <em>182.2</em>, <em>182.6</em>, <em>183.</em>, <em>183.4</em>, <em>183.8</em>, <em>184.2</em>, <em>184.6</em>, <em>185.</em>, <em>185.4</em>, <em>185.8</em>, <em>186.2</em>, <em>186.6</em>, <em>187.</em>, <em>187.4</em>, <em>187.8</em>, <em>188.2</em>, <em>188.6</em>, <em>189.</em>, <em>189.4</em>, <em>189.8</em>, <em>190.2</em>, <em>190.6</em>, <em>191.</em>, <em>191.4</em>, <em>191.8</em>, <em>192.2</em>, <em>192.6</em>, <em>193.</em>, <em>193.4</em>, <em>193.8</em>, <em>194.2</em>, <em>194.6</em>, <em>195.</em>, <em>195.4</em>, <em>195.8</em>, <em>196.2</em>, <em>196.6</em>, <em>197.</em>, <em>197.4</em>, <em>197.8</em>, <em>198.2</em>, <em>198.6</em>, <em>199.</em>, <em>199.4</em>, <em>199.8])</em>, <em>S1_info=None</em>, <em>S2_info=None</em>, <em>tof_lim=array([-150</em>, <em>200])</em>, <em>title=''</em>, <em>tof_bg_component=0</em>, <em>log=True</em>, <em>interactive_plot=False</em>, <em>projection=0</em>, <em>disable_cuts=False</em>, <em>times_of_flight_cut=0</em>, <em>energy_S1_cut=0</em>, <em>energy_S2_cut=0</em>, <em>disable_bgs=False</em>, <em>weights=False</em>, <em>hist2D_S1=None</em>, <em>hist2D_S2=None</em>, <em>sum_shots=False</em>, <em>proton_recoil=False</em>, <em>pulse_height_spectrum=False</em>, <em>integrated_charge_spectrum=False</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.plot_2D" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a mess, I’m sorry (it does work though).
+Plots 2D histogram of TOF vs energy with projections onto time and energy axis.
 times_of_flight: 1D array of times of flight.
 energy_S1: 1D array of energies for S1
 energy_S2: 1D array of energies for S2
@@ -619,13 +1342,39 @@ projection: used in replot_projections() function, allows for red lines to be pl
 <dl class="function">
 <dt id="tofu_functions.remove_led">
 <code class="descclassname">tofu_functions.</code><code class="descname">remove_led</code><span class="sig-paren">(</span><em>time_stamps</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.remove_led" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the same time stamps back without the LED chunk at the end and the position where the LED starts.
-time_stamps: one dimensional array of time stamps</p>
+<dd><p>Removes chunk of LED data at the end of time stamp train. Assumes that the
+frequency of the LED source is 5 kHz.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>time_stamps</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">1D array of time stamps.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>t</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">1D array of time stamps without LED chunk.</p>
+</dd>
+<dt><strong>led_start</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">Index in time_stamps at which LED started.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.replot_projections">
-<code class="descclassname">tofu_functions.</code><code class="descname">replot_projections</code><span class="sig-paren">(</span><em>limits</em>, <em>panel_choice</em>, <em>times_of_flight</em>, <em>energy_S1</em>, <em>energy_S2</em>, <em>bins_tof</em>, <em>bins_energy</em>, <em>bins_2D</em>, <em>log=True</em>, <em>disable_cuts=False</em>, <em>disable_bgs=False</em>, <em>energy_S1_cut=0</em>, <em>energy_S2_cut=0</em>, <em>times_of_flight_cut=0</em>, <em>proton_recoil=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.replot_projections" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">tofu_functions.</code><code class="descname">replot_projections</code><span class="sig-paren">(</span><em>limits</em>, <em>panel_choice</em>, <em>times_of_flight</em>, <em>energy_S1</em>, <em>energy_S2</em>, <em>bins_tof</em>, <em>S1_info=None</em>, <em>S2_info=None</em>, <em>log=True</em>, <em>disable_cuts=False</em>, <em>disable_bgs=False</em>, <em>energy_S1_cut=0</em>, <em>energy_S2_cut=0</em>, <em>times_of_flight_cut=0</em>, <em>proton_recoil=False</em>, <em>pulse_height_spectrum=False</em>, <em>integrated_charge_spectrum=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.replot_projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Replot the spectra with a cut on one of the energy projections
 limits: limits of cuts for projections. 1x2 array for 1D spectrum, 2x2 array for 2D spectrum
 panel_choice: panel to be cut (BR - bottom right, ML - middle left, TR - top right etc.)
@@ -636,47 +1385,154 @@ energy_S2: 1D array of energies for S2</p>
 
 <dl class="function">
 <dt id="tofu_functions.sTOF4">
-<code class="descclassname">tofu_functions.</code><code class="descname">sTOF4</code><span class="sig-paren">(</span><em>S1_times</em>, <em>S2_times</em>, <em>t_back=100</em>, <em>t_forward=100</em>, <em>return_indices=False</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.sTOF4" title="Permalink to this definition">¶</a></dt>
-<dd><p>We choose an event in S2, define the width of the window in which we want
-to search for an event in S1 and calculate the time difference between 
-the chosen S2 time stamp and the found S1 time stamp(s)
-S1_times: 1D array of time stamps for one S1
-S2_times: 1D array of time stamps for one S2
-t_back: Number of time units (usually ns) to look back in time to find coincidences between S2 and S1 (gives positive TOF’s)
-t_forward: Number of time units (usually ns) to look forwards in time to find coincidences between S2 and S1 (gives negative TOF’s)
-Example: coincidences = sTOF3(S1_time_stamps, S2_time_stamps, t_back = 400, t_forward = 200)</p>
+<code class="descclassname">tofu_functions.</code><code class="descname">sTOF4</code><span class="sig-paren">(</span><em>S1_times</em>, <em>S2_times</em>, <em>t_back</em>, <em>t_forward</em>, <em>return_indices=False</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.sTOF4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the time differences between S1_times and S2_times given a search
+window. We loop over the time stamps in S2, for each S2 time stamp we 
+search for an event in S1 within a given time window for events. If such an
+event is found the time difference is calculated.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>S1_times</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">1D array of time stamps for one S1, typically given in ns.</p>
+</dd>
+<dt><strong>S2_times</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">1D array of time stamps for one S2, typically given in ns.</p>
+</dd>
+<dt><strong>t_back</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or float</span></dt>
+<dd><p class="first last">Time to look backwards in time from any given S2 time stamp. 
+Constitutes together with t_forward, the time window in which we 
+search for S1 events.</p>
+</dd>
+<dt><strong>t_forward</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or float</span></dt>
+<dd><p class="first last">Time to look forwards in time from any given S2 time stamp. 
+Constitutes together with t_back, the time window in which we 
+search for S1 events.</p>
+</dd>
+<dt><strong>return_indices</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to true, returns S1 and S2 indices for each found
+coincidence.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>delta_t</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">1D array of time differences between S1 and S2 time stamps (i.e. 
+times-of-flight).</p>
+</dd>
+<dt><strong>indices</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">2D array of indices for each coincidence. First column
+corresponds to S1, second column to S2.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">s1_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">34</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s2_times</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">9</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">33</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sTOF</span><span class="p">(</span><span class="n">s1_times</span><span class="p">,</span> <span class="n">s2_times</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+<span class="go">array([-1.,  3.,  2.,  1., -1.])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.sinc_interpolation">
 <code class="descclassname">tofu_functions.</code><code class="descname">sinc_interpolation</code><span class="sig-paren">(</span><em>pulse_data</em>, <em>x_values</em>, <em>ux_values</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.sinc_interpolation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Performs sinc interpolation on the pulse data set.
-pulse_data: array of pulse height data where each row corresponds to one record.</p>
-<blockquote>
-<div>NOTE: pulse_data must be baseline reduced (see baseline_reduction() function), otherwise sinc interpolation fails.</div></blockquote>
-<dl class="docutils">
-<dt>x_values:   one dimensional array of values corresponding to pulse_data’s x-axis.</dt>
-<dd>must have a constant period.</dd>
+<dd><p>Returns since-interpolation of given pulse data set.
+See Matlab example: 
+<a class="reference external" href="http://phaseportrait.blogspot.com/2008/06/sinc-interpolation-in-matlab.html">http://phaseportrait.blogspot.com/2008/06/sinc-interpolation-in-matlab.html</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>pulse_data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">2D array of pulse waveforms where each row corresponds to one 
+pulse. Typically 64 samples in each row for ADQ14 (board 1-5) 
+and 56 samples for ADQ412 (board 6-10). NOTE: pulse_data must be
+baseline reduced (see baseline_reduction() function).</p>
+</dd>
+<dt><strong>x_values</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">1D array of values corresponding to x_axis of pulse_data. 
+Length between each point in x_values must be constant.</p>
+</dd>
+<dt><strong>ux_values: ndarray</strong></dt>
+<dd><p class="first last">1D array similar to x_values but upsampled. Length between each
+point in ux_values must be constant.</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
 </dl>
-<p>ux_values:  one dimensional array similar to x_values but upsampled.
-Example:</p>
-<blockquote>
-<div>pulse_data is the regular m*n array where m = number of records and n = number of samples per record
-x_axis = np.arange(0, n)
-u_factor = 10 is the upsampling factor
-ux_axis = np.arange(0, n, 1./u_factor)
-u_pulse_data = sinc_interpolation(pulse_data, x_axis, ux_axis)</div></blockquote>
-<p>From Matlab example: <a class="reference external" href="http://phaseportrait.blogspot.com/2008/06/sinc-interpolation-in-matlab.html">http://phaseportrait.blogspot.com/2008/06/sinc-interpolation-in-matlab.html</a></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>u_pulse_data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">2D array of sinc-interpolated pulse waveforms where each row
+corresponds to one pulse.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Let n be the number of records and m the number of samples per record</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ux_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span> <span class="c1"># Upsampled 10 times</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">u_pulse_data</span> <span class="o">=</span> <span class="n">since_interpolation</span><span class="p">(</span><span class="n">pulse_data</span><span class="p">,</span> <span class="n">x_values</span><span class="p">,</span> <span class="n">ux_values</span><span class="p">)</span>    
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="tofu_functions.time_pickoff_CFD">
 <code class="descclassname">tofu_functions.</code><code class="descname">time_pickoff_CFD</code><span class="sig-paren">(</span><em>pulse_data</em>, <em>fraction=0.3</em>, <em>timer=False</em><span class="sig-paren">)</span><a class="headerlink" href="#tofu_functions.time_pickoff_CFD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the times of arrival for a 2D array of pulses using a constant
-fraction + linear interpolation method.
-pulse_data: 2D array of pulses where each row corresponds to one pulse
-fraction: fraction at which to perform linear interpolation
-return a 1D array of times-of-arrival for each pulse.</p>
+fraction and a linear interpolation method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>pulse_data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray,</span></dt>
+<dd><p class="first last">2D array of pulse waveforms where each row corresponds to one 
+pulse. Typically 64 samples in each row for ADQ14 (board 1-5) 
+and 56 samples for ADQ412 (board 6-10). NOTE: pulse_data must be
+baseline reduced (see baseline_reduction function).</p>
+</dd>
+<dt><strong>fraction</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd><p class="first last">Fraction at which to perform the linear interpolation</p>
+</dd>
+<dt><strong>timer</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool, optional</span></dt>
+<dd><p class="first last">If set to True, prints the time to execute the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>new_time</strong> <span class="classifier-delimiter">:</span> <span class="classifier">ndarray</span></dt>
+<dd><p class="first last">1D array of times-of-arrival for each pulse.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">time_pickoff_CFD</span><span class="p">(</span><span class="n">pulse_data</span><span class="p">,</span> <span class="n">fraction</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">)</span>
+<span class="go">[12.5149318,  14.97846766, ... 12.53181554, 12.39070941, 12.94160379]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
