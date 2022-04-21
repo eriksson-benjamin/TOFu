@@ -262,13 +262,8 @@ def create_TOF(arguments):
         pulse_energy = dfs.get_energy_calibration(-pulse_area, detector_name, timer = timer_level)
         
         # Check which energy thresholds (MeVee) to use
-        if detector_name[0:2]=='S1':
-            thr_l = S1_thr_l
-            thr_u = S1_thr_u
-        else:
-            thr_l = S2_thr_l
-            thr_u = S2_thr_u
-            
+        thr_l, thr_u = energy_thresholds[detector_name]
+
         # Remove pulses outside user defined energy thresholds
         pulse_energy_thr = np.where((pulse_energy > thr_l) & (pulse_energy < thr_u))[0]
         pulse_energy = pulse_energy[pulse_energy_thr]
@@ -332,10 +327,11 @@ if __name__=="__main__":
     S2_info                     = {'energy limits':[0, 6],
                                    'energy bins':np.arange(0, 20, 0.1)}
     processed_shots             = np.array([])
-    S1_thr_l                    = 0
-    S1_thr_u                    = np.inf
-    S2_thr_l                    = 0
-    S2_thr_u                    = np.inf
+#    S1_thr_l                    = 0
+#    S1_thr_u                    = np.inf
+#    S2_thr_l                    = 0
+#    S2_thr_u                    = np.inf
+    energy_thresholds           = dfs.get_dictionaries('merged', fill=[0, np.inf])
     E_low                       = -0.1
     E_high                      = 2
     shift_file                  = 'shift_files/shift_V4.txt'
@@ -505,7 +501,7 @@ if __name__=="__main__":
                     
             # Disable given boards
             elif sys.argv[i] == '--disable-boards':
-                if sys.argv[i +1][0:2] == '--':
+                if sys.argv[i+1][0:2] == '--':
                     error_message = '--disable-boards requires an additional argument.'
                     sys_ext = True
                 else:
@@ -631,45 +627,24 @@ if __name__=="__main__":
                     j += 1
                 skip_flag = j
                 
-            # Energy (light yield) thresholds for S1
-            elif sys.argv[i] == '--S1-thresholds':
+            # Software thresholds for S1/S2 (MeV)
+            elif sys.argv[i] == '--software-thresholds':
                 if sys.argv[i + 1][0:2] == '--':
-                    error_message = '--S1-thresholds requires at least one additional argument.'
+                    error_message = '--software-thresholds requires at least one additional argument.'
                     sys_exit = True
-                try: 
-                    next_arg = sys.argv[i + 2][0:2] == '--'
-                    if next_arg:
-                        S1_thr_l = np.float(sys.argv[i + 1])
-                        skip_flag = 1
-                    else:
-                        S1_thr_l = np.float(sys.argv[i + 1])
-                        S1_thr_u = np.float(sys.argv[i + 2])
-                        skip_flag = 2
-                except: 
-                    S1_thr_l = np.float(sys.argv[i + 1])
+                else:
+                    # Import energy thresholds (-1 -> inf)
+                    thresholds = np.loadtxt(sys.argv[i+1], comments='#', usecols=(1, 2), dtype='float')
+                    keys = np.loadtxt(sys.argv[i+1], comments='#', usecols=(0), dtype='str')
+                    energy_thresholds = {}
+                    for key, thr in zip(keys, thresholds):
+                        if -1 in thr:
+                            ly = dfs.light_yield_function([thr[0]])[0]
+                            energy_thresholds[key] = [ly, np.inf]
+                        else:
+                            energy_thresholds[key] = dfs.light_yield_function(thr)
                     skip_flag = 1
-
-                print(f'Thresholds for S1 set to {S1_thr_l} < E [MeVee] < {S1_thr_u}')
-                
-            # Energy (light yield) thresholds for S2
-            elif sys.argv[i] == '--S2-thresholds':
-                if sys.argv[i + 1][0:2] == '--':
-                    error_message = '--S2-thresholds requires at least one additional argument.'
-                    sys_exit = True
-                try: 
-                    next_arg = sys.argv[i + 2][0:2] == '--'
-                    if next_arg:
-                        S2_thr_l = np.float(sys.argv[i + 1])
-                        skip_flag = 1
-                    else:
-                        S2_thr_l = np.float(sys.argv[i + 1])
-                        S2_thr_u = np.float(sys.argv[i + 2])
-                        skip_flag = 2
-                except: 
-                    S2_thr_l = np.float(sys.argv[i + 1])
-                    skip_flag = 1
-    
-                print(f'Thresholds for S2 set to {S2_thr_l} < E [MeVee] < {S2_thr_u}')
+                    print(f'Software energy thresholds set using: {sys.argv[i+1]}')
             
             # Print help message
             elif sys.argv[i] == '--help': 
