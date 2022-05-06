@@ -861,7 +861,7 @@ if __name__=="__main__":
             energy_S1    = data['energy_S1']
             energy_S2    = data['energy_S2']
             time_slice   = data['time_slice']
-                
+            
         # Check if figure is already open, if so close it
         if plt.fignum_exists(shot_number): plt.close(shot_number)
     
@@ -996,7 +996,7 @@ if __name__=="__main__":
                 plt.show()
             
     
-        # Save all times, energies and times of flight
+        # Save all times, energies and times of flight (creates large files)
         if set_file_name: 
             file_name = f'{shot_number}_{time_slice[0]:.1f}_{time_slice[1]:.1f}.pickle'
         if save_data:
@@ -1009,7 +1009,7 @@ if __name__=="__main__":
                              'times_S2':new_times_S2}
                 
                 pickle.dump(to_pickle, handle, protocol = pickle.HIGHEST_PROTOCOL)
-        # Only save histogram data
+        # Only save binned data
         if save_NES:
             print(f'Saving NES data to {file_name}')
             with open(file_name, 'wb') as handle:
@@ -1035,8 +1035,8 @@ if __name__=="__main__":
                              'erg_S2':erg_S2_vals,
                              'hist2d_S1':hist2d_S1_vals,
                              'hist2d_S2':hist2d_S2_vals,
-                             'erg_bins_S1':erg_bin_centres_S1,
-                             'erg_bins_S2':erg_bin_centres_S2,
+                             'S1_info':S1_info,
+                             'S2_info':S2_info,
                              'shots':processed_shots,
                              'shot_number':shot_number,
                              'input_arguments':sys.argv,
