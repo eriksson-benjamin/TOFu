@@ -940,6 +940,9 @@ if __name__=="__main__":
         # Perform kinematic cuts
         if not disable_cuts: 
             coincidences_cut, energies_S1_cut, energies_S2_cut = dfs.kinematic_cuts(coincidences, energies_S1, energies_S2, timer = time_level)
+            # Only save energies with corresponding positive flight time
+            energies_S1_cut = energies_S1_cut[coincidences_cut>0]
+            energies_S2_cut = energies_S2_cut[coincidences_cut>0]
         else:
             coincidences_cut = 0
             energies_S1_cut  = 0
@@ -1014,8 +1017,19 @@ if __name__=="__main__":
             print(f'Saving NES data to {file_name}')
             with open(file_name, 'wb') as handle:
                 # Histogram the data
-                if not disable_cuts: counts, _ = np.histogram(coincidences_cut, bins = bins)
-                else: counts, _ = np.histogram(coincidences, bins = bins)
+                if not disable_cuts: 
+                    counts, _ = np.histogram(coincidences_cut, bins = bins)
+                    erg_S1_vals, _ = np.histogram(energies_S1_cut, bins=S1_info['energy bins'])
+                    erg_S2_vals, _ = np.histogram(energies_S2_cut, bins=S2_info['energy bins'])
+
+                else: 
+                    counts, _ = np.histogram(coincidences, bins = bins)
+                    erg_S1_vals, _ = np.histogram(energies_S1, bins=S1_info['energy bins'])
+                    erg_S2_vals, _ = np.histogram(energies_S2, bins=S2_info['energy bins'])
+
+
+                hist2d_S1_vals, _, _ = np.histogram2d(coincidences, energies_S1, bins=[bins, S1_info['energy bins']])
+                hist2d_S2_vals, _, _ = np.histogram2d(coincidences, energies_S2, bins=[bins, S2_info['energy bins']])
                 
                 # Select bin centres
                 bin_centres = bins[0:-1] + np.diff(bins)[0] / 2

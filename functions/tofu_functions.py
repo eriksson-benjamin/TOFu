@@ -1209,22 +1209,21 @@ def get_energy_calibration(areas, detector_name, timer = False):
     if timer: elapsed_time(t_start, 'get_energy_calibration()')
     return energy_array
 
-def find_time_range(shot_number, tight_range = False, timer = False):
+def find_time_range(shot_number, n_yield=False, timer=False):
     '''
-    Returns the time range for which the 99.5% of the neutron events have
-    ocurred using TIN/RNT PPF. Assumes a starting time of 40 s unless 
-    tight_range is set to True.
+    Returns the time range for which the 99% of the neutron events have
+    ocurred using TIN/RNT PPF.
     
     Parameters
     ----------
     shot_number : int,
                 Jet puse number.
-    tight_range : bool,
-                If set to True, the starting point is set to the time at which
-                0.05% of the neutron events have ocurred.
+    n_yield : bool, optional
+            If set to True, returns the total neutron yield in the given time 
+            range.
     timer : bool, optional
           If set to True, prints the time to execute the function.                 
-                    
+    
     Returns
     -------
     energy_array : ndarray,
@@ -1233,9 +1232,9 @@ def find_time_range(shot_number, tight_range = False, timer = False):
     Examples
     --------
     >>> find_time_range(98044)
-    array([40., 56.1780014])
-    >>> find_time_range(98044, tight_range=True)
-    array([47.26800156, 56.1780014])
+    array([47.26, 56.17])
+    >>> find_time_range(98044, n_yield=True)
+    (array([47.26, 56.17]), 5.92e+16)
     ''' 
 
     if timer: t_start = elapsed_time()
@@ -1248,18 +1247,24 @@ def find_time_range(shot_number, tight_range = False, timer = False):
     if len(f_times) == 0: 
         print('WARNING: Fission chamber data unaviailable.')
         time_slice = np.array([40., 70.])
+        neutrons = None
     else:
         # Create cumulative distribution function
         f_cdist = np.cumsum(f_data) / np.sum(f_data)
         
         # Find the time before which 99.5% of the neutron yield occurs
-        t0 = 40.
-        t1 = f_times[np.searchsorted(f_cdist, 0.995)]
+        arg0 = np.searchsorted(f_cdist, 0.005)
+        arg1 = np.searchsorted(f_cdist, 0.995)
+        
+        t0 = f_times[arg0]
+        t1 = f_times[arg1]
         time_slice = np.array([t0, t1])
- 
-        if tight_range: time_slice[0] = f_times[np.searchsorted(f_cdist, 0.005)]
-    
+        
+        # Calculate neutron yield in time range
+        neutrons = f_data[arg0:arg1+1].sum()*0.006
+        
     if timer: elapsed_time(t_start, 'find_time_range()')
+    if n_yield: return time_slice, neutrons
     return time_slice
 
 def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 0], [0, 0]]), timer = False):
@@ -1577,12 +1582,19 @@ def get_kincut_function(tof, timer = False):
     alpha_max = alpha + np.arccos((l**2 + l_min**2 - l_S2**2/4) / (2 * l * l_min))
     alpha_min = alpha - np.arccos((l**2 + l_max**2 - l_S2**2/4) / (2 * l * l_max))
     
-    J_to_MeV = 1E-6 / constant.electron_volt 
+    # Broaden cuts somewhat
+    safety_factor_1 = 0.7
+    safety_factor_2 = 1.4
+    safety_factor_3 = 1.2
+#    safety_factor_1 = 1
+#    safety_factor_2 = 1
+#    safety_factor_3 = 1
     
     # Calculate cuts in proton recoil energy (MeV)
-    E_S1_max = 0.5 * constant.neutron_mass * (l_min / (tof*1E-9))**2 * (1 / np.cos(alpha_max)**2 - 1) * J_to_MeV
-    E_S1_min = 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * (1 / np.cos(alpha_min)**2 - 1) * J_to_MeV
-    E_S2_max = 0.5 * constant.neutron_mass * (l_max / (tof*1E-9))**2 * J_to_MeV
+    J_to_MeV = 1E-6 / constant.electron_volt 
+    E_S1_min = safety_factor_1*0.5*constant.neutron_mass*(l_max/(tof*1E-9))**2*(1/np.cos(alpha_min)**2-1)*J_to_MeV
+    E_S1_max = safety_factor_2*0.5*constant.neutron_mass*(l_min/(tof*1E-9))**2*(1/np.cos(alpha_max)**2-1)*J_to_MeV
+    E_S2_max = safety_factor_3*0.5*constant.neutron_mass*(l_max/(tof*1E-9))**2*J_to_MeV
 
     # Translate to light yield
     ly_S1_max = light_yield_function(E_S1_max)
@@ -2107,6 +2119,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     # If kinematic cuts are applied
     if not disable_cuts: 
         tof = times_of_flight_cut
+        # Only plot projection of energies
         erg_S1 = energy_S1_cut
         erg_S2 = energy_S2_cut
     else: 
@@ -2210,8 +2223,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         S1_max = np.max(hist2D_S1)
         S2_max = np.max(hist2D_S2)
     else:
-        S1_max = np.max(plt.hist2d(tof, erg_S1, bins = bins_2D_S1, cmap = my_cmap, vmin = 1)[0])
-        S2_max = np.max(plt.hist2d(tof, erg_S2, bins = bins_2D_S2, cmap = my_cmap, vmin = 1)[0])
+        S1_max = np.max(plt.hist2d(times_of_flight, energy_S1, bins=bins_2D_S1, cmap=my_cmap, vmin=1)[0])
+        S2_max = np.max(plt.hist2d(times_of_flight, energy_S2, bins=bins_2D_S2, cmap=my_cmap, vmin=1)[0])
     if S1_max >= S2_max: vmax = S1_max
     else: vmax = S2_max
     
@@ -2277,14 +2290,16 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
                                weights = weights2D_S2,
                                cmap = my_cmap, 
                                vmin = 1, 
-                               vmax = vmax)[0]
+                               vmax = vmax,
+                               norm = matplotlib.colors.LogNorm())[0]
     else:
         hist2d_S2 = plt.hist2d(times_of_flight, 
                                energy_S2, 
                                bins = bins_2D_S2, 
                                cmap = my_cmap, 
                                vmin = 1, 
-                               vmax = vmax)[0]
+                               vmax = vmax,
+                               norm = matplotlib.colors.LogNorm())[0]
     ax_S2_2D = plt.gca()
     plt.setp(ax_S2_2D.get_xticklabels(), visible = False)
     plt.setp(ax_S2_2D.get_yticklabels(), visible = False)
@@ -2316,6 +2331,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     '''
     plt.subplot(323, sharey = ax_S2_2D)
     if weights: 
+        
         plt.plot(erg_S2, 
                  bins_energy_centres_S2, 
                  marker = marker,
@@ -2523,8 +2539,6 @@ def replot_projections(limits, panel_choice, times_of_flight, energy_S1,
         # Find all events within this cut
         inds = np.where((eoi >= limits[0]) & (eoi <= limits[1]))[0]
         
-        
-#        title = 'Cut in ' + det + '\n' + str(round(limits[0], 2)) + ' < ' + uni + ' < ' + str(round(limits[1], 2))
         title = f'Cut in {det}\n{round(limits[0], 2)} < {uni} < {round(limits[1], 2)}'
         
     # If the cut has been made in one of the 2D spectra
@@ -2593,4 +2607,5 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--help: Print this help text.')
     
 if __name__=='__main__':
+    x = find_time_range(98044, True)
     pass
