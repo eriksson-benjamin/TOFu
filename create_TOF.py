@@ -327,16 +327,12 @@ if __name__=="__main__":
     S2_info                     = {'energy limits':[0, 6],
                                    'energy bins':np.arange(0, 20, 0.1)}
     processed_shots             = np.array([])
-#    S1_thr_l                    = 0
-#    S1_thr_u                    = np.inf
-#    S2_thr_l                    = 0
-#    S2_thr_u                    = np.inf
     energy_thresholds           = dfs.get_dictionaries('merged', fill=[0, np.inf])
     E_low                       = -0.1
     E_high                      = 2
     shift_file                  = 'shift_files/shift_V4.txt'
     time_window                 = 500 # Time window (+-) for TOF spectrum [ns]
-
+    cut_factors                 = (1., 1., 1.)
     
     if len(sys.argv) == 1: 
         dfs.print_help()
@@ -467,6 +463,20 @@ if __name__=="__main__":
             
             # Disable kinematic cuts
             elif sys.argv[i] == '--disable-cuts': disable_cuts = True
+            
+            # Apply factors to kinematic cuts
+            elif sys.argv[i] == '--apply-cut-factors':
+                if len(sys.argv) < i+3:
+                    error_message = '--apply-cut-factors requires three additional arguments.'
+                    sys_exit = True
+                else:
+                    cut_factors = (sys.argv[i+1], sys.argv[i+2], sys.argv[i+3])
+                    skip_flag = 3
+                    b = ['--' in cf for cf in cut_factors]
+                    if sum(b):
+                        error_message = '--apply-cut-factors requires three additional arguments.'
+                        sys_exit = True
+                    else: cut_factors = (float(sys.argv[i+1]), float(sys.argv[i+2]), float(sys.argv[i+3]))
             
             # Disable background subtraction
             elif sys.argv[i] == '--disable-bgs': 
@@ -939,7 +949,7 @@ if __name__=="__main__":
         
         # Perform kinematic cuts
         if not disable_cuts: 
-            coincidences_cut, energies_S1_cut, energies_S2_cut = dfs.kinematic_cuts(coincidences, energies_S1, energies_S2, timer = time_level)
+            coincidences_cut, energies_S1_cut, energies_S2_cut = dfs.kinematic_cuts(coincidences, energies_S1, energies_S2, cut_factors, timer = time_level)
             # Only save energies with corresponding positive flight time
             energies_S1_cut = energies_S1_cut[coincidences_cut>0]
             energies_S2_cut = energies_S2_cut[coincidences_cut>0]
@@ -957,6 +967,7 @@ if __name__=="__main__":
                                                               energies_S2, 
                                                               S2_info,
                                                               disable_cuts,
+                                                              cut_factors,
                                                               time_level)
         
         dfs.elapsed_time(t_start, 'all boards')
@@ -972,8 +983,8 @@ if __name__=="__main__":
                              energy_S2_cut = energies_S2_cut, times_of_flight_cut = coincidences_cut, 
                              disable_bgs = disable_bgs, sum_shots = sum_shots, 
                              proton_recoil = proton_recoil, pulse_height_spectrum = pulse_height_spectrum,
-                             integrated_charge_spectrum = integrated_charge_spectrum,
-                             timer = time_level)
+                             integrated_charge_spectrum = integrated_charge_spectrum, 
+                             cut_factors = cut_factors, timer = time_level)
                 tof_vals    += tof_hist
                 erg_S1_vals += erg_S1_hist
                 erg_S2_vals += erg_S2_hist
@@ -991,7 +1002,7 @@ if __name__=="__main__":
                              proton_recoil = proton_recoil, 
                              pulse_height_spectrum = pulse_height_spectrum, 
                              integrated_charge_spectrum = integrated_charge_spectrum,
-                             timer = time_level)
+                             cut_factors = cut_factors, timer = time_level)
                 else: plt.close('all')
             else:
                 # Create histogram

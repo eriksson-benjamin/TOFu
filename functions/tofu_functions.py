@@ -1521,7 +1521,7 @@ def light_yield_function(proton_energy, function = 'gatu', s = 0.73, timer = Fal
     return s*light_yield
 
 
-def get_kincut_function(tof, timer = False):
+def get_kincut_function(tof, cut_factors=(1., 1., 1.), timer = False):
     '''
     Takes an array of times of flight [ns] and returns the corresponding 
     maximal/minimal light yield for each flight time (MeVee). The calculation
@@ -1535,6 +1535,10 @@ def get_kincut_function(tof, timer = False):
     ----------
     tof : ndarray,
         1D array of times-of-flight (ns)
+    cut_factors : tuple of floats, optional
+                Tuple of three factors (a, b, c) to apply to kinematic cuts. 
+                Factors a and b are applied to lower and upper S1 kinematic
+                cut, factor c is applied to upper S2 kinematic cut.
     timer : bool, optional
           If set to True, prints the time to execute the function.
                  
@@ -1553,7 +1557,9 @@ def get_kincut_function(tof, timer = False):
     Examples
     --------
     >>> t_tof = [27, 28, 29] # (ns)
-    >>> get_kincut_function(t_tof)
+    >>> # Broaden S1 kinematic cuts by factor 0.7 down and 1.4 up
+    >>> # Increase S2 cut by 20%
+    >>> get_kincut_function(t_tof, (0.7, 1.4, 1.2)) 
     (array([0.41889004, 0.37579523, 0.33857325]),
      array([1.80448041, 1.62189197, 1.4616936 ]),
      array([4.91064379, 4.46936204, 4.07293829]))   
@@ -1582,19 +1588,11 @@ def get_kincut_function(tof, timer = False):
     alpha_max = alpha + np.arccos((l**2 + l_min**2 - l_S2**2/4) / (2 * l * l_min))
     alpha_min = alpha - np.arccos((l**2 + l_max**2 - l_S2**2/4) / (2 * l * l_max))
     
-    # Broaden cuts somewhat
-    safety_factor_1 = 0.7
-    safety_factor_2 = 1.4
-    safety_factor_3 = 1.2
-#    safety_factor_1 = 1
-#    safety_factor_2 = 1
-#    safety_factor_3 = 1
-    
     # Calculate cuts in proton recoil energy (MeV)
     J_to_MeV = 1E-6 / constant.electron_volt 
-    E_S1_min = safety_factor_1*0.5*constant.neutron_mass*(l_max/(tof*1E-9))**2*(1/np.cos(alpha_min)**2-1)*J_to_MeV
-    E_S1_max = safety_factor_2*0.5*constant.neutron_mass*(l_min/(tof*1E-9))**2*(1/np.cos(alpha_max)**2-1)*J_to_MeV
-    E_S2_max = safety_factor_3*0.5*constant.neutron_mass*(l_max/(tof*1E-9))**2*J_to_MeV
+    E_S1_min = cut_factors[0]*0.5*constant.neutron_mass*(l_max/(tof*1E-9))**2*(1/np.cos(alpha_min)**2-1)*J_to_MeV
+    E_S1_max = cut_factors[1]*0.5*constant.neutron_mass*(l_min/(tof*1E-9))**2*(1/np.cos(alpha_max)**2-1)*J_to_MeV
+    E_S2_max = cut_factors[2]*0.5*constant.neutron_mass*(l_max/(tof*1E-9))**2*J_to_MeV
 
     # Translate to light yield
     ly_S1_max = light_yield_function(E_S1_max)
@@ -1604,7 +1602,7 @@ def get_kincut_function(tof, timer = False):
     if timer: elapsed_time(t_start, 'get_kincut_function()')
     return ly_S1_min, ly_S1_max, ly_S2_max
 
-def kinematic_cuts(tof, energy_S1, energy_S2, timer = False):
+def kinematic_cuts(tof, energy_S1, energy_S2, cut_factors=(1., 1., 1.), timer = False):
     '''
     Performs kinematic cuts on the times of flight vs. energy for S1's and 
     S2's.
@@ -1617,6 +1615,10 @@ def kinematic_cuts(tof, energy_S1, energy_S2, timer = False):
               1D array of S1 energies (MeVee)
     energy_S2 : ndarray, 
               1D array of S2 energies (MeVee)
+    cut_factors : tuple of floats, optional
+                Tuple of three factors (a, b, c) to apply to kinematic cuts. 
+                Factors a and b are applied to lower and upper S1 kinematic
+                cut, factor c is applied to upper S2 kinematic cut.
     timer : bool, optional
           If set to True, prints the time to execute the function.
                  
@@ -1650,7 +1652,7 @@ def kinematic_cuts(tof, energy_S1, energy_S2, timer = False):
     energy_S2 = np.array(energy_S2)
     
     # Run tof through get_kincut_function()
-    S1_min, S1_max, S2_max = get_kincut_function(tof)
+    S1_min, S1_max, S2_max = get_kincut_function(tof, cut_factors)
 
     # Compare measured energies with maximum/minimum energies for the given time of flight
     accept_inds = np.where((energy_S1 > S1_min) & (energy_S1 < S1_max) & (energy_S2 < S2_max))[0]
@@ -1842,7 +1844,8 @@ def elapsed_time(time_start = 0., timed_function = '', return_time = False):
     if return_time: return time.time() - time_start
 
 def background_subtraction(coincidences, tof_bins, energies_S1, S1_info, 
-                           energies_S2, S2_info, disable_cuts, timer = False):
+                           energies_S2, S2_info, disable_cuts, 
+                           cut_factors=(1., 1., 1.), timer = False):
     '''
     Performs background subtraction of TOF spectrum using negative flight 
     times.
@@ -1865,6 +1868,10 @@ def background_subtraction(coincidences, tof_bins, energies_S1, S1_info,
                  If set to True, calculates the background as the average value
                  between TOF -100 to -50 ns. If set to False, takes kinematic
                  cuts into consideration.
+    cut_factors : tuple of floats, optional
+                Tuple of three factors (a, b, c) to apply to kinematic cuts. 
+                Factors a and b are applied to lower and upper S1 kinematic
+                cuts, factor c is applied to upper S2 kinematic cut.
     timer : bool, optional
           If set to True, prints the time to execute the function.
                                  
@@ -1920,7 +1927,7 @@ def background_subtraction(coincidences, tof_bins, energies_S1, S1_info,
         
         
         # Get kinematic cuts for given TOF bin edges
-        S1_min, S1_max, S2_max = get_kincut_function(tof_bin_centres)
+        S1_min, S1_max, S2_max = get_kincut_function(tof_bin_centres, cut_factors)
         
         # S1
         s1_projection = np.zeros(len(tof_bin_centres))
@@ -2084,7 +2091,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
             times_of_flight_cut = 0, energy_S1_cut = 0, energy_S2_cut = 0, disable_bgs = False, 
             weights = False, hist2D_S1 = None, hist2D_S2 = None, sum_shots = False, 
             proton_recoil = False, pulse_height_spectrum = False, integrated_charge_spectrum = False,
-            timer = False):
+            cut_factors = (1., 1., 1.), timer = False):
     ''' This is a mess, I'm sorry (it does work though).
     Plots 2D histogram of TOF vs energy with projections onto time and energy axis.
     times_of_flight: 1D array of times of flight.
@@ -2270,7 +2277,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     if not disable_cuts:
         tof_axis_p = np.linspace(0.1, 500, 500)
         tof_axis_n = np.linspace(-0.1, -500, 500)
-        S1_min, S1_max, S2_max = get_kincut_function(tof_axis_p)
+        S1_min, S1_max, S2_max = get_kincut_function(tof_axis_p, cut_factors)
         plt.plot(tof_axis_p, S1_min, 'r-')
         plt.plot(tof_axis_p, S1_max, 'r-')
         plt.plot(tof_axis_n, S1_min, 'r-')
@@ -2505,7 +2512,8 @@ def replot_projections(limits, panel_choice, times_of_flight, energy_S1,
                        energy_S1_cut = 0, energy_S2_cut = 0, 
                        times_of_flight_cut = 0, proton_recoil = False, 
                        pulse_height_spectrum = False,
-                       integrated_charge_spectrum = False):
+                       integrated_charge_spectrum = False, 
+                       cut_factors = (1., 1., 1.)):
     '''
     Replot the spectra with a cut on one of the energy projections
     limits: limits of cuts for projections. 1x2 array for 1D spectrum, 2x2 array for 2D spectrum
@@ -2574,7 +2582,8 @@ def replot_projections(limits, panel_choice, times_of_flight, energy_S1,
               disable_bgs = disable_bgs, title = title, projection = proj, 
               log = log, proton_recoil = proton_recoil, 
               pulse_height_spectrum = pulse_height_spectrum,
-              integrated_charge_spectrum = integrated_charge_spectrum)
+              integrated_charge_spectrum = integrated_charge_spectrum, 
+              cut_factors = cut_factors)
     
     
 def print_help():
@@ -2592,6 +2601,7 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--time-range start stop: Only plot the data between \"start\" and \"stop\" seconds into the shot. \"start\" and \"stop\" are given in number of seconds since PRE.')
     print('--time-range-file: Selects shots and time ranges from separate input file (see input_files/time_ranges.txt for example. Set --disable-plots and --disable-scratch to run without user interaction.')
     print('--disable-cuts: Plot the data without any kinematic cuts.')
+    print('--apply-cut-factors a b c: Apply factors to kinematic cuts. Factors a and b are applied to lower and upper S1 cuts, factor c is applied to S2 upper cut.')
     print('--disable-bgs: Plot the data without background subtracting the time-of-flight spectrum.')
     print('--disable-plots: Disables plotting.')
     print('--disable-detectors: Analysis is not performed on detectors specified by user. Example: --disable-detectors S1_01 S1_02 S2_01')
