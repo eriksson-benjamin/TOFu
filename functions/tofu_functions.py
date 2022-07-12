@@ -1106,34 +1106,29 @@ def get_shifts(shift_file, timer = False):
 
 def get_pulse_area(pulses, u_factor, timer = False):
     '''
-    Returns the shifts (written in shift_file) required to line up all S1-S2 
-    combinations and shift the gamma peak 3.7 ns. Method is outlined in
-    Eriksson, Benjamin, et al. 
-    "New method for time alignment and time calibration of the TOFOR 
-    time-of-flight neutron spectrometer at JET." 
-    Review of Scientific Instruments 92.3 (2021): 033538.
+    Returns the areas under the pulses.
 
     Parameters
     ----------
-    shift_file : string,
-               The path to the shift file.
+    pulses : ndarray,
+            2D array of pulse waveforms-
+    u_factor : int,
+             Up-sampling factor, must be set equal to the up-sampling performed
+             by the sinc-interpolation.
     timer : bool, optional
           If set to True, prints the time to execute the function.
                  
     Returns
     -------
-    shifts : dict,
-           Dictionary with keys 
-           dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05'])
-           Each contains 32 shifts (ns) corresponding to the S1 vs. S2 shifts.
+    pulse_area : ndarray,
+               1D darray of pulse areas.
             
     Examples
     --------
-    >>> shifts = get_shifts()
-    >>> shifts.keys()
-    dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05']
-    >>> shifts['S1_01']
-    array([ -18.95286,  -19.35286,..., -118.55286, -117.75286])
+    >>> u = 10
+    >>> sinc_pulses = sinc_interpolation(pulses, x_values, ux_values, u)
+    >>> get_pulse_area(sinc_pulses, u)
+    array([ -732.5, -1724., ..., -6221.5, -3151. ])    
     ''' 
     
     if timer: t_start = elapsed_time()
@@ -2617,5 +2612,17 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--help: Print this help text.')
     
 if __name__=='__main__':
-    x = find_time_range(98044, True)
+    times_1 = get_times(98044, detector_name='S1_01')
+    times_2 = get_times(98044, detector_name='S1_02')
+    coincidences_1 = sTOF4(times_1, times_2, 100, 10)
+    coincidences_2 = sTOF4(times_2, times_1, 10, 100)
+    print(np.all(coincidences_1==-coincidences_2))
+    
     pass
+
+
+
+
+
+
+
