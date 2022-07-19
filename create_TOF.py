@@ -323,9 +323,9 @@ if __name__=="__main__":
     bins                        = np.arange(-199.8, 200, 0.4)
     tof_vals                    = np.zeros(len(bins) - 1)
     S1_info                     = {'energy limits':[0, 5],
-                                   'energy bins':np.arange(0, 20, 0.1)}
+                                   'energy bins':np.arange(0, 10, 0.01)}
     S2_info                     = {'energy limits':[0, 6],
-                                   'energy bins':np.arange(0, 20, 0.1)}
+                                   'energy bins':np.arange(0, 10, 0.01)}
     processed_shots             = np.array([])
     energy_thresholds           = dfs.get_dictionaries('merged', fill=[0, np.inf])
     E_low                       = -0.1
