@@ -6,8 +6,10 @@ Created on Thu Jul 11 08:27:51 2019
 @author: beriksso
 """
 
-import getdat as gd
-import ppf
+try: import getdat as gd
+except: pass
+try: import ppf
+except: pass
 import numpy as np
 import time
 import matplotlib.pyplot as plt
@@ -2612,12 +2614,6 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--help: Print this help text.')
     
 if __name__=='__main__':
-    times_1 = get_times(98044, detector_name='S1_01')
-    times_2 = get_times(98044, detector_name='S1_02')
-    coincidences_1 = sTOF4(times_1, times_2, 100, 10)
-    coincidences_2 = sTOF4(times_2, times_1, 10, 100)
-    print(np.all(coincidences_1==-coincidences_2))
-    
     pass
 
 
