@@ -1669,6 +1669,7 @@ def get_dictionaries(S = 0, fill = []):
           
     fill : ndarray, optional,
          Sets the values of the dictionary to whatever is passed in "fill".
+         
     Notes
     -----
     The input parameter S can be set to the following modes.\n
@@ -1708,7 +1709,8 @@ def get_dictionaries(S = 0, fill = []):
     for i in range(1, 6):
         dict_key = 'S1_0' + str(i)
         S1_dictionary.update({dict_key: fill.copy()})
-    if S == 'S1': return S1_dictionary
+    if S == 'S1': 
+        return S1_dictionary
     
     S2_dictionary = {}
     for i in range(1, 33):
@@ -1716,16 +1718,24 @@ def get_dictionaries(S = 0, fill = []):
         else: dict_key = 'S2_' + str(i)
         S2_dictionary.update({dict_key: fill.copy()})
     
-    if S == 'S2': return S2_dictionary
+    if S == 'S2': 
+        return S2_dictionary
     if S == 'merged': 
         S1_dictionary.update(S2_dictionary)
         return S1_dictionary
-    if S == 'nested': return {'S1_01':get_dictionaries('S2', fill.copy()),
-                              'S1_02':get_dictionaries('S2', fill.copy()), 
-                              'S1_03':get_dictionaries('S2', fill.copy()), 
-                              'S1_04':get_dictionaries('S2', fill.copy()),
-                              'S1_05':get_dictionaries('S2', fill.copy())}
-    
+    if S == 'nested': 
+        return {'S1_01':get_dictionaries('S2', fill.copy()),
+                'S1_02':get_dictionaries('S2', fill.copy()), 
+                'S1_03':get_dictionaries('S2', fill.copy()), 
+                'S1_04':get_dictionaries('S2', fill.copy()),
+                'S1_05':get_dictionaries('S2', fill.copy())}
+    if S == 'ADQ14':
+        keys = list(get_dictionaries('merged').keys())
+        return {key:fill.copy() for key in keys[:20]}
+    if S == 'ADQ412':
+        keys = list(get_dictionaries('merged').keys())
+        return {key:fill.copy() for key in keys[21:]}
+        
     return S1_dictionary, S2_dictionary
 
 def get_boards():
