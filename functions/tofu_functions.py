@@ -1734,7 +1734,7 @@ def get_dictionaries(S = 0, fill = []):
         return {key:fill.copy() for key in keys[:20]}
     if S == 'ADQ412':
         keys = list(get_dictionaries('merged').keys())
-        return {key:fill.copy() for key in keys[21:]}
+        return {key:fill.copy() for key in keys[20:]}
         
     return S1_dictionary, S2_dictionary
 
