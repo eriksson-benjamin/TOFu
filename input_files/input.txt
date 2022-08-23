@@ -1,21 +1,22 @@
---JPN 100228
+#--JPN 100075
 #--disable-bgs
 #--disable-cuts
-#--disable-plots
+--apply-cut-factors 0.7 1.4 1.2
+--disable-plots
 #--disable-detectors S1_05
-#--disable-boards 7 8
+--disable-boards 7 8
 #--enable-detectors S1_01 S2_17 S2_18 S2_19 S2_20 
 #--ohmic-spectrum
-#--remove-doubles 0
+#--remove-doubles 1
 #--run-timer
 #--save-data
-#--save-NES s1_05_disabled.pickle
+--save-NES
 #--sum-shots 99361 99360 99359 99358 99357 99356
-#--time-range 50 55
-#--time-range-file input_files/time_ranges.txt
+#--time-range 48.8 49.8
+--time-range-file input_files/time_ranges.txt
 #--1D-spectrum
 --software-thresholds input_files/thresholds.txt
-#--disable-scratch
+--disable-scratch
 #--proton-recoil-energy
 #--pulse-height-spectrum ADQ14
 #--integrated-charge-spectrum ADQ14
