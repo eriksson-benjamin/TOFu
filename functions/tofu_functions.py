@@ -1144,7 +1144,8 @@ def get_pulse_area(pulses, u_factor, timer = False):
         chunked_data = np.array_split(pulses, n_chunks, axis = 0)
     
     # Otherwise use full data set at once
-    else: chunked_data = [pulses]
+    else: 
+        chunked_data = [pulses]
     
     # Find area under pulse
     counter = 0
@@ -2591,7 +2592,63 @@ def replot_projections(limits, panel_choice, times_of_flight, energy_S1,
               pulse_height_spectrum = pulse_height_spectrum,
               integrated_charge_spectrum = integrated_charge_spectrum, 
               cut_factors = cut_factors)
+
     
+def get_energy_calibration_(areas, detector_name, timer = False):
+    '''
+    Return the deposited energy (MeVee) in the given detector using the energy
+    calibration given in the energy calibration folder. 
+    
+    Notes
+    -----
+    Used temporarily for the new energy calibration where we use smaller
+    integration limits (10-30 ns) when calculating the pulse waveform areas.
+    
+    Parameters
+    ----------
+    areas : ndarray,
+          1D array of pulse areas. 
+    detector_name : string,
+                  Detector name corresponding to the pulse areas being parsed.
+    timer : bool, optional
+          If set to True, prints the time to execute the function.                 
+                    
+    Returns
+    -------
+    energy_array : ndarray,
+                 1D array of deposited energies in MeVee.
+            
+    Examples
+    --------
+    >>> energies = get_energy_calibration(areas, 'S1_01')
+    array([0.00134, 0.23145, ..., 0.02134])
+    ''' 
+    
+    if timer: t_start = elapsed_time()
+    
+    raise_exception = False
+    # Load calibration data for given detector
+    if detector_name[0:2] == 'S1':
+        dirname = os.path.dirname(__file__)
+        filename = os.path.join(dirname, '../energy_calibration/energy_calibration_S1_.txt')
+        cal = np.loadtxt(filename, usecols = (0,1))[int(detector_name[3:]) - 1]
+
+        cal_factor = 3000.
+    elif detector_name[0:2] == 'S2':
+        dirname = os.path.dirname(__file__)
+        filename = os.path.join(dirname, '../energy_calibration/energy_calibration_S2_.txt')
+        cal = np.loadtxt(filename, usecols = (0,1))[int(detector_name[3:]) - 1]
+        
+        if int(detector_name[3:]) <= 15: cal_factor = 3000.
+        elif int(detector_name[3:]) > 15: cal_factor = 350.
+        else: raise_exception = True   
+    else: raise_exception = True
+    if raise_exception: raise Exception('Please supply the detector type as the second parameter (SX = \'S1_x\' x = [01, 05] or SX = \'S2_x\' x = [01, 32])')        
+    
+    # Calculate energy from area
+    energy_array = (cal[0] + cal[1] * areas / cal_factor ) / 1000.
+    if timer: elapsed_time(t_start, 'get_energy_calibration()')
+    return energy_array
     
 def print_help():
     print('\nPlease supply the shot number.')
