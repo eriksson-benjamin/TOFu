@@ -1,4 +1,4 @@
-font.family        : [times new roman, serif]
+font.family        : serif, times new roman
 font.serif         : FreeSerif
 font.sans-serif    : FreeSans
 
