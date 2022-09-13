@@ -253,13 +253,13 @@ def create_TOF(arguments):
         pulse_energy = -np.min(pulse_data_sinc, axis = 1)
     elif integrated_charge_spectrum:
         # Get area under pulse
-        pulse_energy = -dfs.get_pulse_area(pulse_data_sinc, u_factor, timer = timer_level)
+        pulse_energy = -dfs.get_pulse_area(pulse_data_sinc[:, 100:300], u_factor, timer = timer_level)
     elif not plot_1D: 
         # Get area under pulses
-        pulse_area = dfs.get_pulse_area(pulse_data_sinc, u_factor, timer = timer_level)
+        pulse_area = dfs.get_pulse_area(pulse_data_sinc[:, 100:300], u_factor, timer = timer_level)
         
         # Convert to deposited energy (MeVee)
-        pulse_energy = dfs.get_energy_calibration(-pulse_area, detector_name, timer = timer_level)
+        pulse_energy = dfs.get_energy_calibration_(-pulse_area, detector_name, timer = timer_level)
         
         # Check which energy thresholds (MeVee) to use
         thr_l, thr_u = energy_thresholds[detector_name]
