@@ -1203,7 +1203,7 @@ def get_energy_calibration(areas, detector_name, timer = False):
     if raise_exception: raise Exception('Please supply the detector type as the second parameter (SX = \'S1_x\' x = [01, 05] or SX = \'S2_x\' x = [01, 32])')        
     
     # Calculate energy from area
-    energy_array = (cal[0] + cal[1] * areas / cal_factor ) / 1000.
+    energy_array = (cal[0] + cal[1] * areas) / cal_factor / 1000.
     if timer: elapsed_time(t_start, 'get_energy_calibration()')
     return energy_array
 
@@ -2646,7 +2646,7 @@ def get_energy_calibration_(areas, detector_name, timer = False):
     if raise_exception: raise Exception('Please supply the detector type as the second parameter (SX = \'S1_x\' x = [01, 05] or SX = \'S2_x\' x = [01, 32])')        
     
     # Calculate energy from area
-    energy_array = (cal[0] + cal[1] * areas / cal_factor ) / 1000.
+    energy_array = (cal[0] + cal[1] * areas) / cal_factor / 1000.
     if timer: elapsed_time(t_start, 'get_energy_calibration()')
     return energy_array
     
