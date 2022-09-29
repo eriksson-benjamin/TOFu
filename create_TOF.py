@@ -259,7 +259,7 @@ def create_TOF(arguments):
         pulse_area = dfs.get_pulse_area(pulse_data_sinc[:, 100:300], u_factor, timer = timer_level)
         
         # Convert to deposited energy (MeVee)
-        pulse_energy = dfs.get_energy_calibration_(-pulse_area, detector_name, timer = timer_level)
+        pulse_energy = dfs.get_energy_calibration(-pulse_area, detector_name, timer = timer_level)
         
         # Check which energy thresholds (MeVee) to use
         thr_l, thr_u = energy_thresholds[detector_name]
