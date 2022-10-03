@@ -1389,7 +1389,7 @@ def light_yield_function(proton_energy, function = 'gatu', s = 0.73, timer = Fal
                   1D array of proton recoil energies given in MeV.
     function : str, optional
              Set to "gatu" to use the light yield function from M. Gatu Johnson,
-             set to "stevenato" to use light yield function from Stevanato, L., 
+             set to "stevanato" to use light yield function from Stevanato, L., 
              et al. "Light output of EJ228 scintillation neutron detectors." 
              Applied Radiation and Isotopes 69.2 (2011): 369-372.
     s : float,
@@ -1465,6 +1465,9 @@ def light_yield_function(proton_energy, function = 'gatu', s = 0.73, timer = Fal
         L_0 = 0.606
         L_1 = 2.97
         light_yield = L_0*proton_energy**2/(proton_energy+L_1)
+    else:
+        raise Exception(f'Unknown light yield function: {function}')
+        
     if timer: elapsed_time(t_start)
     
     return s*light_yield
