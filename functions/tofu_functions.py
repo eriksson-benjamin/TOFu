@@ -1378,7 +1378,7 @@ def inverted_light_yield(light_yield, function = 'gatu', check = True, timer = F
     if timer: elapsed_time(t_start, 'inverted_light_yield()')
     return proton_recoil
     
-def light_yield_function(proton_energy, function = 'gatu', s = 0.73, timer = False):
+def light_yield_function(proton_energy, function = 'gatu', s = 1, timer = False):
     '''
     Takes an array of proton recoil energies (MeV) and converts to light yield
     (MeVee) using the light yield function specified in "function".
