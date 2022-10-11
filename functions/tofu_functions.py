@@ -1256,6 +1256,8 @@ def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 
     ''' 
     
     if timer: t_start = elapsed_time()
+    if len(pulses) == 0:
+        return pulses, np.array([])
     if detector_name not in get_dictionaries('merged').keys():
         raise Exception('Unknown detector name.')
     # Remove anything with a positive area
