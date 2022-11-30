@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+ #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Fri Jan 15 07:41:37 2021
@@ -333,6 +333,7 @@ if __name__=="__main__":
     shift_file                  = 'shift_files/shift_V4.txt'
     time_window                 = 500 # Time window (+-) for TOF spectrum [ns]
     cut_factors                 = (1., 1., 1.)
+    path                        = './'
     
     if len(sys.argv) == 1: 
         dfs.print_help()
@@ -410,23 +411,39 @@ if __name__=="__main__":
                         sys_exit = True
                 except: time_level = 1
             
-            # Save all data to file   
-            elif sys.argv[i] == '--save-data':
-                if i == len(sys.argv) - 1: set_file_name = True
-                elif sys.argv[i + 1][0:2] == '--': set_file_name = True
-                else:
-                    file_name = sys.argv[i + 1]
-                    skip_flag = 1
+#            # Save all data to file   
+#            elif sys.argv[i] == '--save-data':
+#                if i == len(sys.argv) - 1: set_file_name = True
+#                elif sys.argv[i + 1][0:2] == '--': set_file_name = True
+#                else:
+#                    file_name = sys.argv[i + 1]
+#                    skip_flag = 1
+#                save_data = True
+
+            # Save all data to file
+            elif sys.argv[i] == '--save-data': 
+                set_file_name = True
                 save_data = True
+                if i == len(sys.argv) - 1: pass
+                elif sys.argv[i + 1][0:2] == '--': pass
+                else:
+                    path = sys.argv[i + 1]
+                    if path[-1] != '/':
+                        path += '/'
+                    skip_flag = 1
             
             # Save histogram data to file
             elif sys.argv[i] == '--save-NES': 
-                if i == len(sys.argv) - 1: set_file_name = True
-                elif sys.argv[i + 1][0:2] == '--': set_file_name = True
-                else:
-                    file_name = sys.argv[i + 1]
-                    skip_flag = 1
+                set_file_name = True
                 save_NES = True
+                if i == len(sys.argv) - 1: pass
+                elif sys.argv[i + 1][0:2] == '--': pass
+                else:
+                    path = sys.argv[i + 1]
+                    if path[-1] != '/':
+                        path += '/'
+                    skip_flag = 1
+                
             
             # Remove/keep double scattering events in S1
             elif sys.argv[i] == '--remove-doubles': 
@@ -1012,7 +1029,7 @@ if __name__=="__main__":
     
         # Save all times, energies and times of flight (creates large files)
         if set_file_name: 
-            file_name = f'{shot_number}_{time_slice[0]:.1f}_{time_slice[1]:.1f}.pickle'
+            file_name = f'{path}{shot_number}_{time_slice[0]:.1f}_{time_slice[1]:.1f}.pickle'
         if save_data:
             print(f'Saving data to: {file_name}')
             with open(file_name, 'wb') as handle:
