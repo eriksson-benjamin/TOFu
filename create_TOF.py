@@ -19,6 +19,7 @@ import ppf
 import pickle
 import os
 
+
 def set_timer_level(detector_name):
     # Set timer level
     if time_level in s1_dicts.keys() or time_level in s2_dicts.keys():
@@ -273,17 +274,22 @@ def create_TOF(arguments):
     else: pulse_energy = 0
 
     # Perform time pickoff method
-    time_pickoff = dfs.time_pickoff_CFD(pulse_data_sinc, fraction = 0.05 ,timer = timer_level) * 1. / u_factor
-    # Calculate how much to adjust the ADQ14 time stamps by
-    if boa in ['01', '02', '03', '04', '05']: time_adjustment = time_pickoff - pre_trig_adjustment
-    # Calculate how much to adjust the ADQ412 time stamps
-    elif boa in ['06', '07', '08', '09', '10']: time_adjustment = time_pickoff
+    time_pickoff = dfs.time_pickoff_CFD(pulse_data_sinc, fraction = 0.05 ,
+                                        timer = timer_level) * 1. / u_factor
+                                        
+    # Calculate how much to adjust the time stamps by
+    if boa in ['01', '02', '03', '04', '05']: 
+        time_adjustment = time_pickoff - pre_trig_adjustment
+    elif boa in ['06', '07', '08', '09', '10']: 
+        time_adjustment = time_pickoff
+    
     # Calculate the new times and append to S1/S2 timelist
     new_times = time_data + time_adjustment
-    if timer_level: dfs.elapsed_time(t_start, detector_name)
+    if timer_level: 
+        dfs.elapsed_time(t_start, detector_name)
     print(detector_name + ': Done')
+    
     return new_times, detector_name, pulse_energy
-
 
 
 
@@ -411,15 +417,6 @@ if __name__=="__main__":
                         sys_exit = True
                 except: time_level = 1
             
-#            # Save all data to file   
-#            elif sys.argv[i] == '--save-data':
-#                if i == len(sys.argv) - 1: set_file_name = True
-#                elif sys.argv[i + 1][0:2] == '--': set_file_name = True
-#                else:
-#                    file_name = sys.argv[i + 1]
-#                    skip_flag = 1
-#                save_data = True
-
             # Save all data to file
             elif sys.argv[i] == '--save-data': 
                 set_file_name = True
@@ -444,7 +441,6 @@ if __name__=="__main__":
                         path += '/'
                     skip_flag = 1
                 
-            
             # Remove/keep double scattering events in S1
             elif sys.argv[i] == '--remove-doubles': 
                 try: 
@@ -478,6 +474,15 @@ if __name__=="__main__":
                     else: time_range_file[sn].append([t1[enum], t2[enum]])
                 skip_flag = 1
             
+            # Read shift file
+            elif sys.argv[i] == '--shift-file':
+                if sys.argv[i + 1][0:2] == '--': 
+                    error_message = '--shift-file requires an additional argument.'
+                    sys_exit = True
+                else:
+                    shift_file = sys.argv[i + 1]
+                    skip_flag = 1
+            
             # Disable kinematic cuts
             elif sys.argv[i] == '--disable-cuts': disable_cuts = True
             
@@ -498,7 +503,7 @@ if __name__=="__main__":
             # Disable background subtraction
             elif sys.argv[i] == '--disable-bgs': 
                 disable_bgs = True
-                background_component = np.zeros(len(bins))
+                background_component = np.zeros(len(bins) - 1)
             
             # Disable get data from scratch
             elif sys.argv[i] == '--disable-scratch': disable_scratch = True
