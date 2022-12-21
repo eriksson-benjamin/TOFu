@@ -1085,7 +1085,6 @@ def get_shifts(shift_file, timer = False):
     if timer: t_start = elapsed_time()
     
     # Load shifts
-#    A = np.loadtxt(shift_file, dtype = 'str')
     shift_dat = np.loadtxt(shift_file, dtype='str')
     
     # Grab S1/S2 shifts
@@ -1102,25 +1101,12 @@ def get_shifts(shift_file, timer = False):
     S1_nump = np.array([S1_shifts[S1] for S1 in S1_sort])
     S2_nump = np.array([S2_shifts[S2] for S2 in S2_sort])
     
-#    # Get gamma peak shifts for S1-5 vs S2's
-#    gamma_peak = np.array(A[0:-4, 1], dtype = 'float')
-#    
-#    # Get neutron peak shifts for S1-5 vs S1's
-#    neutron_peak = np.array(A[-4:, 1], dtype = 'float')
-     
     # Gamma peak should be located at 3.7 ns
     g_peak = 3.7
     
     # Dictionary
     shifts = get_dictionaries('S1')
-
-##     This gives how much one needs to shift each TOF spectrum in order to line up with the S1_5 vs S2's at 3.7 ns
-#    shifts['S1_05'] = g_peak - gamma_peak
-#    shifts['S1_04'] = shifts['S1_05'] - neutron_peak[3]
-#    shifts['S1_03'] = shifts['S1_05'] - neutron_peak[2]
-#    shifts['S1_02'] = shifts['S1_05'] - neutron_peak[1]
-#    shifts['S1_01'] = shifts['S1_05'] - neutron_peak[0]
-#    
+    
     shifts['S1_05'] = g_peak - S2_nump
     shifts['S1_04'] = shifts['S1_05'] - S1_nump[3]
     shifts['S1_03'] = shifts['S1_05'] - S1_nump[2]
