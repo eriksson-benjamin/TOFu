@@ -1083,25 +1083,49 @@ def get_shifts(shift_file, timer = False):
     '''
 
     if timer: t_start = elapsed_time()
-    A = np.loadtxt(shift_file, dtype = 'str')
     
-    # Get gamma peak shifts for S1-5 vs S2's
-    gamma_peak = np.array(A[0:-4, 1], dtype = 'float')
-    # Get neutron peak shifts for S1-5 vs S1's
-    neutron_peak = np.array(A[-4:, 1], dtype = 'float')
+    # Load shifts
+#    A = np.loadtxt(shift_file, dtype = 'str')
+    shift_dat = np.loadtxt(shift_file, dtype='str')
+    
+    # Grab S1/S2 shifts
+    S1_shifts = {sd[0]:float(sd[1]) for sd in shift_dat if 'S1' in sd[0]}
+    S2_shifts = {sd[0]:float(sd[1]) for sd in shift_dat if 'S2' in sd[0]}
+    
+    # Sort keys
+    S1_sort = list(S1_shifts.keys())
+    S2_sort = list(S2_shifts.keys())
+    S1_sort.sort()
+    S2_sort.sort()
+    
+    # Cast to sorted numpy array
+    S1_nump = np.array([S1_shifts[S1] for S1 in S1_sort])
+    S2_nump = np.array([S2_shifts[S2] for S2 in S2_sort])
+    
+#    # Get gamma peak shifts for S1-5 vs S2's
+#    gamma_peak = np.array(A[0:-4, 1], dtype = 'float')
+#    
+#    # Get neutron peak shifts for S1-5 vs S1's
+#    neutron_peak = np.array(A[-4:, 1], dtype = 'float')
      
     # Gamma peak should be located at 3.7 ns
     g_peak = 3.7
     
     # Dictionary
-    shifts = {'S1_01':[], 'S1_02':[], 'S1_03':[], 'S1_04': [], 'S1_05':[]}
+    shifts = get_dictionaries('S1')
 
-    # This gives how much one needs to shift each TOF spectrum in order to line up with the S1_5 vs S2's at 3.7 ns
-    shifts['S1_05'] = g_peak - gamma_peak
-    shifts['S1_04'] = shifts['S1_05'] - neutron_peak[3]
-    shifts['S1_03'] = shifts['S1_05'] - neutron_peak[2]
-    shifts['S1_02'] = shifts['S1_05'] - neutron_peak[1]
-    shifts['S1_01'] = shifts['S1_05'] - neutron_peak[0]
+##     This gives how much one needs to shift each TOF spectrum in order to line up with the S1_5 vs S2's at 3.7 ns
+#    shifts['S1_05'] = g_peak - gamma_peak
+#    shifts['S1_04'] = shifts['S1_05'] - neutron_peak[3]
+#    shifts['S1_03'] = shifts['S1_05'] - neutron_peak[2]
+#    shifts['S1_02'] = shifts['S1_05'] - neutron_peak[1]
+#    shifts['S1_01'] = shifts['S1_05'] - neutron_peak[0]
+#    
+    shifts['S1_05'] = g_peak - S2_nump
+    shifts['S1_04'] = shifts['S1_05'] - S1_nump[3]
+    shifts['S1_03'] = shifts['S1_05'] - S1_nump[2]
+    shifts['S1_02'] = shifts['S1_05'] - S1_nump[1]
+    shifts['S1_01'] = shifts['S1_05'] - S1_nump[0]
     
     if timer: elapsed_time(t_start, 'get_shifts()')
     return shifts
@@ -2631,6 +2655,7 @@ mode = 1: Only plot events which have produced a coincidence between two S1\'s')
     print('--proton-recoil-energy: Convert the energy axis from MeVee to MeV scale.')
     print('--pulse-height-spectrum: Use maxima of pulses for the energy axis.')
     print('--integrated-charge-spectrum: Use integrated charge for the energy axis.')
+    print('--shift-file shifts.txt: Set detector time shifts (in ns) specified in shifts.txt')
     print('--help: Print this help text.')
     
 if __name__=='__main__':
