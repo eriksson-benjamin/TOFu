@@ -1,21 +1,24 @@
-#--JPN 100075
-#--disable-bgs
-#--disable-cuts
---apply-cut-factors 0.7 1.4 1.2
+--JPN 101958
+--disable-bgs
+--disable-cuts
+#--apply-cut-factors 0.7 1.4 1.2
+#--apply-cut-factors 1 1 1
 --disable-plots
-#--disable-detectors S1_05
---disable-boards 7 8
-#--enable-detectors S1_01 S2_17 S2_18 S2_19 S2_20 
+#--disable-detectors S1_01 S1_02 S1_03 S1_04
+#--disable-boards 7 8
+#--enable-detectors S1_01 S1_02 S1_03 S1_04 S1_05 S2_12 S2_16 
 #--ohmic-spectrum
 #--remove-doubles 1
 #--run-timer
-#--save-data
+#--save-data /common/scratch/beriksso/TOFu/data/time_alignment/dataset_3/
 --save-NES
-#--sum-shots 99361 99360 99359 99358 99357 99356
-#--time-range 48.8 49.8
---time-range-file input_files/time_ranges.txt
+#--save-NES /common/scratch/beriksso/TOFu/data/model_inadequacy/
+#--sum-shots 101183 101184 101185
+#--time-range 40 80
+#--time-range-file input_files/time_ranges.txt
+#--software-thresholds input_files/thresholds.txt
+--shift-file shift_files/shift_V4.txt
 #--1D-spectrum
---software-thresholds input_files/thresholds.txt
 --disable-scratch
 #--proton-recoil-energy
 #--pulse-height-spectrum ADQ14
