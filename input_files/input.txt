@@ -1,11 +1,11 @@
---JPN 101958
---disable-bgs
---disable-cuts
-#--apply-cut-factors 0.7 1.4 1.2
+--JPN 99552
+#--disable-bgs
+#--disable-cuts
+--apply-cut-factors 0.7 1.4 1.2
 #--apply-cut-factors 1 1 1
---disable-plots
+#--disable-plots
 #--disable-detectors S1_01 S1_02 S1_03 S1_04
-#--disable-boards 7 8
+--disable-boards 7 8
 #--enable-detectors S1_01 S1_02 S1_03 S1_04 S1_05 S2_12 S2_16 
 #--ohmic-spectrum
 #--remove-doubles 1
@@ -14,12 +14,13 @@
 --save-NES
 #--save-NES /common/scratch/beriksso/TOFu/data/model_inadequacy/
 #--sum-shots 101183 101184 101185
-#--time-range 40 80
-#--time-range-file input_files/time_ranges.txt
-#--software-thresholds input_files/thresholds.txt
+--time-range 59 62.5
+#--time-range-file input_files/time_ranges/time_ranges.txt
+--energy-calibration energy_calibration/26-11-2022
+--software-thresholds input_files/thresholds/26-11-2022/thresholds.txt
 --shift-file shift_files/shift_V4.txt
 #--1D-spectrum
---disable-scratch
+#--disable-scratch
 #--proton-recoil-energy
 #--pulse-height-spectrum ADQ14
 #--integrated-charge-spectrum ADQ14
