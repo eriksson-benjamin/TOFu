@@ -154,7 +154,7 @@ def import_all_data(arguments):
 def create_TOF(arguments):
     '''
     Analysis of pulse waveforms to modify time stamp using time-pickoff method.
-    Run in parallel
+    Run in parallel.
     '''
     
     if time_level: t_start = dfs.elapsed_time()
@@ -260,7 +260,7 @@ def create_TOF(arguments):
         pulse_area = dfs.get_pulse_area(pulse_data_sinc[:, 100:300], u_factor, timer = timer_level)
         
         # Convert to deposited energy (MeVee)
-        pulse_energy = dfs.get_energy_calibration(-pulse_area, detector_name, timer = timer_level)
+        pulse_energy = dfs.get_energy_calibration(-pulse_area, detector_name, energy_calibration, timer = timer_level)
         
         # Check which energy thresholds (MeVee) to use
         thr_l, thr_u = energy_thresholds[detector_name]
@@ -337,10 +337,13 @@ if __name__=="__main__":
     E_low                       = -0.1
     E_high                      = 2
     shift_file                  = 'shift_files/shift_V4.txt'
+    energy_calibration          = 'energy_calibration/26-11-2022/'
     time_window                 = 500 # Time window (+-) for TOF spectrum [ns]
     cut_factors                 = (1., 1., 1.)
     path                        = './'
     
+    # Read user arguments
+    # -------------------
     if len(sys.argv) == 1: 
         dfs.print_help()
         sys.exit
@@ -473,6 +476,15 @@ if __name__=="__main__":
                     if sn not in time_range_file.keys(): time_range_file[sn] = [[t1[enum], t2[enum]]]
                     else: time_range_file[sn].append([t1[enum], t2[enum]])
                 skip_flag = 1
+            
+            # Energy calibration file name
+            elif sys.argv[i] == '--energy-calibration':
+                if sys.argv[i + 1][0:2] == '--': 
+                    error_message = '--energy-calibration requires an additional argument.'
+                    sys_exit = True
+                else:
+                    energy_calibration = sys.argv[i + 1]
+                    skip_flag = 1
             
             # Read shift file
             elif sys.argv[i] == '--shift-file':

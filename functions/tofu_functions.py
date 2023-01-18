@@ -2560,7 +2560,7 @@ def replot_projections(limits, panel_choice, times_of_flight, energy_S1,
               cut_factors = cut_factors)
 
     
-def get_energy_calibration(areas, detector_name, timer = False):
+def get_energy_calibration(areas, detector_name, energy_calibration, timer = False):
     '''
     Return the deposited energy (MeVee) in the given detector using the energy
     calibration given in the energy calibration folder. 
@@ -2595,12 +2595,12 @@ def get_energy_calibration(areas, detector_name, timer = False):
     # Load calibration data for given detector
     if detector_name[0:2] == 'S1':
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '../energy_calibration/energy_calibration_S1.txt')
+        filename = os.path.join(dirname, f'../{energy_calibration}/energy_calibration_S1.txt')
         cal = np.loadtxt(filename, usecols=(0,1))[int(detector_name[3:]) - 1]
 
     elif detector_name[0:2] == 'S2':
         dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, '../energy_calibration/energy_calibration_S2.txt')
+        filename = os.path.join(dirname, f'../{energy_calibration}/energy_calibration_S2.txt')
         cal = np.loadtxt(filename, usecols=(0,1))[int(detector_name[3:]) - 1]
         
     else: 
@@ -2623,6 +2623,7 @@ def print_help():
     print('--remove-doubles mode:\n  \
 mode = 0: Remove all events which have produced a coincidence between two S1\'s.\n  \
 mode = 1: Only plot events which have produced a coincidence between two S1\'s')
+    print('--energy-calibration path: Path to the energy calibration file relative to the top directory.')
     print('--save-data: Save the data as a python pickle with file name \"(shot_number)_(t0)_(t1).pickle\".')
     print('--save-NES: Save histogram data as a python pickle with file name \"(shot_number)_(t0)_(t1).pickle\".')
     print('--time-range start stop: Only plot the data between \"start\" and \"stop\" seconds into the shot. \"start\" and \"stop\" are given in number of seconds since PRE.')
