@@ -15,40 +15,41 @@ import time
 import matplotlib.pyplot as plt
 import matplotlib
 import scipy.constants as constant
-import scipy.optimize as optimize
 from matplotlib.lines import Line2D
 import os
 
-def get_pulses(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A', pulse_start = -1, pulse_end = -1, timer = False):
+
+def get_pulses(shot_number, board='N/A', channel='N/A', detector_name='N/A', 
+               pulse_start=-1, pulse_end=-1, timer=False):
     '''
     Returns pulse data for a given board, channel and shot number.
     
     Parameters
     ----------
     shot_number : int or string
-                JET pulse number.
+        JET pulse number.
     board : int or string, optional
-          Board number (between 1-10) for requested data. Must be given if
-          detector_name is not.
+        Board number (between 1-10) for requested data. Must be given if
+        detector_name is not.
     channel : string, optional
-            Channel name for requested data (A, B, C or D). Must be given if 
-            detector_name is not.
+        Channel name for requested data (A, B, C or D). Must be given if 
+        detector_name is not.
     detector_name : string, optional
-                  Detector name for requested data. Must be given if board and
-                  channel are not. E.g. "S1_01", "S1_02", "S2_01", "S2_02" etc.
+        Detector name for requested data. Must be given if board and
+        channel are not. E.g. "S1_01", "S1_02", "S2_01", "S2_02" etc.
     pulse_start : int, optional
-                Index before which pulses are not returned.
+        Index before which pulses are not returned.
     pulse_end : int, optional
-              Index after which pulses are not returned.
+        Index after which pulses are not returned.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
     
     Returns
     -------
     pulses : ndarray
-           2D array of pulse waveforms where each row corresponds to one pulse. 
-           Typically 64 samples in each row for ADQ14 (board 1-5) and 56
-           samples for ADQ412 (board 6-10).
+        2D array of pulse waveforms where each row corresponds to one pulse. 
+        Typically 64 samples in each row for ADQ14 (board 1-5) and 56 samples 
+        for ADQ412 (board 6-10).
            
     Examples
     --------
@@ -73,11 +74,9 @@ def get_pulses(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A
     
     # Get some of the data or all of it
     if (pulse_start != -1) & (pulse_end != -1):
-        pulse_data, _, _ = gd.getbytex(file_name, 
-                                       shot_number, 
-                                       nbytes = (pulse_end-pulse_start)*record_length*2, 
-                                       start = 6+2*record_length*pulse_start, 
-                                       order = 12)
+        pulse_data, _, _ = gd.getbytex(file_name, shot_number, 
+                                nbytes=(pulse_end-pulse_start)*record_length*2, 
+                                start=6+2*record_length*pulse_start, order=12)
     else:
         pulse_data, _, _ = gd.getbyte(file_name, shot_number)
     pulse_data.dtype = np.int16
@@ -88,10 +87,12 @@ def get_pulses(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A
 
     if timer: elapsed_time(t_start, 'get_pulses()')
     
-    pulses = np.reshape(pulse_data, [int(len(pulse_data) / record_length), record_length])
+    pulses = np.reshape(pulse_data, 
+                        [int(len(pulse_data) / record_length), record_length])
     return pulses
        
-def get_times(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A', timer = False):
+def get_times(shot_number, board='N/A', channel='N/A',
+              detector_name='N/A', timer=False):
     '''
     Returns trigger time stamps for pulses on given board, channel and shot 
     number in nanoseconds since board initialization.
@@ -99,23 +100,23 @@ def get_times(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A'
     Parameters
     ----------
     shot_number : int or string
-                JET pulse number.
+        JET pulse number.
     board : int or string, optional
-          Board number (between 1-10) for requested data. Must be given if
-          detector_name is not.
+        Board number (between 1-10) for requested data. Must be given if
+        detector_name is not.
     channel : string, optional
-            Channel name for requested data (A, B, C or D). Must be given if 
-            detector_name is not.
+        Channel name for requested data (A, B, C or D). Must be given if 
+        detector_name is not.
     detector_name : string, optional
-                  Detector name for requested data. Must be given if board and
-                  channel are not. E.g. "S1_01", "S1_02", "S2_01", "S2_02" etc.
+        Detector name for requested data. Must be given if board and
+        channel are not. E.g. "S1_01", "S1_02", "S2_01", "S2_02" etc.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
     
     Returns
     -------
     time_stamps : ndarray
-                1D array of time stamps.
+        1D array of time stamps.
            
     Examples
     --------
@@ -150,7 +151,8 @@ def get_times(shot_number, board = 'N/A', channel = 'N/A', detector_name = 'N/A'
     
     if timer: elapsed_time(t_start, 'get_times()')
     return time_stamps * mult_factor
-def get_offset(board, shot_number, timer = False):
+
+def get_offset(board, shot_number, timer=False):
     '''
     Returns the time from board initialization to JET PRE for given board and 
     shot number in nanoseconds. Required to align the time stamp trains for 
@@ -159,16 +161,16 @@ def get_offset(board, shot_number, timer = False):
     Parameters
     ----------
     board : int or string
-          Board number (between 6-10) for requested time offset.
+        Board number (between 6-10) for requested time offset.
     shot_number : int or string
-                JET pulse number.
+        JET pulse number.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
           
     Returns
     -------
     offset : int
-           Nanoseconds between board initialization and JET PRE.
+        Nanoseconds between board initialization and JET PRE.
     
     Examples
     --------
@@ -194,26 +196,28 @@ def get_offset(board, shot_number, timer = False):
         raise Exception('get_offset() failed to retrieve offset value.')
     return offset[0]
     
-def get_temperatures(board, shot_number, timer = False):
+def get_temperatures(board, shot_number, timer=False):
     '''
-    Returns temperatures (deg C) at different locations on the ADQ412 and ADQ14 boards before and after acquisition.
-    For ADQ412 five temperatures are returned, two of which are always 256, these temperature locations on the boards
-    are not available for our cards. For ADQ14 seven temperatures are returned.
-    For information on where the temperatures are measured see the function GetTemperature() in the ADQAPI manual.
+    Returns temperatures (deg C) at different locations on the ADQ412 and ADQ14
+    boards before and after acquisition. For ADQ412 five temperatures are
+    returned, two of which are always 256, these temperature locations on the
+    boards are not available for our cards. For ADQ14 seven temperatures are 
+    returned. For information on where the temperatures are measured see the
+    function GetTemperature() in the ADQAPI manual.
     
     Parameters
     ----------
     board : int or string
-          Board number (between 1-10) for requested temperatures.
+        Board number (between 1-10) for requested temperatures.
     shot_number : int or string
-                JET pulse number
+        JET pulse number
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
          
     Returns
     -------
     T0, T1 : ndarray
-           Array of temperatures on the boards before and after acquisition.
+        Array of temperatures on the boards before and after acquisition.
            
     Examples
     --------
@@ -221,9 +225,11 @@ def get_temperatures(board, shot_number, timer = False):
     (array([ 36.125, 256.   , 256.   ,  68.625,  41.5  ], dtype=float32),
      array([ 36.25 , 256.   , 256.   ,  69.5  ,  41.875], dtype=float32)
     '''
-    if timer: t_start = elapsed_time()
+    if timer: 
+        t_start = elapsed_time()
     
-    if int(board) < 10: board = f'0{int(board)}'
+    if int(board) < 10: 
+        board = f'0{int(board)}'
     
     file_name_1 = f'M11D-B{board}<T0'
     file_name_2 = f'M11D-B{board}<TE'
@@ -237,7 +243,7 @@ def get_temperatures(board, shot_number, timer = False):
     if timer: elapsed_time(t_start, 'get_temperatures()')
     return T0, TE
   
-def get_time_limit(board, shot_number, timer = False):
+def get_time_limit(board, shot_number, timer=False):
     '''
     Returns the acquisition time limit in seconds for a given board and shot
     number.
@@ -245,16 +251,16 @@ def get_time_limit(board, shot_number, timer = False):
     Parameters
     ----------
     board : int or string
-          Board number (between 1-10) for requested trigger level.
+        Board number (between 1-10) for requested trigger level.
     shot_number : int or string
-                JET pulse number.
+        JET pulse number.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
     
     Returns
     -------
     time_limit : int
-               Time limit in seconds.
+        Time limit in seconds.
                   
     Examples
     --------
@@ -275,7 +281,7 @@ def get_time_limit(board, shot_number, timer = False):
     if timer: elapsed_time(t_start, 'get_time_limit()')
     return time_limit
 
-def get_record_length(board, shot_number, timer = False):
+def get_record_length(board, shot_number, timer=False):
     '''
     Returns the record length in number of samples for a given board and shot
     number.
@@ -283,16 +289,16 @@ def get_record_length(board, shot_number, timer = False):
     Parameters
     ----------
     board : int or string
-          Board number (between 1-10) for requested trigger level.
+        Board number (between 1-10) for requested trigger level.
     shot_number : int or string
-                JET pulse number.
+        JET pulse number.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
     
     Returns
     -------
     record_length : int
-                  Record length in number of samples.
+        Record length in number of samples.
                   
     Examples
     --------
@@ -317,7 +323,7 @@ def get_record_length(board, shot_number, timer = False):
     else: return record_length
 
 
-def get_pre_trigger(board, shot_number, timer = False):
+def get_pre_trigger(board, shot_number, timer=False):
     '''
     Returns the number of pre-trigger samples used for the given shot and 
     board.
@@ -325,16 +331,16 @@ def get_pre_trigger(board, shot_number, timer = False):
     Parameters
     ----------
     board : int or string
-          Board number (between 1-10).
+        Board number (between 1-10).
     shot_number : int or string
-                JET pulse number.
+        JET pulse number.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
     
     Returns
     -------
     prt_samples : int
-                Number of pre-trigger samples.
+        Number of pre-trigger samples.
     
     Examples
     --------
@@ -355,23 +361,24 @@ def get_pre_trigger(board, shot_number, timer = False):
     if timer: elapsed_time(t_start, 'get_pre_trigger()')
     return prt_samples
 
-def get_bias_level(board, shot_number, timer = False):
+
+def get_bias_level(board, shot_number, timer=False):
     '''
     Returns the bias level for the given shot, board and channel.
     
     Parameters
     ----------
     board : int or string
-          Board number (between 1-10).
+        Board number (between 1-10).
     shot_number : int or string
-                JET pulse number.
+        JET pulse number.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
     
     Returns
     -------
     blvl : int
-         Bias level in codes
+        Bias level in codes
     
     Examples
     --------
@@ -393,7 +400,8 @@ def get_bias_level(board, shot_number, timer = False):
     if timer: elapsed_time(t_start, 'get_bias_level()')
     return blvl.byteswap()[0]
 
-def get_trigger_level(board, channel, shot_number, timer = False):
+
+def get_trigger_level(board, channel, shot_number, timer=False):
     '''
     Returns the trigger level in codes used for the given shot, board and 
     channel.
@@ -401,18 +409,18 @@ def get_trigger_level(board, channel, shot_number, timer = False):
     Parameters
     ----------
     board : int or string
-          Board number (between 1-10) for requested trigger level.
+        Board number (between 1-10) for requested trigger level.
     channel : string
-            Channel name for requested data (A, B, C or D).
+        Channel name for requested data (A, B, C or D).
     shot_number : int or string
-                JET pulse number.
+        JET pulse number.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
     
     Returns
     -------
     trigger_level : int
-                  Trigger level in codes.
+        Trigger level in codes.
                   
     Examples
     --------
@@ -433,7 +441,7 @@ def get_trigger_level(board, channel, shot_number, timer = False):
     if timer: elapsed_time(t_start, 'get_trigger_level()')
     return trigger_level
 
-def baseline_reduction(pulse_data, timer = False):
+def baseline_reduction(pulse_data, timer=False):
     '''
     Subtracts the baseline average of the first 10 samples from each pulse. 
     Returns the same pulse data array with the base line centred around zero.
@@ -441,16 +449,16 @@ def baseline_reduction(pulse_data, timer = False):
     Parameters
     ----------
     pulse_data : ndarray
-               2D array of pulse waveforms where each row corresponds to one 
-               pulse. Typically 64 samples in each row for ADQ14 (board 1-5) 
-               and 56 samples for ADQ412 (board 6-10).
+        2D array of pulse waveforms where each row corresponds to one pulse.
+        Typically 64 samples in each row for ADQ14 (board 1-5) and 56 samples 
+        for ADQ412 (board 6-10).
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
           
     Returns
     -------
     pulses_baseline : ndarray
-                    Same as pulse_data but with baseline centred around 0.
+        Same as pulse_data but with baseline centred around 0.
                     
     Examples
     --------
@@ -477,7 +485,7 @@ def baseline_reduction(pulse_data, timer = False):
     if timer: elapsed_time(t_start, 'baseline_reduction()')
     return pulses_baseline
 
-def remove_led(time_stamps, timer = False):
+def remove_led(time_stamps, timer=False):
     '''
     Removes chunk of LED data at the end of time stamp train. Assumes that the
     frequency of the LED source is 5 kHz.
@@ -485,16 +493,16 @@ def remove_led(time_stamps, timer = False):
     Parameters
     ----------
     time_stamps : ndarray
-                1D array of time stamps.
+        1D array of time stamps.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
           
     Returns
     -------
     t : ndarray
-      1D array of time stamps without LED chunk.
+        1D array of time stamps without LED chunk.
     led_start : int
-              Index in time_stamps at which LED started.
+        Index in time_stamps at which LED started.
     '''
     
     if timer: t_start = elapsed_time()
@@ -529,28 +537,27 @@ def remove_led(time_stamps, timer = False):
     t = time_stamps[0:led_start - 10]
     return t, led_start - 10
 
-def find_threshold(pulse_data, trig_level, timer = False):
+def find_threshold(pulse_data, trig_level, timer=False):
     '''
-    Finds the point in the pulse which crosses the trigger level 
-    (generally sample 16, 17, 18 or 19 ns for ADQ14). Mainly relevant for ADQ14
-    cards since the number of pre trigger samples varies.
+    Finds the point in the pulse which crosses the trigger level (generally
+    sample 16, 17, 18 or 19 ns for ADQ14). Mainly relevant for ADQ14 cards
+    since the number of pre trigger samples varies.
     
     Parameters
     ----------
     pulse_data : ndarray
-               2D array of pulse waveforms where each row corresponds to one 
-               pulse. Typically 64 samples in each row for ADQ14 (board 1-5) 
-               and 56 samples for ADQ412 (board 6-10).
+        2D array of pulse waveforms where each row corresponds to one pulse.
+        Typically 64 samples in each row for ADQ14 (board 1-5) and 56 samples
+        for ADQ412 (board 6-10).
     trig_level : int
-               Trigger level used during acquisition in codes.
+        Trigger level used during acquisition in codes.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
     
     Returns
     -------
     thr_crossing : ndarray
-                 1D array of indices at which each pulse crosses the given
-                 threshold.
+        1D array of indices at which each pulse crosses the given threshold.
     
     Examples
     --------
@@ -562,12 +569,13 @@ def find_threshold(pulse_data, trig_level, timer = False):
     # Subtract the trigger level from pulse data
     pulse_data = pulse_data - trig_level
 
-    # Find all negative numbers (positive numbers correspond to elements above the threshold)
+    # Find all negative numbers 
+    #(positive numbers correspond to elements above the threshold)
     neg_pulse_data = np.where(pulse_data <= 0)
 
     # Find the index of the first ocurrence of each number in neg_pulse_data
     # Example: neg_pulse_data[0] = [0(this one), 0, 0, 0, 0, 1(this one), 1, 1, 2(this one), 2, 2, 2...]
-    u, indices = np.unique(neg_pulse_data[0], return_index = True)
+    u, indices = np.unique(neg_pulse_data[0], return_index=True)
 
     # Choose the corresponding elements from neg_pulse_data[1]
     thr_crossing = neg_pulse_data[1][indices]
@@ -575,7 +583,7 @@ def find_threshold(pulse_data, trig_level, timer = False):
 
     return thr_crossing
 
-def sinc_interpolation(pulse_data, x_values, ux_values, timer = False):
+def sinc_interpolation(pulse_data, x_values, ux_values, timer=False):
     '''
     Returns since-interpolation of given pulse data set.
     See Matlab example: 
@@ -584,24 +592,24 @@ def sinc_interpolation(pulse_data, x_values, ux_values, timer = False):
     Parameters
     ----------
     pulse_data : ndarray
-               2D array of pulse waveforms where each row corresponds to one 
-               pulse. Typically 64 samples in each row for ADQ14 (board 1-5) 
-               and 56 samples for ADQ412 (board 6-10). NOTE: pulse_data must be
-               baseline reduced (see baseline_reduction() function).
+        2D array of pulse waveforms where each row corresponds to one pulse.
+        Typically 64 samples in each row for ADQ14 (board 1-5) and 56 samples
+        for ADQ412 (board 6-10). NOTE: pulse_data must be baseline reduced (see
+        baseline_reduction() function).
     x_values : ndarray
-             1D array of values corresponding to x_axis of pulse_data. 
-             Length between each point in x_values must be constant.
+        1D array of values corresponding to x_axis of pulse_data. Length
+        between each point in x_values must be constant.
     ux_values: ndarray 
-             1D array similar to x_values but upsampled. Length between each
-             point in ux_values must be constant.
+        1D array similar to x_values but upsampled. Length between each point
+        in ux_values must be constant.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
           
     Returns
     -------
     u_pulse_data : ndarray
-                 2D array of sinc-interpolated pulse waveforms where each row
-                 corresponds to one pulse.
+        2D array of sinc-interpolated pulse waveforms where each row
+        corresponds to one pulse.
         
     Examples
     --------
@@ -648,7 +656,7 @@ def sinc_interpolation(pulse_data, x_values, ux_values, timer = False):
     if timer: elapsed_time(t_start, 'sinc_interpolation()')
     return u_pulse_data
     
-def time_pickoff_CFD(pulse_data, fraction = 0.3, timer = False):
+def time_pickoff_CFD(pulse_data, fraction=0.3, timer=False):
     '''
     Returns the times of arrival for a 2D array of pulses using a constant
     fraction and a linear interpolation method.
@@ -656,19 +664,19 @@ def time_pickoff_CFD(pulse_data, fraction = 0.3, timer = False):
     Parameters
     ----------
     pulse_data : ndarray,
-               2D array of pulse waveforms where each row corresponds to one 
-               pulse. Typically 64 samples in each row for ADQ14 (board 1-5) 
-               and 56 samples for ADQ412 (board 6-10). NOTE: pulse_data must be
-               baseline reduced (see baseline_reduction function).
+        2D array of pulse waveforms where each row corresponds to one pulse.
+        Typically 64 samples in each row for ADQ14 (board 1-5) and 56 samples
+        for ADQ412 (board 6-10). NOTE: pulse_data must be baseline reduced (see
+        baseline_reduction function).
     fraction : float
-             Fraction at which to perform the linear interpolation
+        Fraction at which to perform the linear interpolation.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
           
     Returns
     -------
     new_time : ndarray
-             1D array of times-of-arrival for each pulse.
+        1D array of times-of-arrival for each pulse.
 
     Examples
     --------
@@ -695,15 +703,11 @@ def time_pickoff_CFD(pulse_data, fraction = 0.3, timer = False):
         # Find the minima and a fraction of the minima
         minima = np.min(pulse_data, axis = 1)
         minima_fraction = minima * fraction
-        # Find position of minimum
-    #    minima_pos = np.argmin(pulse_data, axis = 1)
-    #    print('Warning: ' + str(len(minima_pos[minima_pos < 100])) + ' pulses have minimum before 10 ns.')
-        
     
         # Find the index of the point closest to the fraction of the minimum
         # Look only in the first 25 ns (leading edge) of the pulse
-        x_closest = find_points(pulse_data[:, 0:250], minima_fraction, timer = timer)
-    
+        x_closest = find_points(pulse_data[:, 0:250], minima_fraction, 
+                                timer=timer)
     
         # Set up for simple linear regression
         reg_x = np.zeros([len(x_closest), 3])
@@ -721,17 +725,19 @@ def time_pickoff_CFD(pulse_data, fraction = 0.3, timer = False):
         
         # Perform simple linear regression
         slopes, intercepts = linear_regression(reg_x, reg_y, timer = timer)
+        
         # Solve the y = kx + m equation for x. y = minima_fraction
         new_time[new_time_counter:len(pulse_data)+new_time_counter] = (minima_fraction - intercepts) / slopes
         new_time_counter += len(pulse_data)
         
 
-    if timer: elapsed_time(t_start, 'time_pickoff_CFD()')
+    if timer: 
+        elapsed_time(t_start, 'time_pickoff_CFD()')
     return new_time
 
 
  
-def linear_regression(x_data, y_data, timer = False):
+def linear_regression(x_data, y_data, timer=False):
     '''
     Returns the slope (A) and intersection (B) for a simple linear regression 
     on x and y data on the for y = Ax+B.
@@ -739,20 +745,20 @@ def linear_regression(x_data, y_data, timer = False):
     Parameters
     ----------
     x_data : ndarray,
-            2D array of x-data        
+        2D array of x-data        
     y_data : ndarray,
-            2D array of y-data
+        2D array of y-data
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
           
     Returns
     -------
     slope : ndarray,
-          1D array of slopes (A) of the linear regression on the form y = Ax+B
-          for each row of x_data and y_data
+        1D array of slopes (A) of the linear regression on the form y = Ax+B
+        for each row of x_data and y_data.
     intercept : ndarray,
-          1D array of intercepts (B) of the linear regression on the form 
-          y = Ax+B for each row of x_data and y_data
+        1D array of intercepts (B) of the linear regression on the form
+        y = Ax+B for each row of x_data and y_data.
     
     Examples
     --------
@@ -784,26 +790,26 @@ def linear_regression(x_data, y_data, timer = False):
     return slope, intercept
 
 
-def find_points(pulse_data, value, timer = False):
+def find_points(pulse_data, value, timer=False):
     '''
     Returns the indicies of the points closest to "value" in pulse_data.
     
     Parameters
     ----------
     pulse_data : ndarray,
-               2D array of pulse height data where each row corresponds to one 
-               record. NOTE: pulse_data must be baseline reduced (see 
-               baseline_reduction() function).
+        2D array of pulse height data where each row corresponds to one record.
+        NOTE: pulse_data must be baseline reduced (see baseline_reduction() 
+        function).
     value : ndarray,
-            1D array of values
+        1D array of values.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
           
     Returns
     -------
     index : ndarray,
-          1D array of indices from pulse_data corresponding to the position
-          in each row with value closest to "value".
+        1D array of indices from pulse_data corresponding to the position in
+        each row with value closest to "value".
     
     Examples
     --------
@@ -825,7 +831,8 @@ def find_points(pulse_data, value, timer = False):
     if timer: elapsed_time(t_start, 'find_points()')
     return index   
     
-def sTOF4(S1_times, S2_times, t_back, t_forward, return_indices = False, timer = False):
+def sTOF4(S1_times, S2_times, t_back, t_forward, 
+          return_indices=False, timer=False):
     '''
     Returns the time differences between S1_times and S2_times given a search
     window. We loop over the time stamps in S2, for each S2 time stamp we 
@@ -835,31 +842,29 @@ def sTOF4(S1_times, S2_times, t_back, t_forward, return_indices = False, timer =
     Parameters
     ----------
     S1_times : ndarray
-             1D array of time stamps for one S1, typically given in ns.
+        1D array of time stamps for one S1, typically given in ns.
     S2_times : ndarray
-             1D array of time stamps for one S2, typically given in ns.
+        1D array of time stamps for one S2, typically given in ns.
     t_back : int or float
-           Time to look backwards in time from any given S2 time stamp. 
-           Constitutes together with t_forward, the time window in which we 
-           search for S1 events.
+        Time to look backwards in time from any given S2 time stamp. 
+        Constitutes together with t_forward, the time window in which we search
+        for S1 events.
     t_forward : int or float
-              Time to look forwards in time from any given S2 time stamp. 
-              Constitutes together with t_back, the time window in which we 
-              search for S1 events.
+        Time to look forwards in time from any given S2 time stamp. Constitutes
+        together with t_back, the time window in which we search for S1 events.
     return_indices : bool, optional
-                   If set to true, returns S1 and S2 indices for each found
-                   coincidence.
+        If set to true, returns S1 and S2 indices for each found coincidence.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
                  
     Returns
     -------
     delta_t : ndarray
-            1D array of time differences between S1 and S2 time stamps (i.e. 
-            times-of-flight).
+        1D array of time differences between S1 and S2 time stamps (i.e.
+        times-of-flight).
     indices : ndarray
-            2D array of indices for each coincidence. First column
-            corresponds to S1, second column to S2.
+        2D array of indices for each coincidence. First column corresponds to
+        S1, second column to S2.
             
     Examples
     --------
@@ -884,9 +889,9 @@ def sTOF4(S1_times, S2_times, t_back, t_forward, return_indices = False, timer =
     for i in range(0, len(S2_times)):
         lowest_index = lowest_indices[i]
         search_sorted = 0
-        # Find the time stamp in S1 closest to wLow (rounded up, i.e. just inside the window)
+        # Find the time stamp in S1 closest to wLow 
+        # (rounded up, i.e. just inside the window)
         while True:
-
             # Increase to next event
             low_index = lowest_index + search_sorted
             
@@ -907,9 +912,11 @@ def sTOF4(S1_times, S2_times, t_back, t_forward, return_indices = False, timer =
             if low_index == len(S1_times):
                 break
             
-            # If the time stamp in S1 is beyond the window we go to next S2 time (there are no more time stamps within this window)
+            # If the time stamp in S1 is beyond the window go to next S2 time 
+            # (there are no more time stamps within this window)
             if S1_times[low_index] >= w_high[i]: break
-            # If the time stamp in S1 is before the window check the next time stamp (should never happen currently)
+            # If time stamp in S1 is before the window, check next time stamp 
+            # (should never happen currently)
             if S1_times[low_index] <= w_low[i]: 
                 search_sorted += 1
                 continue
@@ -953,7 +960,7 @@ def sTOF4(S1_times, S2_times, t_back, t_forward, return_indices = False, timer =
     else: return delta_t
     
 
-def get_detector_name(board, channel, timer = False):
+def get_detector_name(board, channel, timer=False):
     '''
     Returns the detector name corresponding to the given board and channel.
     The order of the S2's on the ADQ412's are back to front
@@ -961,17 +968,17 @@ def get_detector_name(board, channel, timer = False):
     Parameters
     ----------
     board : string or int,
-          String or integer corresponding to the board number (1-10)
+        String or integer corresponding to the board number (1-10)
     channel: string,
-           String containing the channel number ('A', 'B', 'C', or 'D')
+        String containing the channel number ('A', 'B', 'C', or 'D')
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
                  
     Returns
     -------
     detector_name : string,
-                  String containing the detector name corresponding to the
-                  input board and channel.
+        String containing the detector name corresponding to the input board
+        and channel.
             
     Examples
     --------
@@ -995,7 +1002,7 @@ def get_detector_name(board, channel, timer = False):
     if timer: elapsed_time(t_start, 'get_detector_name()')    
     return detector_name
 
-def get_board_name(detector_name, timer = False):
+def get_board_name(detector_name, timer=False):
     '''
     Returns the board and channel for a corresponding detector name. The order 
     of the S2's on the ADQ412's are back to front.
@@ -1003,19 +1010,18 @@ def get_board_name(detector_name, timer = False):
     Parameters
     ----------
     detector_name : string,
-          String containing the detector name ('S1_01',...,'S1_05' or 
-          'S2_01', ..., 'S2_32')
+        String containing the detector name ('S1_01',...,'S1_05' or
+        'S2_01', ..., 'S2_32')
     timer : bool, optional
           If set to True, prints the time to execute the function.
                  
     Returns
     -------
     board : string,
-          String containing the board number corresponding to the input 
-          detector name.
+        String containing the board number corresponding to the input detector
+        name.
     channel : string,
-            String containing the channel corresponding to the input detector
-            name.
+        String containing the channel corresponding to the input detector name.
             
     Examples
     --------
@@ -1050,7 +1056,7 @@ def get_board_name(detector_name, timer = False):
     if timer: elapsed_time(t_start, 'get_board_name()')    
     return board, channel
 
-def get_shifts(shift_file, timer = False):
+def get_shifts(shift_file, timer=False):
     '''
     Returns the shifts (written in shift_file) required to line up all S1-S2 
     combinations and shift the gamma peak 3.7 ns. Method is outlined in
@@ -1062,16 +1068,16 @@ def get_shifts(shift_file, timer = False):
     Parameters
     ----------
     shift_file : string,
-               The path to the shift file.
+        The path to the shift file.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
                  
     Returns
     -------
     shifts : dict,
-           Dictionary with keys 
-           dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05'])
-           Each contains 32 shifts (ns) corresponding to the S1 vs. S2 shifts.
+        Dictionary with keys: 
+        dict_keys(['S1_01', 'S1_02', 'S1_03', 'S1_04', 'S1_05']).
+        Each contains 32 shifts (ns) corresponding to the S1 vs. S2 shifts.
             
     Examples
     --------
@@ -1116,24 +1122,24 @@ def get_shifts(shift_file, timer = False):
     if timer: elapsed_time(t_start, 'get_shifts()')
     return shifts
 
-def get_pulse_area(pulses, u_factor, timer = False):
+def get_pulse_area(pulses, u_factor, timer=False):
     '''
     Returns the areas under the pulses.
 
     Parameters
     ----------
     pulses : ndarray,
-            2D array of pulse waveforms-
+        2D array of pulse waveforms-
     u_factor : int,
-             Up-sampling factor, must be set equal to the up-sampling performed
-             by the sinc-interpolation.
+        Up-sampling factor, must be set equal to the up-sampling performed by
+        the sinc-interpolation.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
                  
     Returns
     -------
     pulse_area : ndarray,
-               1D darray of pulse areas.
+        1D darray of pulse areas.
             
     Examples
     --------
@@ -1176,17 +1182,17 @@ def find_time_range(shot_number, n_yield=False, timer=False):
     Parameters
     ----------
     shot_number : int,
-                Jet puse number.
+        Jet puse number.
     n_yield : bool, optional
-            If set to True, returns the total neutron yield in the given time 
-            range.
+        If set to True, returns the total neutron yield in the given time
+        range.
     timer : bool, optional
-          If set to True, prints the time to execute the function.                 
+        If set to True, prints the time to execute the function.                 
     
     Returns
     -------
     energy_array : ndarray,
-                 1D array of deposited energies in MeVee.
+        1D array of deposited energies in MeVee.
             
     Examples
     --------
@@ -1226,24 +1232,25 @@ def find_time_range(shot_number, n_yield=False, timer=False):
     if n_yield: return time_slice, neutrons
     return time_slice
 
-def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 0], [0, 0]]), timer = False):
+def cleanup(pulses, dx, detector_name, bias_level, 
+            baseline_cut=np.array([[0, 0], [0, 0]]), timer=False):
     '''
     Takes an array of baseline reduced pulses and removes junk pulses.
     
     Parameters
     ----------
     pulses : ndarray,
-           2D array of pulse waveforms where each row corresponds to one 
-           waveform. Must be baseline reduced [see baseline_reduction()].
+        2D array of pulse waveforms where each row corresponds to one waveform.
+        Must be baseline reduced [see baseline_reduction()].
     dx : float,
-       Distance between each point on the x-axis. Typically 1 ns.
+        Distance between each point on the x-axis. Typically 1 ns.
     bias_level : int,
-               Digitizer bias level used for the shot.
+        Digitizer bias level used for the shot.
     baseline_cut : ndarray,
-                 Baselines which fluctuate more than the thresholds given in 
-                 baseline_cut (in codes) are removed.
+        Baselines which fluctuate more than the thresholds given in
+        baseline_cut (in codes) are removed.
     timer : bool, optional
-          If set to True, prints the time to execute the function.                 
+        If set to True, prints the time to execute the function.                 
                     
     Returns
     -------
@@ -1275,8 +1282,10 @@ def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 
     indices = np.where(area > 0)[0]
 
     # Remove anything with points on the baseline far from requested baseline 
-    if bias_level not in [27000, 30000, 1600]: print('WARNING: The function cleanup() bases it\'s cuts on a bias level of 27k or 30k for ADQ14 and 1.6k codes for ADQ412. This shot has a bias level of ' + str(bias_level) + ' codes.')
-    if np.abs(np.mean(pulses[0, 0:10])) > 10: print('WARNING: The function cleanup() requires pulses with a baseline centred around 0.')
+    if bias_level not in [27000, 30000, 1600]: 
+        print('WARNING: The function cleanup() bases it\'s cuts on a bias level of 27k or 30k for ADQ14 and 1.6k codes for ADQ412. This shot has a bias level of ' + str(bias_level) + ' codes.')
+    if np.abs(np.mean(pulses[0, 0:10])) > 10: 
+        print('WARNING: The function cleanup() requires pulses with a baseline centred around 0.')
     
     '''
     Left hand side baseline
@@ -1330,7 +1339,8 @@ def cleanup(pulses, dx, detector_name, bias_level, baseline_cut = np.array([[0, 
     if timer: elapsed_time(t_start, 'cleanup()')
     return new_pulses, bad_indices
 
-def inverted_light_yield(light_yield, function = 'gatu', check = True, timer = False):
+def inverted_light_yield(light_yield, function='gatu', 
+                         check=True, timer=False):
     '''
     Takes an array of light yields (MeVee) and converts to proton recoil energy
     (MeV) using the look-up table of the inverted light yield function 
@@ -1339,19 +1349,19 @@ def inverted_light_yield(light_yield, function = 'gatu', check = True, timer = F
     Parameters
     ----------
     light_yield : ndarray,
-                1D array of light yields given in MeVee.
+        1D array of light yields given in MeVee.
     function : str, optional
-             Set to "gatu" to use the light yield function from M. Gatu Johnson,
-             set to "stevenato" to use light yield function from Stevanato, L., 
-             et al. "Light output of EJ228 scintillation neutron detectors." 
-             Applied Radiation and Isotopes 69.2 (2011): 369-372.
+        Set to "gatu" to use the light yield function from M. Gatu Johnson, set
+        to "stevenato" to use light yield function from Stevanato, L., et al. 
+        "Light output of EJ228 scintillation neutron detectors." Applied
+        Radiation and Isotopes 69.2 (2011): 369-372.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
                  
     Returns
     -------
     proton_recoil : ndarray,
-                  Array of proton recoil energies (MeV).
+        Array of proton recoil energies (MeV).
             
     Examples
     --------
@@ -1361,12 +1371,11 @@ def inverted_light_yield(light_yield, function = 'gatu', check = True, timer = F
     '''
     
     if timer: t_start = elapsed_time()
-    # Cast into numpy array
-#    light_yield = np.array([light_yield])
     
     # Import look-up table
     dirname = os.path.dirname(__file__)
-    filename = os.path.join(dirname, f'../inverted_light_yield/look_up_{function}.txt')
+    filename = os.path.join(dirname, 
+                            f'../inverted_light_yield/look_up_{function}.txt')
     table = np.loadtxt(filename)
     
     # Check if the look-up table matches the light yield function
@@ -1390,7 +1399,7 @@ def inverted_light_yield(light_yield, function = 'gatu', check = True, timer = F
     if timer: elapsed_time(t_start, 'inverted_light_yield()')
     return proton_recoil
     
-def light_yield_function(proton_energy, function = 'gatu', s = 1, timer = False):
+def light_yield_function(proton_energy, function='gatu', s=1, timer=False):
     '''
     Takes an array of proton recoil energies (MeV) and converts to light yield
     (MeVee) using the light yield function specified in "function".
@@ -1398,22 +1407,22 @@ def light_yield_function(proton_energy, function = 'gatu', s = 1, timer = False)
     Parameters
     ----------
     proton_energy : ndarray,
-                  1D array of proton recoil energies given in MeV.
+        1D array of proton recoil energies given in MeV.
     function : str, optional
-             Set to "gatu" to use the light yield function from M. Gatu Johnson,
-             set to "stevanato" to use light yield function from Stevanato, L., 
-             et al. "Light output of EJ228 scintillation neutron detectors." 
-             Applied Radiation and Isotopes 69.2 (2011): 369-372.
+        Set to "gatu" to use the light yield function from M. Gatu Johnson, set
+        to "stevanato" to use light yield function from Stevanato, L., et al.
+        "Light output of EJ228 scintillation neutron detectors." Applied
+        Radiation and Isotopes 69.2 (2011): 369-372.
     s : float,
-      Arbitrary scaling factor, default set to s=0.73, to ensure that the light
-      yield function matches the measured spectrum.
+        Arbitrary scaling factor, default set to s=0.73, to ensure that the
+        light yield function matches the measured spectrum.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
                  
     Returns
     -------
     light_yield : ndarray,
-                  Array of light yields (MeVee).
+        Array of light yields (MeVee).
             
     Examples
     --------
@@ -1485,7 +1494,7 @@ def light_yield_function(proton_energy, function = 'gatu', s = 1, timer = False)
     return s*light_yield
 
 
-def get_kincut_function(tof, cut_factors=(1., 1., 1.), timer = False):
+def get_kincut_function(tof, cut_factors=(1., 1., 1.), timer=False):
     '''
     Takes an array of times of flight [ns] and returns the corresponding 
     maximal/minimal light yield for each flight time (MeVee). The calculation
@@ -1566,7 +1575,9 @@ def get_kincut_function(tof, cut_factors=(1., 1., 1.), timer = False):
     if timer: elapsed_time(t_start, 'get_kincut_function()')
     return ly_S1_min, ly_S1_max, ly_S2_max
 
-def kinematic_cuts(tof, energy_S1, energy_S2, cut_factors=(1., 1., 1.), timer = False):
+
+def kinematic_cuts(tof, energy_S1, energy_S2, 
+                   cut_factors=(1., 1., 1.), timer=False):
     '''
     Performs kinematic cuts on the times of flight vs. energy for S1's and 
     S2's.
@@ -1576,27 +1587,27 @@ def kinematic_cuts(tof, energy_S1, energy_S2, cut_factors=(1., 1., 1.), timer = 
     tof : ndarray,
         1D array of times-of-flight (ns)
     energy_S1 : ndarray, 
-              1D array of S1 energies (MeVee)
+        1D array of S1 energies (MeVee)
     energy_S2 : ndarray, 
-              1D array of S2 energies (MeVee)
+        1D array of S2 energies (MeVee)
     cut_factors : tuple of floats, optional
-                Tuple of three factors (a, b, c) to apply to kinematic cuts. 
-                Factors a and b are applied to lower and upper S1 kinematic
-                cut, factor c is applied to upper S2 kinematic cut.
+        Tuple of three factors (a, b, c) to apply to kinematic cuts. Factors a 
+        and b are applied to lower and upper S1 kinematic cut, factor c is
+        applied to upper S2 kinematic cut.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
                  
     Returns
     -------
     tof_cut : ndarray,       
-            1D array of times of flight (ns) with kinematic cuts applied,
-            len(tof_cut)<=len(tof).
+        1D array of times of flight (ns) with kinematic cuts applied, 
+        len(tof_cut)<=len(tof).
     energy_S1_cut : ndarray,
-                  1D array of energies (MeVee) for S1 with kinematic cuts 
-                  applied, len(energy_S1_cut)<=len(energy_S1).
+        1D array of energies (MeVee) for S1 with kinematic cuts applied, 
+        len(energy_S1_cut)<=len(energy_S1).
     energy_S2_cut : ndarray,
-                  1D array of energies (MeVee) for S2 with kinematic cuts 
-                  applied, len(energy_S2_cut)<=len(energy_S2).
+        1D array of energies (MeVee) for S2 with kinematic cuts applied,
+        len(energy_S2_cut)<=len(energy_S2).
             
     Examples
     --------
@@ -1619,7 +1630,9 @@ def kinematic_cuts(tof, energy_S1, energy_S2, cut_factors=(1., 1., 1.), timer = 
     S1_min, S1_max, S2_max = get_kincut_function(tof, cut_factors)
 
     # Compare measured energies with maximum/minimum energies for the given time of flight
-    accept_inds = np.where((energy_S1 > S1_min) & (energy_S1 < S1_max) & (energy_S2 < S2_max))[0]
+    accept_inds = np.where((energy_S1 > S1_min) & 
+                           (energy_S1 < S1_max) & 
+                           (energy_S2 < S2_max))[0]
 
     if timer: elapsed_time(t_start, 'kinematic_cuts()')
     return tof[accept_inds], energy_S1[accept_inds], energy_S2[accept_inds]                 
@@ -1632,10 +1645,11 @@ def get_dictionaries(S = 0, fill = []):
     Parameters
     ----------
     S : str, optional
-      String indicating which type of dictionary to return. Available options:
+        String indicating which type of dictionary to return. See notes for
+        available options
           
     fill : ndarray, optional,
-         Sets the values of the dictionary to whatever is passed in "fill".
+        Sets the values of the dictionary to whatever is passed in "fill".
          
     Notes
     -----
@@ -1705,41 +1719,49 @@ def get_dictionaries(S = 0, fill = []):
         
     return S1_dictionary, S2_dictionary
 
+
 def get_boards():
     '''
     Returns an array of board names.
     '''
-    return np.array(['01', '02', '03', '04', '05', '06', '07', '08', '09', '10'])
+    boards = np.array(['01', '02', '03', '04', '05', 
+                       '06', '07', '08', '09', '10'])
+    
+    return boards
+
 
 def get_channels():
     '''
     Returns an array of channel names.
     '''
-    return np.array(['A', 'B', 'C', 'D'])
+    channels = np.array(['A', 'B', 'C', 'D'])
+    
+    return channels
 
-def find_ohmic_phase(shot_number, timer = False):
+
+def find_ohmic_phase(shot_number, timer=False):
     '''
-    Returns the JET time (s) at which the Ohmic phase is over for given shot number.
+    Returns the JET time (s) at which the Ohmic phase is over for given shot
+    number.
 
     Parameters
     ----------
     shot_number : int or string
-                JET pulse number.
+        JET pulse number.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
                  
     Returns
     -------
     t_end : float,       
-          JET time at which the Ohmic phase stops, i.e. the time at which any
-          heating but Ohmic heatings is applied.
+        JET time at which the Ohmic phase stops, i.e. the time at which any
+        heating but Ohmic heatings is applied.
             
     Examples
     --------
     >>> find_ohmic_phase(98044)
     47.008
     '''
-
     if timer: t_start = elapsed_time()
     
     # Import NBI info
@@ -1763,27 +1785,35 @@ def find_ohmic_phase(shot_number, timer = False):
         len(lhcd_pow[lhcd_pow > 0]) == 0): return 70.
     
     # Find where ICRH starts
-    if len(icrh_pow[icrh_pow > 0]) > 0: icrh_start = icrh_tim[np.where(icrh_pow != 0)[0][0]]
-    else: icrh_start = np.inf
+    if len(icrh_pow[icrh_pow > 0]) > 0: 
+        icrh_start = icrh_tim[np.where(icrh_pow != 0)[0][0]]
+    else: 
+        icrh_start = np.inf
     
     # Find where NBI starts
-    if len(nbi_pow[nbi_pow > 0]) > 0: nbi_start = nbi_tim[np.where(nbi_pow != 0)[0][0]]
-    else: nbi_start = np.inf
+    if len(nbi_pow[nbi_pow > 0]) > 0: 
+        nbi_start = nbi_tim[np.where(nbi_pow != 0)[0][0]]
+    else: 
+        nbi_start = np.inf
     
     # Find where LHCD starts
-    if len(lhcd_pow[lhcd_pow > 0]) > 0: lhcd_start = lhcd_tim[np.where(lhcd_pow !=0)[0][0]]
-    else: lhcd_start = np.inf
+    if len(lhcd_pow[lhcd_pow > 0]) > 0: 
+        lhcd_start = lhcd_tim[np.where(lhcd_pow !=0)[0][0]]
+    else: 
+        lhcd_start = np.inf
 
     first = np.argsort(np.array([nbi_start, icrh_start, lhcd_start]))[0]
 
     # Find which heating system started first
-    if first == 0: t_end = nbi_start
-    elif first == 1: t_end = icrh_start
-    elif first == 2: t_end = lhcd_start
+    if first == 0: 
+        t_end = nbi_start
+    elif first == 1: 
+        t_end = icrh_start
+    elif first == 2: 
+        t_end = lhcd_start
     
     if timer: elapsed_time(t_start, 'find_ohmic_phase()')
     return t_end
-
 
 
 def elapsed_time(time_start = 0., timed_function = '', return_time = False):
@@ -1793,17 +1823,17 @@ def elapsed_time(time_start = 0., timed_function = '', return_time = False):
     Parameters
     ----------
     time_start : float, optional
-               Starting time, used to calculate the elapsed time
+        Starting time, used to calculate the elapsed time
     timed_function : str, optional
-                   String used in print statement, typically set to the 
-                   function being timed.
+        String used in print statement, typically set to the function being
+        timed.
     return_time : bool, optional
-                Returns the elapsed time
+        Returns the elapsed time.
                                  
     Returns
     -------
     return_time : float,       
-                Elapsed time (s)
+        Elapsed time (s).
             
     Examples
     --------
@@ -1813,13 +1843,18 @@ def elapsed_time(time_start = 0., timed_function = '', return_time = False):
     Elapsed time for example function: 1.00 sec.
     '''
     
-    if not time_start: return time.time()
-    else: print('Elapsed time for ' + timed_function + ': ' + '%.2f' %(time.time() - time_start) + ' sec.' )    
-    if return_time: return time.time() - time_start
+    if not time_start: 
+        return time.time()
+    else: 
+        print('Elapsed time for ' + timed_function + ': ' + '%.2f' %(time.time() - time_start) + ' sec.' )
+    
+    if return_time: 
+        return time.time() - time_start
+
 
 def background_subtraction(coincidences, tof_bins, energies_S1, S1_info, 
                            energies_S2, S2_info, disable_cuts, 
-                           cut_factors=(1., 1., 1.), timer = False):
+                           cut_factors=(1., 1., 1.), timer=False):
     '''
     Performs background subtraction of TOF spectrum using negative flight 
     times.
@@ -1827,40 +1862,40 @@ def background_subtraction(coincidences, tof_bins, energies_S1, S1_info,
     Parameters
     ----------
     coincidences : ndarray,
-                 1D array of times-of-flight (ns).
+        1D array of times-of-flight (ns).
     tof_bins : ndarray,
-             Bins used for TOF spectrum.
+        Bins used for TOF spectrum.
     energies_S1 : ndarray,
-                1D array of energies (MeVee) for S1.
+        1D array of energies (MeVee) for S1.
     S1_info : dict,
-            Contains S1 information on energy bins, limits, etc.
+        Contains S1 information on energy bins, limits, etc.
     energies_S2 : ndarray,
-                1D array of energies (MeVee) for S2.
+        1D array of energies (MeVee) for S2.
     S2_info : dict,
-            Contains S2 information on energy bins, limits, etc.
+        Contains S2 information on energy bins, limits, etc.
     disable_cuts : boolean,
-                 If set to True, calculates the background as the average value
-                 between TOF -100 to -50 ns. If set to False, takes kinematic
-                 cuts into consideration.
+        If set to True, calculates the background as the average value 
+        between TOF -100 to -50 ns. If set to False, takes kinematic cuts into
+        consideration.
     cut_factors : tuple of floats, optional
-                Tuple of three factors (a, b, c) to apply to kinematic cuts. 
-                Factors a and b are applied to lower and upper S1 kinematic
-                cuts, factor c is applied to upper S2 kinematic cut.
+        Tuple of three factors (a, b, c) to apply to kinematic cuts. Factors a
+        and b are applied to lower and upper S1 kinematic cuts, factor c is
+        applied to upper S2 kinematic cut.
     timer : bool, optional
-          If set to True, prints the time to execute the function.
+        If set to True, prints the time to execute the function.
                                  
     Returns
     -------
     tof_bg : ndarray,
-           1D array, background TOF component. Component is flipped to positive
-           flight times. The entire component is returned (i.e. negative and 
-           positive part) for the given input bins.
+        1D array, background TOF component. Component is flipped to positive
+        flight times. The entire component is returned (i.e. negative and 
+        positive part) for the given input bins.
     '''
-    
     if timer: t_start = elapsed_time()
     
     # Without kinematic cuts use average background between -100 ns and -50 ns
-    tof_hist, _ = np.histogram(coincidences[(coincidences < -50) & (coincidences > -100)], tof_bins[(tof_bins < -50) & (tof_bins > -100)])
+    tof_hist, _ = np.histogram(coincidences[(coincidences < -50) & (coincidences > -100)], 
+                                            tof_bins[(tof_bins < -50) & (tof_bins > -100)])
     mean_bg = np.mean(tof_hist)
     
     if disable_cuts: 
@@ -1873,24 +1908,20 @@ def background_subtraction(coincidences, tof_bins, energies_S1, S1_info,
         tof_bins_n = tof_bins[tof_bins<0]
         
         # Calculate bin centres
-        tof_bin_centres = tof_bins_n[1:]-np.diff(tof_bins_n)[0]/2
+        tof_bin_centres = tof_bins_n[1:] - np.diff(tof_bins_n)[0]/2
         S1_energy_bins = S1_info['energy bins']
         S1_energy_bin_width = np.diff(S1_energy_bins)[0]
-        S1_energy_bin_centres = S1_energy_bins[1:]-S1_energy_bin_width/2
         
         S2_energy_bins = S2_info['energy bins']
         S2_energy_bin_width = np.diff(S2_energy_bins)[0]
-        S2_energy_bin_centres = S2_energy_bins[1:]-S2_energy_bin_width/2
         
         # Histogram everything, only include tof < -20 ns (avoid muon peak)
-        S1_hist, _, _ = np.histogram2d(coincidences, 
-                                       energies_S1, 
-                                       bins = [tof_bins_n[tof_bins_n<-20], 
-                                               S1_info['energy bins']])
-        S2_hist, _, _ = np.histogram2d(coincidences, 
-                                       energies_S2, 
-                                       bins = [tof_bins_n[tof_bins_n<-20], 
-                                               S2_info['energy bins']])
+        S1_hist, _, _ = np.histogram2d(coincidences, energies_S1, 
+                                       bins=[tof_bins_n[tof_bins_n<-20], 
+                                             S1_info['energy bins']])
+        S2_hist, _, _ = np.histogram2d(coincidences, energies_S2, 
+                                       bins=[tof_bins_n[tof_bins_n<-20], 
+                                             S2_info['energy bins']])
         
         # Average along the x-axis
         S1_average = np.mean(S1_hist, axis = 0)
@@ -1898,7 +1929,6 @@ def background_subtraction(coincidences, tof_bins, energies_S1, S1_info,
 
         S1_smooth = np.transpose(np.tile(S1_average, (len(tof_bin_centres), 1)))
         S2_smooth = np.transpose(np.tile(S2_average, (len(tof_bin_centres), 1)))
-        
         
         # Get kinematic cuts for given TOF bin edges
         S1_min, S1_max, S2_max = get_kincut_function(tof_bin_centres, cut_factors)
@@ -1918,8 +1948,10 @@ def background_subtraction(coincidences, tof_bins, energies_S1, S1_info,
             high = np.searchsorted(S1_energy_bins, e_max) # upper cut
             
             # If we hit our maximum energy binning use max bin for projection
-            if e_max >= S1_energy_bins[-1]: high -= 1
-            if e_min >= S1_energy_bins[-1]: low -= 1
+            if e_max >= S1_energy_bins[-1]: 
+                high -= 1
+            if e_min >= S1_energy_bins[-1]: 
+                low -= 1
             lower = (low-1, low)   # (lower bin edge, upper bin edge) for lower cut
             upper = (high-1, high) # (lower bin edge, upper bin edge) for upper cut
             
@@ -1927,13 +1959,13 @@ def background_subtraction(coincidences, tof_bins, energies_S1, S1_info,
             # If cuts are within a single bin
             if lower == upper:
                 # Caclulate fraction of the bin to be added to projection
-                fraction = (e_max-e_min)/S1_energy_bin_width
-                to_project = fraction*col[low-1]
+                fraction = (e_max-e_min) / S1_energy_bin_width
+                to_project = fraction * col[low-1]
             # If cuts are at different bins
             else:
                 # Calculate fraction of bins to be added
-                fraction_low  = (S1_energy_bins[lower[1]]-e_min)/S1_energy_bin_width
-                fraction_high = (e_max-S1_energy_bins[upper[0]])/S1_energy_bin_width
+                fraction_low  = (S1_energy_bins[lower[1]] - e_min) / S1_energy_bin_width
+                fraction_high = (e_max-S1_energy_bins[upper[0]]) / S1_energy_bin_width
                 to_project = fraction_low*col[low-1] + fraction_high*col[high-1]
             
             # Also add the bins which do not require fractions calculated
@@ -1952,12 +1984,13 @@ def background_subtraction(coincidences, tof_bins, energies_S1, S1_info,
             high = np.searchsorted(S2_energy_bins, e_max) # upper cut
             
             # If we hit our maximum energy binning use max bin for projection
-            if e_max >= S1_energy_bins[-1]: high -= 1
+            if e_max >= S1_energy_bins[-1]: 
+                high -= 1
             upper = (high-1, high) # (lower bin edge, upper bin edge) for upper cut
             
-            # Caclulate fraction of the bin to be added to projection
-            fraction = (e_max-S2_energy_bins[upper[0]])/S2_energy_bin_width
-            to_project = fraction*col[high-1]
+            # Calculate fraction of the bin to be added to projection
+            fraction = (e_max-S2_energy_bins[upper[0]]) / S2_energy_bin_width
+            to_project = fraction * col[high-1]
             
             # Also add the bins which do not require fractions calculated
             to_project += col[:upper[0]].sum()
@@ -1970,8 +2003,66 @@ def background_subtraction(coincidences, tof_bins, energies_S1, S1_info,
         tof_bg[len(sx_projection)+1:] = np.flip(sx_projection)
     if timer: elapsed_time(t_start, 'background_subtraction()')
     
-
     return tof_bg
+
+
+def get_energy_calibration(areas, detector_name, 
+                           energy_calibration, timer=False):
+    '''
+    Return the deposited energy (MeVee) in the given detector using the energy
+    calibration given in the energy calibration folder. 
+    
+    Notes
+    -----
+    Integration limits (10-30 ns) are used when calculating the pulse waveform 
+    areas.
+    
+    Parameters
+    ----------
+    areas : ndarray,
+        1D array of pulse areas. 
+    detector_name : string,
+        Detector name corresponding to the pulse areas being parsed.
+    timer : bool, optional
+        If set to True, prints the time to execute the function.                 
+                    
+    Returns
+    -------
+    energy_array : ndarray,
+        1D array of deposited energies in MeVee.
+            
+    Examples
+    --------
+    >>> energies = get_energy_calibration(areas, 'S1_01')
+    array([0.00134, 0.23145, ..., 0.02134])
+    ''' 
+    
+    if timer: t_start = elapsed_time()
+    
+    # Load calibration data for given detector
+    if detector_name[0:2] == 'S1':
+        dirname = os.path.dirname(__file__)
+        S1_fn = f'../{energy_calibration}/energy_calibration_S1.txt'
+        filename = os.path.join(dirname, S1_fn)
+        cal = np.loadtxt(filename, usecols=(0,1))[int(detector_name[3:]) - 1]
+
+    elif detector_name[0:2] == 'S2':
+        dirname = os.path.dirname(__file__)
+        S2_fn = f'../{energy_calibration}/energy_calibration_S2.txt'
+        filename = os.path.join(dirname, S2_fn)
+        cal = np.loadtxt(filename, usecols=(0,1))[int(detector_name[3:]) - 1]
+        
+    else: 
+        raise Exception(('Please supply the detector type as the second '
+                         'parameter (SX = \'S1_x\' x = [01, 05] or SX = '
+                         '\'S2_x\' x = [01, 32])'))
+
+    # Calculate energy from area
+    energy_array = (cal[0] + cal[1] * areas)
+    
+    if timer: elapsed_time(t_start, 'get_energy_calibration()')
+    return energy_array
+
 
 def set_plot_style():
     dirname = os.path.dirname(__file__)
@@ -1986,28 +2077,72 @@ def set_plot_style():
 ##################################
 
 # Plot 1D histogram, allows looping several plots into same window with legend
-def hist_1D_s(x_data, title = '', log = True, bins = 0, ax = -1, 
-              normed = 0, density = False, x_label = 't$_{tof}$ [ns]', y_label = 'Counts', hist_type = 'standard', 
-              alpha = 1, linewidth = 1, color = 'k', weights = None, linestyle = '-', timer = False):
+def hist_1D_s(x_data, title='', log=True, bins=0, ax=-1, normed=0,
+              density=False, x_label='t$_{tof}$ [ns]', y_label='Counts',
+              hist_type='standard', alpha=1, linewidth=1, color='k', 
+              weights=None, linestyle='-', timer=False):
     '''
-    Example of how to use legend:
-    fig = plt.figure('Time differences')
-    ax = fig.add_subplot(111)
-    bins = np.linspace(0, 1.15 * np.max(dt_ADQ14), 1000)
-    hist_1D_s(dt_ADQ412, label = 'ADQ412', log = True, bins = bins, x_label = 'Time difference [ms]', ax = ax)
-    hist_1D_s(dt_ADQ14,  label = 'ADQ14',  log = True, bins = bins, x_label = 'Time difference [ms]', ax = ax)
+    Plot a 1D histogram with various customization options, including log
+    scaling, normalization, and styling. This function is designed to allow 
+    multiple histograms to be plotted in the same window with a legend.
+
+    Parameters
+    ----------
+    x_data : array_like
+        The data to be histogrammed.
+    title : str, optional
+        Title of the histogram plot.
+    log : bool, optional
+        If True, the histogram axis will be log-scaled.
+    bins : int or array_like, optional
+        The bin specification:
+        - If int, the number of bins for the histogram.
+        - If array_like, the bin edges.
+    ax : matplotlib.axes.Axes or int, optional
+        The axes on which to plot the histogram. If -1, a new axes is created.
+    normed : int, optional
+        If non-zero, the histogram values will be normalized.
+    density : bool, optional
+        If True, the histogram is normalized such that the integral over the
+        range is 1.
+    x_label : str, optional
+        The label for the x-axis.
+    y_label : str, optional
+        The label for the y-axis.
+    hist_type : str, optional
+        The type of histogram to draw. Default is 'standard'.
+    alpha : float, optional
+        The alpha blending value, between 0 (transparent) and 1 (opaque).
+    linewidth : float, optional
+        The line width of the histogram bars.
+    color : str, optional
+        The color of the histogram.
+    weights : array_like, optional
+        An array of weights, of the same shape as `x_data`.
+    linestyle : str, optional
+        The line style of the histogram bars.
+    timer : bool, optional
+        If True, the execution time of the function is measured and printed.
+
+    Returns
+    -------
+    hist : tuple
+        A tuple containing the values of the histogram and the bin edges.
     '''
     if timer: t_start = elapsed_time()
     
     # Create bins if not given
-    if bins is 0: bins = np.linspace(np.min(x_data), np.max(x_data), 100)
+    if bins is 0: 
+        bins = np.linspace(np.min(x_data), np.max(x_data), 100)
     
 
     
     bin_centres = bins[1:] - np.diff(bins) / 2
     hist = np.histogram(x_data, bins = bins, weights = weights)
-    if normed: bin_vals = hist[0] / np.max(hist[0])
-    else: bin_vals = hist[0]
+    if normed: 
+        bin_vals = hist[0] / np.max(hist[0])
+    else: 
+        bin_vals = hist[0]
     
     # Plot with uncertainties
     if hist_type == 'standard':
@@ -2015,27 +2150,17 @@ def hist_1D_s(x_data, title = '', log = True, bins = 0, ax = -1,
         line_width = 1
         marker = '.'
         marker_size = 1.5
-        plt.plot(bin_centres, 
-                 bin_vals, 
-                 marker = marker, 
-                 alpha = alpha,
-                 markersize = marker_size,
-                 color = color,
-                 linestyle = 'None')
-        plt.errorbar(bin_centres, 
-                     bin_vals, 
-                     np.sqrt(bin_vals), 
-                     color = color, 
-                     alpha = alpha,
-                     elinewidth = line_width,
-                     capsize = cap_size,
-                     linestyle = 'None')
+        plt.plot(bin_centres, bin_vals, marker=marker, alpha=alpha, 
+                 markersize=marker_size, color=color, linestyle='None')
+        plt.errorbar(bin_centres, bin_vals, np.sqrt(bin_vals), color=color, 
+                     alpha=alpha, elinewidth=line_width, capsize=cap_size,
+                     linestyle='None')
         plt.yscale('log')
         ax = -1
     else:
-        plt.hist(bin_centres, bins = bins, weights = bin_vals, log = log,
-                 histtype = hist_type, alpha = alpha, linewidth = linewidth,
-                 color = color, linestyle = linestyle, density = density)        
+        plt.hist(bin_centres, bins=bins, weights=bin_vals, log=log, 
+                 histtype=hist_type, alpha=alpha, linewidth=linewidth, 
+                 color=color, linestyle=linestyle, density=density)        
 
     plt.title(title)
     plt.xlim([bins[0], bins[-1]])
@@ -2044,11 +2169,9 @@ def hist_1D_s(x_data, title = '', log = True, bins = 0, ax = -1,
     plt.ylabel(y_label, fontsize = 14)
     plt.xticks(fontsize = 12)
     plt.yticks(fontsize = 12)
-
     
     # Include legend
     if ax != -1:
-        
         handles, labels = ax.get_legend_handles_labels()
         new_handles = [Line2D([], [], c = color) for h in handles]
 
@@ -2059,26 +2182,91 @@ def hist_1D_s(x_data, title = '', log = True, bins = 0, ax = -1,
     
 
 
-def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 200, 0.4), 
-            S1_info = None, S2_info = None, tof_lim = np.array([-150, 200]), title = '', tof_bg_component = 0,
-            log = True, interactive_plot = False, projection = 0, disable_cuts = False,
-            times_of_flight_cut = 0, energy_S1_cut = 0, energy_S2_cut = 0, disable_bgs = False, 
-            weights = False, hist2D_S1 = None, hist2D_S2 = None, sum_shots = False, 
-            proton_recoil = False, pulse_height_spectrum = False, integrated_charge_spectrum = False,
-            cut_factors = (1., 1., 1.), timer = False):
-    ''' This is a mess, I'm sorry (it does work though).
-    Plots 2D histogram of TOF vs energy with projections onto time and energy axis.
-    times_of_flight: 1D array of times of flight.
-    energy_S1: 1D array of energies for S1
-    energy_S2: 1D array of energies for S2
-    bins_tof: bins for 1D time of flight spectrum
-    bins_energy: bins for 1D energy spectrum
-    bins_2D: bins for 2D spectrum of energy vs. time of flight
-    energy_lim: set energy plotting limits
-    title: title
-    log: set log scale
-    interactive_plot: set to true to set cuts in each spectrum
-    projection: used in replot_projections() function, allows for red lines to be plotted along the limits of the cuts
+def plot_2D(times_of_flight, energy_S1, energy_S2, 
+            bins_tof=np.arange(-199.8, 200, 0.4), S1_info=None, S2_info=None,
+            tof_lim=np.array([-150, 200]), title='', tof_bg_component=0,
+            log=True, interactive_plot=False, projection=0, disable_cuts=False,
+            times_of_flight_cut=0, energy_S1_cut=0, energy_S2_cut=0, 
+            disable_bgs=False, weights=False, hist2D_S1=None, hist2D_S2=None,
+            sum_shots=False, proton_recoil=False, pulse_height_spectrum=False,
+            integrated_charge_spectrum=False, cut_factors=(1., 1., 1.),
+            timer=False):
+    ''' This function is a mess, I'm sorry.
+    Plots a 2D histogram of Time of Flight (TOF) versus energy, with options
+    for projections onto the time and energy axes. This function supports 
+    various features like interactive plotting, background subtraction, and 
+    kinematic cuts.
+
+    Parameters
+    ----------
+    times_of_flight : array_like
+        1D array of times of flight.
+    energy_S1 : array_like
+        1D array of energies for S1.
+    energy_S2 : array_like
+        1D array of energies for S2.
+    bins_tof : array_like, optional
+        Bins for the 1D time of flight spectrum.
+    S1_info : dict, optional
+        Dictionary containing information about S1, including energy bins and
+        limits.
+    S2_info : dict, optional
+        Dictionary containing information about S2, including energy bins and
+        limits.
+    tof_lim : array_like, optional
+        Array setting the time of flight plotting limits.
+    title : str, optional
+        Title of the plot.
+    tof_bg_component : int or array_like, optional
+        Background component for the time of flight data.
+    log : bool, optional
+        If True, sets the plot scale to logarithmic.
+    interactive_plot : bool, optional
+        If True, allows interactive setting of cuts in each spectrum.
+    projection : int, optional
+        Used in the replot_projections() function, allows for red lines to be
+        plotted along the limits of the cuts.
+    disable_cuts : bool, optional
+        If True, disables kinematic cuts.
+    times_of_flight_cut : array_like, optional
+        Times of flight data after applying cuts.
+    energy_S1_cut : array_like, optional
+        S1 energy data after applying cuts.
+    energy_S2_cut : array_like, optional
+        S2 energy data after applying cuts.
+    disable_bgs : bool, optional
+        If True, disables background subtraction.
+    weights : bool, optional
+        If True, uses weights for histogramming.
+    hist2D_S1 : array_like, optional
+        2D histogram data for S1.
+    hist2D_S2 : array_like, optional
+        2D histogram data for S2.
+    sum_shots : bool, optional
+        If True, sums over shots.
+    proton_recoil : bool, optional
+        If True, plots proton recoil energy instead of light yield.
+    pulse_height_spectrum : bool, optional
+        If True, plots pulse height spectrum.
+    integrated_charge_spectrum : bool, optional
+        If True, plots integrated charge spectrum.
+    cut_factors : tuple, optional
+        Factors for kinematic cuts.
+    timer : bool, optional
+        If True, measures and prints the execution time of the function.
+
+    Returns
+    -------
+    tuple
+        A tuple containing histograms for TOF, S1 energy, S2 energy, and 2D
+        histograms for S1 and S2.
+
+    Notes
+    -----
+    This function is complex (a mess) and supports a wide range of features for
+    2D histogram plotting. It is capable of interactive plotting, where users
+    can set cuts on the fly, and supports various types of data manipulations
+    like background subtraction and kinematic cuts.
     '''
     if timer: t_start = elapsed_time()
     
@@ -2089,8 +2277,10 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     marker_size = 1
     
     # Add lines for cuts
-    if projection != 0: add_lines = True
-    else: add_lines = False
+    if projection != 0: 
+        add_lines = True
+    else: 
+        add_lines = False
     
     fig = plt.figure(title, figsize=(7,5))
     
@@ -2117,7 +2307,8 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         erg_unit = 'a.u.'
     elif integrated_charge_spectrum:
         erg_unit = 'a.u.'
-    else: erg_unit = '$MeV_{ee}$'
+    else: 
+        erg_unit = '$MeV_{ee}$'
         
     TOF_fig = plt.subplot(326)
     bins_tof_centres = bins_tof[1:] - np.diff(bins_tof)[0] / 2
@@ -2126,7 +2317,7 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         TOF_plot = tof
         
     else: 
-        TOF_hist, _ = np.histogram(tof, bins = bins_tof)
+        TOF_hist, _ = np.histogram(tof, bins=bins_tof)
         TOF_plot = TOF_hist
         
     # Apply background subtraction
@@ -2137,34 +2328,21 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         # Plot background component + fit
         plt.plot(bins_tof_centres, tof_bg_component, 'r--')     
         plt.plot(bins_tof_centres[bins_tof_centres < 0], 
-                 TOF_hist[bins_tof_centres < 0], 
-                 marker = marker,
-                 markersize = marker_size,
-                 color = 'r',
-                 linestyle = 'None')
+                 TOF_hist[bins_tof_centres < 0], marker=marker, 
+                 markersize=marker_size, color='r', linestyle='None')
         plt.errorbar(bins_tof_centres[bins_tof_centres < 0],
                      TOF_hist[bins_tof_centres < 0],
-                     yerr = np.sqrt(TOF_hist[bins_tof_centres < 0]),
-                     linestyle = 'None',
-                     capsize = cap_size,
-                     elinewidth = line_width,
-                     color = 'r')
+                     yerr=np.sqrt(TOF_hist[bins_tof_centres < 0]), 
+                     linestyle='None', capsize=cap_size, elinewidth=line_width,
+                     color='r')
         
     # Plot        
-    plt.plot(bins_tof_centres, 
-             TOF_plot,
-             marker = marker,
-             markersize = marker_size,
-             color = 'k',
-             linestyle = 'None')
+    plt.plot(bins_tof_centres, TOF_plot, marker=marker, markersize=marker_size,
+             color='k', linestyle='None')
         
-    plt.errorbar(bins_tof_centres, 
-                 TOF_plot,
-                 yerr = np.sqrt(TOF_hist), 
-                 linestyle = 'None',
-                 capsize = cap_size,
-                 elinewidth = line_width,
-                 color = 'k')
+    plt.errorbar(bins_tof_centres, TOF_plot, yerr=np.sqrt(TOF_hist), 
+                 linestyle='None', capsize=cap_size, elinewidth=line_width,
+                 color='k')
     plt.yscale('log')
     
     # Get current axis
@@ -2204,10 +2382,14 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         S1_max = np.max(hist2D_S1)
         S2_max = np.max(hist2D_S2)
     else:
-        S1_max = np.max(plt.hist2d(times_of_flight, energy_S1, bins=bins_2D_S1, cmap=my_cmap, vmin=1)[0])
-        S2_max = np.max(plt.hist2d(times_of_flight, energy_S2, bins=bins_2D_S2, cmap=my_cmap, vmin=1)[0])
-    if S1_max >= S2_max: vmax = S1_max
-    else: vmax = S2_max
+        S1_max = np.max(plt.hist2d(times_of_flight, energy_S1, bins=bins_2D_S1,
+                                   cmap=my_cmap, vmin=1)[0])
+        S2_max = np.max(plt.hist2d(times_of_flight, energy_S2, bins=bins_2D_S2,
+                                   cmap=my_cmap, vmin=1)[0])
+    if S1_max >= S2_max: 
+        vmax = S1_max
+    else: 
+        vmax = S2_max
     
     # Plot first 2D histogram (no kinematic cuts applied)
     bins_energy_centres_S1 = S1_info['energy bins'][1:] - np.diff(S1_info['energy bins'])[0] / 2
@@ -2219,33 +2401,29 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
         energy_repeated = np.repeat(bins_energy_centres_S1, len(bins_tof_centres))
         weights2D_S1 = np.ndarray.flatten(np.transpose(hist2D_S1))
         # Create 2D histogram using weights
-        hist2d_S1 = plt.hist2d(tof_repeated, 
-                               energy_repeated, 
-                               bins = bins_2D_S1, 
-                               weights = weights2D_S1,
-                               cmap = my_cmap, 
-                               vmin = 1, 
-                               vmax = vmax)[0]
+        hist2d_S1 = plt.hist2d(tof_repeated, energy_repeated, bins=bins_2D_S1,
+                               weights=weights2D_S1, cmap=my_cmap, vmin=1, 
+                               vmax=vmax)[0]
     else:
-        hist2d_S1 = plt.hist2d(times_of_flight, 
-                               energy_S1, 
-                               bins = bins_2D_S1, 
-                               cmap = my_cmap, 
-                               vmin = 1, 
-                               vmax = vmax)[0]
+        hist2d_S1 = plt.hist2d(times_of_flight, energy_S1, bins=bins_2D_S1,
+                               cmap=my_cmap, vmin=1, vmax=vmax)[0]
     ax_S1_2D = plt.gca()
-    plt.setp(ax_S1_2D.get_xticklabels(), visible = False)
-    plt.setp(ax_S1_2D.get_yticklabels(), visible = False)
+    plt.setp(ax_S1_2D.get_xticklabels(), visible=False)
+    plt.setp(ax_S1_2D.get_yticklabels(), visible=False)
     
     # Add lines for interactive plot
     if add_lines:
         if projection['proj'] == 'time-of-flight and S1 energy':
             proj_lims_tof = projection['limits'][0]
             proj_lims_E = projection['limits'][1]
-            plt.plot([proj_lims_tof[0], proj_lims_tof[0]], [-big_value, big_value], '--r')
-            plt.plot([proj_lims_tof[1], proj_lims_tof[1]], [-big_value, big_value], '--r')
-            plt.plot([-big_value, big_value], [proj_lims_E[0], proj_lims_E[0]], '--r')
-            plt.plot([-big_value, big_value], [proj_lims_E[1], proj_lims_E[1]], '--r')
+            plt.plot([proj_lims_tof[0], proj_lims_tof[0]], 
+                     [-big_value, big_value], '--r')
+            plt.plot([proj_lims_tof[1], proj_lims_tof[1]], 
+                     [-big_value, big_value], '--r')
+            plt.plot([-big_value, big_value], [proj_lims_E[0], 
+                      proj_lims_E[0]], '--r')
+            plt.plot([-big_value, big_value], [proj_lims_E[1], 
+                      proj_lims_E[1]], '--r')
         
     # Add lines for kinematic cuts
     if not disable_cuts:
@@ -2265,35 +2443,30 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     if weights:        
         # Create 2D histogram using weights
         weights2D_S2 = np.ndarray.flatten(np.transpose(hist2D_S2))
-        hist2d_S2 = plt.hist2d(tof_repeated, 
-                               energy_repeated, 
-                               bins = bins_2D_S2, 
-                               weights = weights2D_S2,
-                               cmap = my_cmap, 
-                               vmin = 1, 
-                               vmax = vmax,
-                               norm = matplotlib.colors.LogNorm())[0]
+        hist2d_S2 = plt.hist2d(tof_repeated, energy_repeated, bins=bins_2D_S2, 
+                               weights=weights2D_S2, cmap=my_cmap, vmin=1, 
+                               vmax=vmax, norm=matplotlib.colors.LogNorm())[0]
     else:
-        hist2d_S2 = plt.hist2d(times_of_flight, 
-                               energy_S2, 
-                               bins = bins_2D_S2, 
-                               cmap = my_cmap, 
-                               vmin = 1, 
-                               vmax = vmax,
-                               norm = matplotlib.colors.LogNorm())[0]
+        hist2d_S2 = plt.hist2d(times_of_flight, energy_S2, bins=bins_2D_S2,
+                               cmap=my_cmap, vmin=1, vmax=vmax, 
+                               norm=matplotlib.colors.LogNorm())[0]
     ax_S2_2D = plt.gca()
-    plt.setp(ax_S2_2D.get_xticklabels(), visible = False)
-    plt.setp(ax_S2_2D.get_yticklabels(), visible = False)
+    plt.setp(ax_S2_2D.get_xticklabels(), visible=False)
+    plt.setp(ax_S2_2D.get_yticklabels(), visible=False)
     ax_S2_2D.set_xlim([tof_x_low, tof_x_high])
 
     if add_lines:
         if projection['proj'] == 'time-of-flight and S2 energy':
             proj_lims_tof = projection['limits'][0]
             proj_lims_E = projection['limits'][1]
-            plt.plot([proj_lims_tof[0], proj_lims_tof[0]], [-big_value, big_value], '--r')
-            plt.plot([proj_lims_tof[1], proj_lims_tof[1]], [-big_value, big_value], '--r')
-            plt.plot([-big_value, big_value], [proj_lims_E[0], proj_lims_E[0]], '--r')
-            plt.plot([-big_value, big_value], [proj_lims_E[1], proj_lims_E[1]], '--r')
+            plt.plot([proj_lims_tof[0], proj_lims_tof[0]], 
+                     [-big_value, big_value], '--r')
+            plt.plot([proj_lims_tof[1], proj_lims_tof[1]], 
+                     [-big_value, big_value], '--r')
+            plt.plot([-big_value, big_value], 
+                     [proj_lims_E[0], proj_lims_E[0]], '--r')
+            plt.plot([-big_value, big_value], 
+                     [proj_lims_E[1], proj_lims_E[1]], '--r')
     
     # Add lines for kinematic cuts
     if not disable_cuts: 
@@ -2312,36 +2485,19 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     '''
     plt.subplot(323, sharey = ax_S2_2D)
     if weights: 
-        
-        plt.plot(erg_S2, 
-                 bins_energy_centres_S2, 
-                 marker = marker,
-                 markersize = marker_size,
-                 color = 'k',
-                 linestyle = 'None')
-        plt.errorbar(erg_S2, 
-                     bins_energy_centres_S2, 
-                     xerr = np.sqrt(erg_S2), 
-                     linestyle = 'None',
-                     capsize = cap_size,
-                     elinewidth = line_width,
-                     color = 'k')
+        plt.plot(erg_S2, bins_energy_centres_S2, marker=marker, 
+                 markersize=marker_size, color='k', linestyle='None')
+        plt.errorbar(erg_S2, bins_energy_centres_S2, xerr=np.sqrt(erg_S2),
+                     linestyle='None', capsize=cap_size, elinewidth=line_width,
+                     color='k')
         S2_E_hist = erg_S2
     else: 
-        S2_E_hist, _ = np.histogram(erg_S2, bins = S2_info['energy bins'])
-        plt.plot(S2_E_hist,
-                 bins_energy_centres_S2,
-                 marker = marker,
-                 markersize = marker_size,
-                 color = 'k',
-                 linestyle = 'None')
-        plt.errorbar(S2_E_hist, 
-                     bins_energy_centres_S2, 
-                     xerr = np.sqrt(S2_E_hist),
-                     linestyle = 'None',
-                     capsize = cap_size,
-                     elinewidth = line_width,
-                     color = 'k')
+        S2_E_hist, _ = np.histogram(erg_S2, bins=S2_info['energy bins'])
+        plt.plot(S2_E_hist, bins_energy_centres_S2, marker=marker,
+                 markersize=marker_size, color='k', linestyle='None')
+        plt.errorbar(S2_E_hist, bins_energy_centres_S2, 
+                     xerr=np.sqrt(S2_E_hist), linestyle='None', 
+                     capsize=cap_size, elinewidth=line_width, color='k')
         
     ax_S2_E = plt.gca()
     ax_S2_E.set_xlabel('Counts')
@@ -2351,8 +2507,10 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     if add_lines:
         if projection['proj'] == 'S2':
             proj_lims = projection['limits']
-            plt.plot([-big_value, big_value], [proj_lims[0], proj_lims[0]], '--r')
-            plt.plot([-big_value, big_value], [proj_lims[1], proj_lims[1]], '--r')
+            plt.plot([-big_value, big_value], 
+                     [proj_lims[0], proj_lims[0]], '--r')
+            plt.plot([-big_value, big_value], 
+                     [proj_lims[1], proj_lims[1]], '--r')
     ax_S2_E.set_ylim(S2_info['energy limits'])
     '''
     S1 energy projection
@@ -2362,40 +2520,26 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     if add_lines:
         if projection['proj'] == 'S1':
             proj_lims = projection['limits']
-            plt.plot([-big_value, big_value], [proj_lims[0], proj_lims[0]], '--r')
-            plt.plot([-big_value, big_value], [proj_lims[1], proj_lims[1]], '--r')
+            plt.plot([-big_value, big_value], 
+                     [proj_lims[0], proj_lims[0]], '--r')
+            plt.plot([-big_value, big_value], 
+                     [proj_lims[1], proj_lims[1]], '--r')
     
     if weights:
-        plt.plot(erg_S1, 
-                 bins_energy_centres_S1, 
-                 marker = marker,
-                 markersize = marker_size,
-                 color = 'k',
-                 linestyle = 'None')
-        plt.errorbar(erg_S1, 
-                     bins_energy_centres_S1, 
-                     xerr = np.sqrt(erg_S1), 
-                     linestyle = 'None',
-                     capsize = cap_size,
-                     elinewidth = line_width,
-                     color = 'k')
+        plt.plot(erg_S1, bins_energy_centres_S1, marker=marker,
+                 markersize=marker_size, color='k', linestyle='None')
+        plt.errorbar(erg_S1, bins_energy_centres_S1, xerr=np.sqrt(erg_S1),
+                     linestyle='None', capsize=cap_size, elinewidth=line_width,
+                     color='k')
         S1_E_hist = erg_S1
         
     else: 
-        S1_E_hist, _ = np.histogram(erg_S1, bins = S1_info['energy bins'])
-        plt.plot(S1_E_hist, 
-                 bins_energy_centres_S1, 
-                 marker = marker,
-                 markersize = marker_size,
-                 color = 'k',
-                 linestyle = 'None')
-        plt.errorbar(S1_E_hist, 
-                     bins_energy_centres_S1, 
-                     xerr = np.sqrt(S1_E_hist),
-                     linestyle = 'None',
-                     capsize = cap_size,
-                     elinewidth = line_width,
-                     color = 'k')
+        S1_E_hist, _ = np.histogram(erg_S1, bins=S1_info['energy bins'])
+        plt.plot(S1_E_hist, bins_energy_centres_S1, marker=marker, 
+                 markersize=marker_size, color='k', linestyle='None')
+        plt.errorbar(S1_E_hist, bins_energy_centres_S1, 
+                     xerr=np.sqrt(S1_E_hist), linestyle='None', 
+                     capsize=cap_size, elinewidth=line_width, color='k')
     ax_S1_E = plt.gca()
     plt.setp(ax_S1_E.get_xticklabels(), visible = False)
     ax_S1_E.set_ylim(S1_info['energy limits'])
@@ -2405,29 +2549,40 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
     x_lower = 0.1
     S2_events = S2_E_hist
     S1_events = S1_E_hist
-    if np.sum(S2_events) == 0: x_upper = 1
-    elif np.max(S2_events) >= np.max(S1_events): x_upper = np.max(S2_events)
-    else: x_upper = np.max(S1_events)
+    if np.sum(S2_events) == 0: 
+        x_upper = 1
+    elif np.max(S2_events) >= np.max(S1_events): 
+        x_upper = np.max(S2_events)
+    else: 
+        x_upper = np.max(S1_events)
     
-    if np.sum(S2_events) == 0 or np.sum(S1_events) == 0: x_lower  = 0
+    if np.sum(S2_events) == 0 or np.sum(S1_events) == 0: 
+        x_lower  = 0
     elif np.min(S2_events[S2_events > 0] <= np.min(S1_events[S1_events > 0])): 
         x_lower = np.min(S2_events[S2_events > 0])
-    else: x_lower = np.min(S1_events[S1_events > 0])
+    else: 
+        x_lower = np.min(S1_events[S1_events > 0])
     ax_S2_E.set_xlim([x_lower, x_upper])
     
     # Set x,y-label
-    fig.text(0.12, 0.68, f'Deposited energy ({erg_unit})', va='center', rotation='vertical')
-    fig.text(0.3, 0.94, title, va = 'center', ha = 'center')
-    plt.subplots_adjust(wspace = 0.1, hspace = 0.2)
+    fig.text(0.12, 0.68, f'Deposited energy ({erg_unit})', va='center', 
+             rotation='vertical')
+    fig.text(0.3, 0.94, title, va='center', ha='center')
+    plt.subplots_adjust(wspace=0.1, hspace=0.2)
     
     '''
-    Begin interactive plotting
+    Begin interactive plotting (does not work with kinematic cuts)
     '''
-    plt.show(block = False)
+    plt.show(block=False)
     if interactive_plot:
-        plt.show(block = False)
+        plt.show(block=False)
         while True:
-            print('\nSelect one of the following panels and set upper and lower limits to project the selected limit onto the other dimensions.')
+            if not disable_cuts:
+               print('Interactive plotting does not work with kinematic cuts.')
+               break
+            print('\nSelect one of the following panels and set upper and '
+                  'lower limits to project the selected limit onto the other '
+                  'dimensions.')
             print('TL - top left')
             print('TR - top right')
             print('ML - middle left')
@@ -2447,74 +2602,139 @@ def plot_2D(times_of_flight, energy_S1, energy_S2, bins_tof = np.arange(-199.8, 
                 find_space_energy = energy_choice.find(' ')
                 
                 # Transform to array of two floats [float_1, float_2]
-                tof_choice = [float(tof_choice[0:find_space_tof]), float(tof_choice[find_space_tof + 1:])]
-                energy_choice = [float(energy_choice[0:find_space_energy]), float(energy_choice[find_space_energy + 1:])]
+                tof_choice = [float(tof_choice[0:find_space_tof]), 
+                              float(tof_choice[find_space_tof + 1:])]
+                energy_choice = [float(energy_choice[0:find_space_energy]), 
+                                 float(energy_choice[find_space_energy + 1:])]
                 limits = [tof_choice, energy_choice]    
             
             # Cut in 1D spectrum
             elif panel_choice in ['TL', 'tl', 'ML', 'ml', 'BR', 'br']:
-                if panel_choice in ['BR', 'br']: limits = input('Type limits for time axis ("lower upper"): ')
-                elif panel_choice in ['TL', 'tl']: limits = input('Type limits for S1 energy axis ("lower upper"): ')
-                else: limits = input('Type limits for S2 energy axis ("upper lower"): ')    
+                if panel_choice in ['BR', 'br']: 
+                    limits = input('Type limits for time axis ("lower upper"): ')
+                elif panel_choice in ['TL', 'tl']: 
+                    limits = input('Type limits for S1 energy axis ("lower upper"): ')
+                else: 
+                    limits = input('Type limits for S2 energy axis ("upper lower"): ')    
                 
                 # Find space in user input
                 find_space  = limits.find(' ')
-                limits = [float(limits[0:find_space]), float(limits[find_space + 1:])]
+                limits = [float(limits[0:find_space]), 
+                          float(limits[find_space + 1:])]
                 
             else: 
                 print('Invalid choice.')
                 continue
             # Replot with new projections
-            replot_projections(limits = limits, panel_choice = panel_choice, 
-                               times_of_flight = tof, energy_S1 = erg_S1, 
-                               energy_S2 = erg_S2, bins_tof = bins_tof, 
-                               S1_info = S1_info, S2_info = S2_info, log = log,
-                               disable_cuts = disable_cuts, disable_bgs = True, 
-                               energy_S1_cut = erg_S1, energy_S2_cut = erg_S2, 
-                               times_of_flight_cut = tof, 
-                               proton_recoil = proton_recoil,
-                               pulse_height_spectrum = pulse_height_spectrum,
-                               integrated_charge_spectrum = integrated_charge_spectrum)
-    elif sum_shots: plt.close(fig)
+            replot_projections(limits=limits, panel_choice=panel_choice, 
+                               times_of_flight=tof, energy_S1=erg_S1, 
+                               energy_S2=erg_S2, bins_tof=bins_tof, 
+                               S1_info=S1_info, S2_info=S2_info, log=log,
+                               disable_cuts=disable_cuts, disable_bgs=True, 
+                               energy_S1_cut=erg_S1, energy_S2_cut=erg_S2, 
+                               times_of_flight_cut=tof, 
+                               proton_recoil=proton_recoil,
+                               pulse_height_spectrum=pulse_height_spectrum,
+                               integrated_charge_spectrum=integrated_charge_spectrum)
+    elif sum_shots: 
+        plt.close(fig)
 
     if timer: elapsed_time(t_start, 'plot_2D()')
     return TOF_hist, S1_E_hist, S2_E_hist, hist2d_S1, hist2d_S2
     
+
 def replot_projections(limits, panel_choice, times_of_flight, energy_S1, 
-                       energy_S2, bins_tof, S1_info = None, S2_info = None,
-                       log = True, disable_cuts = False, disable_bgs = False, 
-                       energy_S1_cut = 0, energy_S2_cut = 0, 
-                       times_of_flight_cut = 0, proton_recoil = False, 
-                       pulse_height_spectrum = False,
-                       integrated_charge_spectrum = False, 
-                       cut_factors = (1., 1., 1.)):
+                       energy_S2, bins_tof, S1_info=None, S2_info=None,
+                       log=True, disable_cuts=False, disable_bgs=False, 
+                       energy_S1_cut=0, energy_S2_cut=0, times_of_flight_cut=0,
+                       proton_recoil=False, pulse_height_spectrum=False,
+                       integrated_charge_spectrum=False, 
+                       cut_factors=(1., 1., 1.)):
     '''
-    Replot the spectra with a cut on one of the energy projections
-    limits: limits of cuts for projections. 1x2 array for 1D spectrum, 2x2 array for 2D spectrum
-    panel_choice: panel to be cut (BR - bottom right, ML - middle left, TR - top right etc.)
-    times_of_flight: 1D array of times of flight
-    energy_S1: 1D array of energies for S1
-    energy_S2: 1D array of energies for S2
+    Replots the 2D and 1D spectra with applied cuts based on user selection. 
+    This function is typically used for interactive plotting, allowing users 
+    to apply and visualize cuts on the time of flight and energy data.
+
+    Parameters
+    ----------
+    limits : array_like
+        Limits of the cuts for projections. It is a 1x2 array for 1D spectrum, 
+        and a 2x2 array for 2D spectrum.
+    panel_choice : str
+        Specifies the panel to apply the cut (e.g., 'BR' for bottom right, 
+        'ML' for middle left, 'TR' for top right, etc.).
+    times_of_flight : array_like
+        1D array of times of flight.
+    energy_S1 : array_like
+        1D array of energies for S1.
+    energy_S2 : array_like
+        1D array of energies for S2.
+    bins_tof : array_like
+        Bins for the 1D time of flight spectrum.
+    S1_info : dict, optional
+        Dictionary containing information about S1, including energy bins and
+        limits.
+    S2_info : dict, optional
+        Dictionary containing information about S2, including energy bins and
+        limits.
+    log : bool, optional
+        If True, sets the plot scale to logarithmic.
+    disable_cuts : bool, optional
+        If True, disables kinematic cuts.
+    disable_bgs : bool, optional
+        If True, disables background subtraction.
+    energy_S1_cut : array_like, optional
+        S1 energy data after applying cuts.
+    energy_S2_cut : array_like, optional
+        S2 energy data after applying cuts.
+    times_of_flight_cut : array_like, optional
+        Times of flight data after applying cuts.
+    proton_recoil : bool, optional
+        If True, plots proton recoil energy instead of light yield.
+    pulse_height_spectrum : bool, optional
+        If True, plots pulse height spectrum.
+    integrated_charge_spectrum : bool, optional
+        If True, plots integrated charge spectrum.
+    cut_factors : tuple, optional
+        Factors for kinematic cuts.
+
+    Returns
+    -------
+    None
+        The function does not return any value but plots the histograms with
+        the applied cuts.
+
+    Notes
+    -----
+    This function is part of an interactive data analysis workflow where users
+    can apply cuts to the data and immediately see the effects of these cuts on
+    the histograms. It supports cutting in both 1D and 2D spectra and updates
+    the plots accordingly.
     '''
-    
     # If cut has been made in one of the 1D spectra
     if np.shape(limits) == (2, ):
         # Make cut in S1 or S2 energy
         if panel_choice in ['TL', 'tl']: 
-            if not disable_cuts: eoi = energy_S1_cut
-            else: eoi = energy_S1
+            if not disable_cuts: 
+                eoi = energy_S1_cut
+            else: 
+                eoi = energy_S1
             det = 'S1'
             uni = 'E'
             proj = {'S1_energy':[]}
         if panel_choice in ['ML', 'ml']: 
-            if not disable_cuts: eoi = energy_S2_cut
-            else: eoi = energy_S2
+            if not disable_cuts:
+                eoi = energy_S2_cut
+            else:
+                eoi = energy_S2
             det = 'S2'
             uni = 'E'
 
         if panel_choice in ['BR', 'br']:
-            if not disable_cuts: eoi = times_of_flight_cut
-            else: eoi = times_of_flight
+            if not disable_cuts:
+                eoi = times_of_flight_cut
+            else:
+                eoi = times_of_flight
             det = 'times-of-flight'
             uni = 'tof'
         
@@ -2536,7 +2756,8 @@ def replot_projections(limits, panel_choice, times_of_flight, energy_S1,
         tof_choice = limits[0]
         energy_choice = limits[1]
         
-        inds = np.where((times_of_flight >= tof_choice[0]) & (times_of_flight <= tof_choice[1]) &
+        inds = np.where((times_of_flight >= tof_choice[0]) & 
+                        (times_of_flight <= tof_choice[1]) &
                         (eoi >= energy_choice[0]) & (eoi <= energy_choice[1]))
         title = f'Cut in {det}\n{round(tof_choice[0], 2)} < tof < {round(tof_choice[1], 2)}, {round(energy_choice[0], 2)} < E < {round(energy_choice[1], 2)}'
 
@@ -2548,70 +2769,16 @@ def replot_projections(limits, panel_choice, times_of_flight, energy_S1,
     energy_S1 = energy_S1[inds]
     energy_S2 = energy_S2[inds]
     
-    plot_2D(times_of_flight = times_of_flight, energy_S1 = energy_S1, 
-              energy_S2 = energy_S2, bins_tof = bins_tof, S1_info = S1_info, 
-              S2_info = S2_info, times_of_flight_cut = times_of_flight, 
-              energy_S1_cut = energy_S1, energy_S2_cut = energy_S2_cut,
-              interactive_plot = False, disable_cuts = disable_cuts, 
-              disable_bgs = disable_bgs, title = title, projection = proj, 
-              log = log, proton_recoil = proton_recoil, 
-              pulse_height_spectrum = pulse_height_spectrum,
-              integrated_charge_spectrum = integrated_charge_spectrum, 
-              cut_factors = cut_factors)
-
-    
-def get_energy_calibration(areas, detector_name, energy_calibration, timer = False):
-    '''
-    Return the deposited energy (MeVee) in the given detector using the energy
-    calibration given in the energy calibration folder. 
-    
-    Notes
-    -----
-    Integration limits (10-30 ns) are used when calculating the pulse waveform 
-    areas.
-    
-    Parameters
-    ----------
-    areas : ndarray,
-          1D array of pulse areas. 
-    detector_name : string,
-                  Detector name corresponding to the pulse areas being parsed.
-    timer : bool, optional
-          If set to True, prints the time to execute the function.                 
-                    
-    Returns
-    -------
-    energy_array : ndarray,
-                 1D array of deposited energies in MeVee.
-            
-    Examples
-    --------
-    >>> energies = get_energy_calibration(areas, 'S1_01')
-    array([0.00134, 0.23145, ..., 0.02134])
-    ''' 
-    
-    if timer: t_start = elapsed_time()
-    
-    # Load calibration data for given detector
-    if detector_name[0:2] == 'S1':
-        dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, f'../{energy_calibration}/energy_calibration_S1.txt')
-        cal = np.loadtxt(filename, usecols=(0,1))[int(detector_name[3:]) - 1]
-
-    elif detector_name[0:2] == 'S2':
-        dirname = os.path.dirname(__file__)
-        filename = os.path.join(dirname, f'../{energy_calibration}/energy_calibration_S2.txt')
-        cal = np.loadtxt(filename, usecols=(0,1))[int(detector_name[3:]) - 1]
-        
-    else: 
-        raise Exception(('Please supply the detector type as the second '
-                         'parameter (SX = \'S1_x\' x = [01, 05] or SX = '
-                         '\'S2_x\' x = [01, 32])'))
-
-    # Calculate energy from area
-    energy_array = (cal[0] + cal[1] * areas)
-    if timer: elapsed_time(t_start, 'get_energy_calibration()')
-    return energy_array
+    plot_2D(times_of_flight=times_of_flight, energy_S1=energy_S1, 
+              energy_S2=energy_S2, bins_tof=bins_tof, S1_info=S1_info, 
+              S2_info=S2_info, times_of_flight_cut=times_of_flight, 
+              energy_S1_cut=energy_S1, energy_S2_cut=energy_S2_cut,
+              interactive_plot=False, disable_cuts=disable_cuts, 
+              disable_bgs=disable_bgs, title=title, projection=proj, 
+              log=log, proton_recoil=proton_recoil, 
+              pulse_height_spectrum=pulse_height_spectrum,
+              integrated_charge_spectrum=integrated_charge_spectrum, 
+              cut_factors=cut_factors)
     
 def print_help():
     print('\nPlease supply the shot number.')
