@@ -144,10 +144,12 @@ def nes_pickle_plotter(t_counts, t_bins, t_bgr, e_bins_S1, e_bins_S2, matrix_S1,
     fig.subplots_adjust(top=0.8)
     cbar_ax = fig.add_axes([0.2, 0.84, 0.73, 0.02])
     sm = plt.cm.ScalarMappable(cmap=my_cmap, norm=normed)
+    sm.set_array([])
+    fig.colorbar(sm, cax=cbar_ax, orientation='horizontal')
     try:
         fig.colorbar(sm, cax=cbar_ax, orientation='horizontal')
     except:
-        print('Colorbar feature not available on Galactica.')
+        print('Colorbar feature not available on the JDC.')
 
     plt.subplots_adjust(hspace=0.1)
 
@@ -309,5 +311,7 @@ def get_kinematic_cuts(input_arguments, tof):
 
 
 if __name__ == '__main__':
-    plot_nes_pickle('../temp/100565/100565_52.0_54.0.pickle')
+    pth = ('/home/beriksso/TOFu/analysis/benjamin/other/'
+           'ad-firestone/data/100822/100822_49.5_50.0.pickle')
+    plot_nes_pickle(pth)
     
